@@ -3,167 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Quantum Orbital Model Simulator</title>
+    <title>3D Quantum Orbital Simulator</title>
 
-    <!-- Google Fonts for Elegant Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-    <!-- GeoGebra Web API -->
     <script src="https://www.geogebra.org/apps/deployggb.js"></script>
-
-    <!-- Custom GeoGebra JavaScript Logic -->
     <script src="kernel.js"></script>
 
-    <!-- Dark Aesthetics & Gradients CSS -->
     <style>
         :root {
-            --bg-gradient: radial-gradient(circle at 50% 20%, #161b26 0%, #0d0f14 60%, #050608 100%);
-            --panel-bg: rgba(18, 22, 31, 0.65);
-            --panel-border: rgba(255, 255, 255, 0.08);
-            --text-primary: #e6e8ec;
-            --text-secondary: #8a94a6;
-            --accent-gold: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%);
-            --accent-glow: rgba(212, 175, 55, 0.15);
-            --btn-bg: linear-gradient(135deg, #1f2633 0%, #151922 100%);
-            --btn-hover: linear-gradient(135deg, #2a3447 0%, #1a202c 100%);
+            /* Muted Dark Palette */
+            --bg-deep-blue: #0d1117;
+            --panel-dark-gray: #161b22;
+            --panel-border: #30363d;
+            --btn-bg: #21262d;
+            --btn-hover: #30363d;
+            
+            /* Subtle Accent Colors */
+            --accent-orange: #e69d45;
+            --accent-orange-soft: rgba(230, 157, 69, 0.15);
+            --text-white: #f0f6fc;
+            --text-muted: #8b949e;
+            
+            /* Low-saturation Orbital Colors */
+            --orb-s: #d96b6b;
+            --orb-p: #7aa2f7;
+            --orb-d: #e69d45;
+            --orb-f: #b490db;
         }
 
         * {
             box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         body {
             margin: 0;
-            padding: 30px 20px;
-            background: var(--bg-gradient);
-            background-attachment: fixed;
-            color: var(--text-primary);
+            padding: 28px;
+            background-color: var(--bg-deep-blue);
+            color: var(--text-white);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
+        header {
+            width: 100%;
+            max-width: 1240px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--panel-border);
+        }
+
         h1 {
-            margin-top: 0;
-            margin-bottom: 25px;
-            font-family: 'Cinzel', serif;
-            font-size: 26px;
-            font-weight: 600;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            background: linear-gradient(180deg, #ffffff 0%, #9ba0a8 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            margin: 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            color: var(--text-white);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h1::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: var(--accent-orange);
+            border-radius: 50%;
         }
 
         .container {
             display: flex;
             flex-direction: row;
-            gap: 25px;
-            max-width: 1250px;
+            gap: 20px;
+            max-width: 1240px;
             width: 100%;
         }
 
-        /* Glassmorphism Dark Panel */
+        /* Low-key Dark Panel */
         .control-panel {
-            width: 300px;
-            background: var(--panel-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            width: 290px;
+            background: var(--panel-dark-gray);
             border: 1px solid var(--panel-border);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             gap: 24px;
         }
 
         .section-title {
-            font-family: 'Cinzel', serif;
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: 1.5px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 500;
             text-transform: uppercase;
-            color: #d4af37;
+            letter-spacing: 1px;
+            color: var(--text-muted);
             margin-bottom: 12px;
-            padding-bottom: 6px;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
         }
 
         .btn-group {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
 
         button {
-            padding: 12px 16px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 9px 12px;
+            border: 1px solid var(--panel-border);
             background: var(--btn-bg);
-            color: var(--text-primary);
-            border-radius: 8px;
+            color: var(--text-white);
+            border-radius: 6px;
             font-size: 13px;
-            font-weight: 500;
-            letter-spacing: 0.5px;
+            font-weight: 400;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.15s ease;
             text-align: left;
+            display: flex;
+            justify-content: space-between;
         }
 
         button:hover {
+            border-color: var(--accent-orange);
             background: var(--btn-hover);
-            border-color: rgba(212, 175, 55, 0.4);
-            box-shadow: 0 0 15px var(--accent-glow);
-            transform: translateY(-2px);
-            color: #ffffff;
         }
 
-        /* Dark Aesthetic Legend Items */
-        .legend-item {
+        /* Range Slider Controls */
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent-orange);
+            cursor: pointer;
+            background: var(--btn-bg);
+        }
+
+        /* Checkboxes List */
+        .checkbox-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .checkbox-item {
             display: flex;
             align-items: center;
-            gap: 12px;
+            justify-content: space-between;
             font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 10px;
+            color: var(--text-white);
+            cursor: pointer;
         }
 
-        .color-box {
-            width: 14px;
-            height: 14px;
+        .checkbox-item input {
+            accent-color: var(--accent-orange);
+            cursor: pointer;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            box-shadow: 0 0 8px currentColor;
+            display: inline-block;
+            margin-right: 8px;
         }
 
-        /* Instructions Text */
-        .instructions {
-            font-size: 12px;
-            color: var(--text-secondary);
-            line-height: 1.6;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 12px;
-            border-radius: 8px;
-            border-left: 2px solid #d4af37;
-        }
-
-        /* GeoGebra Container */
+        /* GeoGebra 3D Viewport Frame */
         .applet-container {
             flex-grow: 1;
-            background: var(--panel-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            background: var(--bg-deep-blue);
             border: 1px solid var(--panel-border);
-            border-radius: 16px;
+            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-            position: relative;
         }
 
         #ggb-element {
@@ -174,66 +204,74 @@
 </head>
 <body>
 
-    <h1>Quantum Mechanical Orbital Model</h1>
+    <header>
+        <h1>QUANTUM ORBITAL MODEL</h1>
+    </header>
 
     <div class="container">
-        <!-- Left: Dark Aesthetic UI Controls -->
+        <!-- Left Subdued Control Panel -->
         <div class="control-panel">
-            <!-- Element Selection -->
+            <!-- Element Selector -->
             <div>
-                <div class="section-title">Select Element</div>
+                <div class="section-title">SELECT ELEMENT</div>
                 <div class="btn-group">
-                    <button onclick="loadElement('C')">Carbon &nbsp;<span style="opacity:0.5;">(Z=6)</span></button>
-                    <button onclick="loadElement('Fe')">Iron &nbsp;<span style="opacity:0.5;">(Z=26)</span></button>
-                    <button onclick="loadElement('Mo')">Molybdenum &nbsp;<span style="opacity:0.5;">(Z=42)</span></button>
+                    <button onclick="loadElement('C')"><span>Carbon</span> <span style="color:var(--text-muted);">Z=6</span></button>
+                    <button onclick="loadElement('Fe')"><span>Iron</span> <span style="color:var(--text-muted);">Z=26</span></button>
+                    <button onclick="loadElement('Mo')"><span>Molybdenum</span> <span style="color:var(--text-muted);">Z=42</span></button>
                 </div>
             </div>
 
-            <!-- Orbital Color Legend -->
+            <!-- Opacity Control -->
+            <div class="slider-group">
+                <div class="section-title">DENSITY CONTROL</div>
+                <div class="label-row">
+                    <span>Opacity</span>
+                    <span id="opacityVal" style="color:var(--accent-orange);">35%</span>
+                </div>
+                <input type="range" min="0.05" max="1" step="0.05" value="0.35" oninput="setOpacityFromUI(this.value)">
+            </div>
+
+            <!-- Orbital Filter -->
             <div>
-                <div class="section-title">Orbital Spectra</div>
-                <div class="legend-item">
-                    <div class="color-box" style="background-color: #ff3333; color: #ff3333;"></div>
-                    <span><b style="color:#fff;">s Orbital</b> (l = 0)</span>
+                <div class="section-title">ORBITAL FILTER</div>
+                <div class="checkbox-list">
+                    <label class="checkbox-item">
+                        <span><span class="dot" style="background:var(--orb-s);"></span>s Orbital</span>
+                        <input type="checkbox" checked onchange="toggleOrbitalUI(0, this.checked)">
+                    </label>
+                    <label class="checkbox-item">
+                        <span><span class="dot" style="background:var(--orb-p);"></span>p Orbital</span>
+                        <input type="checkbox" checked onchange="toggleOrbitalUI(1, this.checked)">
+                    </label>
+                    <label class="checkbox-item">
+                        <span><span class="dot" style="background:var(--orb-d);"></span>d Orbital</span>
+                        <input type="checkbox" checked onchange="toggleOrbitalUI(2, this.checked)">
+                    </label>
+                    <label class="checkbox-item">
+                        <span><span class="dot" style="background:var(--orb-f);"></span>f Orbital</span>
+                        <input type="checkbox" checked onchange="toggleOrbitalUI(3, this.checked)">
+                    </label>
                 </div>
-                <div class="legend-item">
-                    <div class="color-box" style="background-color: #3399ff; color: #3399ff;"></div>
-                    <span><b style="color:#fff;">p Orbital</b> (l = 1)</span>
-                </div>
-                <div class="legend-item">
-                    <div class="color-box" style="background-color: #ff9900; color: #ff9900;"></div>
-                    <span><b style="color:#fff;">d Orbital</b> (l = 2)</span>
-                </div>
-                <div class="legend-item">
-                    <div class="color-box" style="background-color: #b233e6; color: #b233e6;"></div>
-                    <span><b style="color:#fff;">f Orbital</b> (l ≥ 3)</span>
-                </div>
-            </div>
-
-            <!-- Instructions -->
-            <div class="instructions">
-                <b style="color: #e6e8ec;">Guide:</b><br>
-                • Adjust <b>Opacity</b> and <b>ShowS/P/D/F</b> directly in the 3D viewport.<br>
-                • Drag with left-click to orbit around the core. Scroll to zoom.
             </div>
         </div>
 
-        <!-- Right: GeoGebra Applet -->
+        <!-- Right 3D Viewport -->
         <div class="applet-container">
             <div id="ggb-element"></div>
         </div>
     </div>
 
-    <!-- GeoGebra Initialization -->
+    <!-- GeoGebra Configuration -->
     <script>
         var params = {
             "appName": "3d",
-            "width": 880,
+            "perspective": "5",
+            "width": 900,
             "height": 650,
             "showToolBar": false,
             "showAlgebraView": false,
             "showMenuBar": false,
-            "is3D": true,
+            "enable3D": true,
             "appletOnLoad": function(api) {
                 window.ggbApplet = api;
                 if (typeof ggbOnInit === "function") {
