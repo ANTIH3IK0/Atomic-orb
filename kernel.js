@@ -1,7 +1,7 @@
-// kernel.js - core logic
 /**
+ * kernel.js - core logic
  * Babylon.js Infinite Quantum Engine Core
- * Dynamic Teleportation (GOTO) & Camera Initial Position Memory
+ * Dynamic Teleportation (GOTO), Minecraft ~ Relative Syntax & Camera Initial Position Memory
  */
 
 let canvas, engine, scene, camera;
@@ -14,6 +14,9 @@ let initialTarget = new BABYLON.Vector3(0, 0, 0);
 let initialRadius = 25;
 let initialAlpha = -Math.PI / 3;
 let initialBeta = Math.PI / 2.5;
+
+// Flag to track whether the user manually locked the initial position
+let userHasCustomInit = false;
 
 const ELEMENT_PRESETS = {
     C:  { Z: 6,  elec: [2, 4], nVal: [1, 2], lVal: [0, 1], En: [-284.2, -15.4] },
@@ -33,11 +36,7 @@ window.addEventListener('DOMContentLoaded', () => {
  */
 const getNEffSlater = (n) => {
     const slaterMap = [1.0, 2.0, 3.0, 3.7, 4.0, 4.2];
-    
-    if (n >= 1 && n <= 6) {
-        return slaterMap[n - 1];
-    }
-    
+    if (n >= 1 && n <= 6) return slaterMap[n - 1];
     return parseFloat((4.2 + (n - 6) * 0.4).toFixed(1));
 };
 
@@ -46,14 +45,10 @@ const getNEffSlater = (n) => {
  */
 function parseCoordinate(inputVal, currentVal) {
     if (!inputVal) return currentVal;
-    
     let str = inputVal.trim().replace(/，/g, ',');
-    
     if (str.startsWith('~')) {
         const offsetStr = str.slice(1);
-        if (offsetStr === '' || offsetStr === '+') {
-            return currentVal;
-        }
+        if (offsetStr === '' || offsetStr === '+') return currentVal;
         const offset = parseFloat(offsetStr);
         return isNaN(offset) ? currentVal : currentVal + offset;
     } else {
@@ -79,12 +74,11 @@ function teleportCamera() {
     const newZ = parseCoordinate(inputZ, currentTarget.z);
 
     camera.setTarget(new BABYLON.Vector3(newX, newY, newZ));
-
     clearTpInputs();
 }
 
 /**
- * Saves input coordinates (or current camera target) as initial position
+ * Manually set and lock the initial camera coordinates and viewing distance
  */
 function setInitialPosition() {
     if (!camera) return;
@@ -103,6 +97,9 @@ function setInitialPosition() {
     initialRadius = camera.radius;
     initialAlpha = camera.alpha;
     initialBeta = camera.beta;
+
+    // Lock custom state to prevent overwriting when switching elements
+    userHasCustomInit = true;
 
     updateInitDisplay();
     clearTpInputs();
@@ -130,7 +127,8 @@ function clearTpInputs() {
 function updateInitDisplay() {
     const display = document.getElementById('initCoordsDisplay');
     if (display && initialTarget) {
-        display.innerText = `INIT: X: ${initialTarget.x.toFixed(2)} | Y: ${initialTarget.y.toFixed(2)} | Z: ${initialTarget.z.toFixed(2)}`;
+        const statusText = userHasCustomInit ? " [LOCKED]" : " [AUTO]";
+        display.innerText = `INIT: X:${initialTarget.x.toFixed(1)}|Y:${initialTarget.y.toFixed(1)}|Z:${initialTarget.z.toFixed(1)} R:${initialRadius.toFixed(1)}${statusText}`;
     }
 }
 
@@ -140,7 +138,6 @@ function updateInitDisplay() {
 function togglePanel(collapse) {
     const panel = document.getElementById('uiOverlay');
     const restoreBtn = document.getElementById('restoreBtn');
-
     if (collapse) {
         panel.classList.add('collapsed');
         setTimeout(() => { restoreBtn.style.display = 'flex'; }, 200);
@@ -148,7 +145,6 @@ function togglePanel(collapse) {
         panel.classList.remove('collapsed');
         restoreBtn.style.display = 'none';
     }
-    
     setTimeout(() => { if (engine) engine.resize(); }, 300);
 }
 
@@ -158,7 +154,6 @@ function togglePanel(collapse) {
 function toggleTpPanel(collapse) {
     const panel = document.getElementById('tpOverlay');
     const restoreBtn = document.getElementById('tpRestoreBtn');
-
     if (collapse) {
         panel.classList.add('collapsed');
         setTimeout(() => { restoreBtn.style.display = 'flex'; }, 200);
@@ -166,18 +161,12 @@ function toggleTpPanel(collapse) {
         panel.classList.remove('collapsed');
         restoreBtn.style.display = 'none';
     }
-    
     setTimeout(() => { if (engine) engine.resize(); }, 300);
 }
 
 function parseArrayInput(str) {
     if (!str) return [];
-    return str
-        .replace(/，/g, ',')
-        .replace(/\s+/g, '')
-        .split(',')
-        .map(v => parseFloat(v))
-        .filter(v => !isNaN(v));
+    return str.replace(/，/g, ',').replace(/\s+/g, '').split(',').map(v => parseFloat(v)).filter(v => !isNaN(v));
 }
 
 function getOrbitalColor(l) {
@@ -425,11 +414,15 @@ function rebuildQuantumModel() {
         activeMeshes.push({ mesh: sphere, l: lVal[k] });
     }
 
-    initialTarget = BABYLON.Vector3.Zero();
-    if (maxRadius > 0) {
-        initialRadius = maxRadius * 3.0;
+    // Only auto-adjust camera position if the user has NOT set a custom initial position
+    if (!userHasCustomInit) {
+        initialTarget = BABYLON.Vector3.Zero();
+        if (maxRadius > 0) {
+            initialRadius = maxRadius * 3.0;
+        }
     }
 
+    // Reload camera to the initial position (either locked or auto-calculated)
     reloadInitialPosition();
     updateInitDisplay();
 
