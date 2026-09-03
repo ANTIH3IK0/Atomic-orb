@@ -1,14 +1,13 @@
 // kernel.js - core logic
 /**
- * Low-Key Dark Quantum Orbital Model Controller
- * Supports presets and fully customizable quantum parameters
+ * Ultra-Modern Subdued Dark Quantum Orbital Model Controller
+ * Features automatic Binding Energy (En) calculation using Slater's Rules
  */
 
 let currentElementKey = 'Mo';
 let currentOpacity = 0.35;
 let visibilityState = { 0: true, 1: true, 2: true, 3: true };
 
-// Active dataset (Presets or Custom)
 let activeData = {
     Z: 42,
     elec: [2, 8, 8, 10, 8, 5, 1],
@@ -20,17 +19,63 @@ let activeData = {
 const ELEMENT_PRESETS = {
     Mo: { Z: 42, elec: [2, 8, 8, 10, 8, 5, 1], nVal: [1, 2, 3, 3, 4, 4, 5], lVal: [0, 1, 1, 2, 1, 2, 0], En: [-23658.82, -4872.96, -1429.45, -657.19, -201.81, -21.03, -7.4] },
     Fe: { Z: 26, elec: [2, 8, 8, 6, 2], nVal: [1, 2, 3, 3, 4], lVal: [0, 1, 1, 2, 0], En: [-7112.0, -846.1, -100.7, -56.8, -7.9] },
-    C:  { Z: 6,  elec: [2, 4], nVal: [1, 2], lVal: [0, 1], En: [-284.2, -15.2] }
+    C:  { Z: 6,  elec: [2, 4], nVal: [1, 2], lVal: [0, 1], En: [-284.2, -15.4] }
 };
 
 function ggbOnInit() {
-    ggbApplet.evalCommand('SetBackgroundColor(8, 10, 15)');
+    ggbApplet.evalCommand('SetBackgroundColor(6, 7, 10)');
     ggbApplet.evalCommand('ShowAxes(false)');
     ggbApplet.evalCommand('ShowGrid(false)');
     rebuildQuantumModel();
 }
 
-// Preset Loader
+/**
+ * Theoretical JS calculation of standard Binding Energies (En) in eV
+ * Uses Slater's Shielding Rules and Effective Principal Quantum Numbers (n*)
+ */
+function computeStandardBindingEnergies(Z, elec, nVal, lVal) {
+    const R_inf = 13.6057; // Rydberg Constant in eV
+    const num = elec.length;
+    let EnArr = [];
+
+    const getNEffSlater = (n) => {
+        if (n === 1) return 1.0;
+        if (n === 2) return 2.0;
+        if (n === 3) return 3.0;
+        if (n === 4) return 3.7;
+        if (n === 5) return 4.0;
+        if (n === 6) return 4.2;
+        return n;
+    };
+
+    for (let k = 0; k < num; k++) {
+        let same = (nVal[k] === 1 && lVal[k] === 0) ? 0.30 * (elec[k] - 1) : 0.35 * (elec[k] - 1);
+        let inner = 0;
+
+        if (lVal[k] >= 2) {
+            let j = 0;
+            while (j < k) { inner += elec[j]; j++; }
+        } else {
+            let elecN1 = 0, elecInnerAll = 0;
+            for (let j = 0; j < num; j++) {
+                if (nVal[j] === nVal[k] - 1) elecN1 += elec[j];
+                else if (nVal[j] < nVal[k] - 1) elecInnerAll += elec[j];
+            }
+            inner = 0.85 * elecN1 + 1.00 * elecInnerAll;
+        }
+
+        let S = same + inner;
+        let zEff = Math.max(1.0, Z - S);
+        let nStar = getNEffSlater(nVal[k]);
+
+        // En ≈ -13.6057 * (Z_eff / n*)^2 (eV)
+        let energy = -R_inf * Math.pow(zEff / nStar, 2);
+        EnArr.push(parseFloat(energy.toFixed(2)));
+    }
+
+    return EnArr;
+}
+
 function loadElement(symbol) {
     if (ELEMENT_PRESETS[symbol]) {
         currentElementKey = symbol;
@@ -40,24 +85,48 @@ function loadElement(symbol) {
     }
 }
 
-// Custom Inputs Parser
+function autoCalcAndSyncEn() {
+    const zVal = parseInt(document.getElementById('inputZ').value);
+    const elecArr = document.getElementById('inputElec').value.split(',').map(Number);
+    const nArr = document.getElementById('inputN').value.split(',').map(Number);
+    const lArr = document.getElementById('inputL').value.split(',').map(Number);
+
+    if (!zVal || elecArr.some(isNaN) || nArr.some(isNaN) || lArr.some(isNaN)) {
+        alert('Please enter valid Z, Elec, n, and l values first.');
+        return;
+    }
+
+    const computedEn = computeStandardBindingEnergies(zVal, elecArr, nArr, lArr);
+    document.getElementById('inputEn').value = computedEn.join(', ');
+}
+
 function applyCustomParameters() {
     try {
         const zVal = parseInt(document.getElementById('inputZ').value);
         const elecArr = document.getElementById('inputElec').value.split(',').map(Number);
         const nArr = document.getElementById('inputN').value.split(',').map(Number);
         const lArr = document.getElementById('inputL').value.split(',').map(Number);
-        const enArr = document.getElementById('inputEn').value.split(',').map(Number);
+        
+        let enInput = document.getElementById('inputEn').value.trim();
+        let enArr = [];
+
+        // Auto calculate En using JS if the field is empty
+        if (enInput === "") {
+            enArr = computeStandardBindingEnergies(zVal, elecArr, nArr, lArr);
+            document.getElementById('inputEn').value = enArr.join(', ');
+        } else {
+            enArr = enInput.split(',').map(Number);
+        }
 
         if (!zVal || elecArr.some(isNaN) || nArr.some(isNaN) || lArr.some(isNaN) || enArr.some(isNaN)) {
-            alert('Please check your parameters syntax (comma separated numbers required).');
+            alert('Invalid parameters. Please ensure comma-separated numeric values.');
             return;
         }
 
         activeData = { Z: zVal, elec: elecArr, nVal: nArr, lVal: lArr, En: enArr };
         rebuildQuantumModel();
     } catch (e) {
-        console.error('Custom parameter error:', e);
+        console.error('Parameter Parsing Error:', e);
     }
 }
 
@@ -69,7 +138,6 @@ function syncCustomInputsUI() {
     document.getElementById('inputEn').value = activeData.En.join(', ');
 }
 
-// UI Controls
 function setOpacityFromUI(val) {
     currentOpacity = parseFloat(val);
     document.getElementById('opacityVal').innerText = Math.round(currentOpacity * 100) + '%';
@@ -81,7 +149,6 @@ function toggleOrbitalUI(lType, isChecked) {
     updateVisibility();
 }
 
-// Mathematical Physics Engine
 function rebuildQuantumModel() {
     clearPreviousSpheres();
 
@@ -124,13 +191,12 @@ function rebuildQuantumModel() {
         let sphereName = `orbSphere_${k}`;
         ggbApplet.evalCommand(`${sphereName} = Sphere((0, 0, 0), ${rQM})`);
 
-        // Low-key Subdued Palette
-        let r_col = 200, g_col = 200, b_col = 200;
+        let r_col = 180, g_col = 180, b_col = 180;
         switch (lVal[k]) {
-            case 0: r_col = 201; g_col = 106; b_col = 106; break; // Subdued Coral Red
-            case 1: r_col = 104; g_col = 136; b_col = 196; break; // Muted Steel Blue
-            case 2: r_col = 217; g_col = 155; b_col = 78;  break; // Soft Amber
-            default: r_col = 158; g_col = 130; b_col = 196; break; // Soft Violet
+            case 0: r_col = 190; g_col = 95;  b_col = 95;  break;
+            case 1: r_col = 95;  g_col = 135; b_col = 185; break;
+            case 2: r_col = 200; g_col = 145; b_col = 80;  break;
+            default: r_col = 145; g_col = 115; b_col = 180; break;
         }
 
         ggbApplet.setColor(sphereName, r_col, g_col, b_col);
