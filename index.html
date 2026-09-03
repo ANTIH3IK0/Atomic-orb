@@ -14,7 +14,6 @@
 
     <style>
         :root {
-            /* Ultra-Modern Dark Palette with Slight Warm Tone */
             --bg-gradient: linear-gradient(165deg, #06070a 0%, #0d0f14 100%);
             --panel-gradient: linear-gradient(180deg, #111319 0%, #0c0e12 100%);
             --border-subtle: #1c1f26;
@@ -24,7 +23,6 @@
             --btn-gradient: linear-gradient(180deg, #161920 0%, #111319 100%);
             --btn-hover: linear-gradient(180deg, #20242e 0%, #161920 100%);
 
-            /* Subdued Off-White Text with Subtle Warm Yellow Tint */
             --text-warm-white: #e5e2da;
             --text-muted: #727068;
             --accent-warm-gold: #c89b52;
@@ -152,10 +150,28 @@
             gap: 4px;
         }
 
+        .label-with-action {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         .input-row label {
             font-size: 10px;
             color: var(--text-muted);
             font-family: 'JetBrains Mono', monospace;
+        }
+
+        .calc-link {
+            font-size: 9px;
+            color: var(--accent-warm-gold);
+            cursor: pointer;
+            text-decoration: underline;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .calc-link:hover {
+            color: var(--text-warm-white);
         }
 
         .input-row input {
@@ -291,8 +307,11 @@
                         <input type="text" id="inputL" value="0, 1, 1, 2, 1, 2, 0">
                     </div>
                     <div class="input-row">
-                        <label>Binding Energies En (eV)</label>
-                        <input type="text" id="inputEn" value="-23658.82, -4872.96, -1429.45, -657.19, -201.81, -21.03, -7.4">
+                        <div class="label-with-action">
+                            <label>Binding Energies En (eV)</label>
+                            <span class="calc-link" onclick="autoCalcAndSyncEn()">[AUTO CALC]</span>
+                        </div>
+                        <input type="text" id="inputEn" value="-23658.82, -4872.96, -1429.45, -657.19, -201.81, -21.03, -7.4" placeholder="Leave empty to auto-calculate">
                     </div>
                     <button class="apply-btn" onclick="applyCustomParameters()">UPDATE MODEL</button>
                 </div>
