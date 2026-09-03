@@ -1,16 +1,20 @@
 // kernel.js - core logic
 /**
- * Modern Dark Quantum Orbital Controller
- * Native JS Control Flow with GeoGebra API Direct Binding
+ * Low-Key Dark Quantum Orbital Model Controller
+ * Supports presets and fully customizable quantum parameters
  */
 
 let currentElementKey = 'Mo';
 let currentOpacity = 0.35;
-let visibilityState = {
-    0: true, // s
-    1: true, // p
-    2: true, // d
-    3: true  // f
+let visibilityState = { 0: true, 1: true, 2: true, 3: true };
+
+// Active dataset (Presets or Custom)
+let activeData = {
+    Z: 42,
+    elec: [2, 8, 8, 10, 8, 5, 1],
+    nVal: [1, 2, 3, 3, 4, 4, 5],
+    lVal: [0, 1, 1, 2, 1, 2, 0],
+    En: [-23658.82, -4872.96, -1429.45, -657.19, -201.81, -21.03, -7.4]
 };
 
 const ELEMENT_PRESETS = {
@@ -19,24 +23,53 @@ const ELEMENT_PRESETS = {
     C:  { Z: 6,  elec: [2, 2, 2], nVal: [1, 2, 2], lVal: [0, 0, 1], En: [-284.2, -19.4, -11.3] }
 };
 
-// 1. Initialization
 function ggbOnInit() {
-    // Hide axes and set dark background inside 3D viewport
-    ggbApplet.evalCommand('SetBackgroundColor(10, 12, 16)');
+    ggbApplet.evalCommand('SetBackgroundColor(8, 10, 15)');
     ggbApplet.evalCommand('ShowAxes(false)');
     ggbApplet.evalCommand('ShowGrid(false)');
     rebuildQuantumModel();
 }
 
-// 2. Element Switcher
+// Preset Loader
 function loadElement(symbol) {
     if (ELEMENT_PRESETS[symbol]) {
         currentElementKey = symbol;
+        activeData = JSON.parse(JSON.stringify(ELEMENT_PRESETS[symbol]));
+        syncCustomInputsUI();
         rebuildQuantumModel();
     }
 }
 
-// 3. UI Controls
+// Custom Inputs Parser
+function applyCustomParameters() {
+    try {
+        const zVal = parseInt(document.getElementById('inputZ').value);
+        const elecArr = document.getElementById('inputElec').value.split(',').map(Number);
+        const nArr = document.getElementById('inputN').value.split(',').map(Number);
+        const lArr = document.getElementById('inputL').value.split(',').map(Number);
+        const enArr = document.getElementById('inputEn').value.split(',').map(Number);
+
+        if (!zVal || elecArr.some(isNaN) || nArr.some(isNaN) || lArr.some(isNaN) || enArr.some(isNaN)) {
+            alert('Please check your parameters syntax (comma separated numbers required).');
+            return;
+        }
+
+        activeData = { Z: zVal, elec: elecArr, nVal: nArr, lVal: lArr, En: enArr };
+        rebuildQuantumModel();
+    } catch (e) {
+        console.error('Custom parameter error:', e);
+    }
+}
+
+function syncCustomInputsUI() {
+    document.getElementById('inputZ').value = activeData.Z;
+    document.getElementById('inputElec').value = activeData.elec.join(', ');
+    document.getElementById('inputN').value = activeData.nVal.join(', ');
+    document.getElementById('inputL').value = activeData.lVal.join(', ');
+    document.getElementById('inputEn').value = activeData.En.join(', ');
+}
+
+// UI Controls
 function setOpacityFromUI(val) {
     currentOpacity = parseFloat(val);
     document.getElementById('opacityVal').innerText = Math.round(currentOpacity * 100) + '%';
@@ -48,16 +81,15 @@ function toggleOrbitalUI(lType, isChecked) {
     updateVisibility();
 }
 
-// 4. Mathematical Reconstruction
+// Mathematical Physics Engine
 function rebuildQuantumModel() {
     clearPreviousSpheres();
 
-    const data = ELEMENT_PRESETS[currentElementKey];
-    const Z = data.Z;
-    const elec = data.elec;
-    const nVal = data.nVal;
-    const lVal = data.lVal;
-    const En = data.En;
+    const Z = activeData.Z;
+    const elec = activeData.elec;
+    const nVal = activeData.nVal;
+    const lVal = activeData.lVal;
+    const En = activeData.En;
     const num = elec.length;
 
     const alpha = 1 / 137.036;
@@ -92,36 +124,35 @@ function rebuildQuantumModel() {
         let sphereName = `orbSphere_${k}`;
         ggbApplet.evalCommand(`${sphereName} = Sphere((0, 0, 0), ${rQM})`);
 
-        // Neon Cyber Colors
-        let r_col = 0, g_col = 0, b_col = 0;
+        // Low-key Subdued Palette
+        let r_col = 200, g_col = 200, b_col = 200;
         switch (lVal[k]) {
-            case 0: r_col = 255; g_col = 60; b_col = 60; break;   // s: Neon Red
-            case 1: r_col = 0; g_col = 240; b_col = 255; break;  // p: Neon Cyan
-            case 2: r_col = 255; g_col = 170; b_col = 0; break;  // d: Neon Amber
-            default: r_col = 180; g_col = 80; b_col = 255; break; // f: Neon Purple
+            case 0: r_col = 201; g_col = 106; b_col = 106; break; // Subdued Coral Red
+            case 1: r_col = 104; g_col = 136; b_col = 196; break; // Muted Steel Blue
+            case 2: r_col = 217; g_col = 155; b_col = 78;  break; // Soft Amber
+            default: r_col = 158; g_col = 130; b_col = 196; break; // Soft Violet
         }
 
         ggbApplet.setColor(sphereName, r_col, g_col, b_col);
         let visKey = lVal[k] >= 3 ? 3 : lVal[k];
         ggbApplet.setVisible(sphereName, visibilityState[visKey]);
-        ggbApplet.setFilling(sphereName, currentOpacity);
+        ggbApplet.evalCommand(`SetFilling(${sphereName}, ${currentOpacity})`);
     }
 }
 
 function updateVisibility() {
-    const data = ELEMENT_PRESETS[currentElementKey];
-    for (let k = 0; k < data.lVal.length; k++) {
+    for (let k = 0; k < activeData.lVal.length; k++) {
         let sphereName = `orbSphere_${k}`;
-        let l = data.lVal[k];
+        let l = activeData.lVal[k];
         let visKey = l >= 3 ? 3 : l;
         ggbApplet.setVisible(sphereName, visibilityState[visKey]);
     }
 }
 
 function updateOpacity() {
-    const data = ELEMENT_PRESETS[currentElementKey];
-    for (let k = 0; k < data.lVal.length; k++) {
-        ggbApplet.setFilling(`orbSphere_${k}`, currentOpacity);
+    for (let k = 0; k < activeData.lVal.length; k++) {
+        let sphereName = `orbSphere_${k}`;
+        ggbApplet.evalCommand(`SetFilling(${sphereName}, ${currentOpacity})`);
     }
 }
 
