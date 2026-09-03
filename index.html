@@ -3,102 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quantum Orbital Model</title>
+    <title>Dynamic Quantum Orbital Visualizer (Atomic-orb Web Edition v1.2)</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-    <script src="https://www.geogebra.org/apps/deployggb.js"></script>
-    <script src="kernel.js"></script>
+    <!-- Babylon.js WebGL Engine -->
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="kernel.js" defer></script>
 
     <style>
         :root {
-            --bg-gradient: linear-gradient(165deg, #06070a 0%, #0d0f14 100%);
-            --panel-gradient: linear-gradient(180deg, #111319 0%, #0c0e12 100%);
-            --border-subtle: #1c1f26;
-            --border-hover: #2d323e;
+            --bg-gradient: linear-gradient(165deg, #050608 0%, #0a0c10 100%);
+            --panel-gradient: linear-gradient(180deg, #101216 0%, #0a0c0f 100%);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(200, 155, 82, 0.4);
             
-            --input-bg: #07080b;
-            --btn-gradient: linear-gradient(180deg, #161920 0%, #111319 100%);
-            --btn-hover: linear-gradient(180deg, #20242e 0%, #161920 100%);
+            --input-bg: #060709;
+            --btn-gradient: linear-gradient(180deg, #151820 0%, #0e1015 100%);
+            --btn-hover: linear-gradient(180deg, #1f232e 0%, #151820 100%);
 
             --text-warm-white: #e5e2da;
-            --text-muted: #727068;
-            --accent-warm-gold: #c89b52;
-            --accent-warm-gold-soft: rgba(200, 155, 82, 0.08);
-
-            --orb-s: #be5e5e;
-            --orb-p: #5e87be;
-            --orb-d: #c89b52;
-            --orb-f: #9173be;
+            --text-muted: #6e6c64;
+            --accent-gold: #c89b52;
+            --accent-gold-soft: rgba(200, 155, 82, 0.1);
         }
 
         * {
             box-sizing: border-box;
             font-family: 'Inter', -apple-system, sans-serif;
+            user-select: none;
         }
 
         body {
             margin: 0;
-            padding: 28px;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
             background: var(--bg-gradient);
             color: var(--text-warm-white);
-            min-height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+            outline: none;
+        }
+
+        .ui-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 320px;
+            max-height: calc(100vh - 40px);
+            background: var(--panel-gradient);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            gap: 18px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(16px);
+            z-index: 10;
+            overflow-y: auto;
         }
 
-        header {
-            width: 100%;
-            max-width: 1240px;
-            display: flex;
-            align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 14px;
-            border-bottom: 1px solid var(--border-subtle);
+        .ui-overlay::-webkit-scrollbar {
+            width: 4px;
+        }
+        .ui-overlay::-webkit-scrollbar-thumb {
+            background: var(--border-subtle);
+            border-radius: 2px;
         }
 
-        h1 {
+        header h1 {
             margin: 0;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 500;
             letter-spacing: 1.5px;
             color: var(--text-warm-white);
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
-        h1::before {
+        header h1::before {
             content: '';
-            display: inline-block;
-            width: 5px;
-            height: 5px;
-            background: var(--accent-warm-gold);
+            width: 6px;
+            height: 6px;
+            background: var(--accent-gold);
             border-radius: 50%;
-        }
-
-        .container {
-            display: flex;
-            flex-direction: row;
-            gap: 24px;
-            max-width: 1240px;
-            width: 100%;
-        }
-
-        .control-panel {
-            width: 320px;
-            background: var(--panel-gradient);
-            border: 1px solid var(--border-subtle);
-            border-radius: 8px;
-            padding: 22px;
-            display: flex;
-            flex-direction: column;
-            gap: 22px;
-            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
         }
 
         .section-title {
@@ -108,24 +108,23 @@
             text-transform: uppercase;
             letter-spacing: 1.2px;
             color: var(--text-muted);
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
-        .btn-group {
+        .preset-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 6px;
         }
 
         button.preset-btn {
-            padding: 8px 6px;
+            padding: 8px 4px;
             border: 1px solid var(--border-subtle);
             background: var(--btn-gradient);
             color: var(--text-warm-white);
-            border-radius: 4px;
-            font-size: 12px;
+            border-radius: 6px;
+            font-size: 11px;
             cursor: pointer;
-            text-align: center;
             transition: all 0.2s ease;
         }
 
@@ -134,47 +133,46 @@
             background: var(--btn-hover);
         }
 
-        .input-form {
+        .input-card {
             display: flex;
             flex-direction: column;
             gap: 8px;
-            background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.15) 100%);
+            background: rgba(0, 0, 0, 0.3);
             padding: 12px;
-            border-radius: 6px;
+            border-radius: 8px;
             border: 1px solid var(--border-subtle);
         }
 
-        .input-row {
+        .input-field {
             display: flex;
             flex-direction: column;
             gap: 4px;
         }
 
-        .label-with-action {
+        .input-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .input-row label {
+        .input-field label {
             font-size: 10px;
             color: var(--text-muted);
             font-family: 'JetBrains Mono', monospace;
         }
 
-        .calc-link {
+        .action-link {
             font-size: 9px;
-            color: var(--accent-warm-gold);
+            color: var(--accent-gold);
             cursor: pointer;
-            text-decoration: underline;
             font-family: 'JetBrains Mono', monospace;
         }
 
-        .calc-link:hover {
-            color: var(--text-warm-white);
+        .action-link:hover {
+            text-decoration: underline;
         }
 
-        .input-row input {
+        .input-field input {
             background: var(--input-bg);
             border: 1px solid var(--border-subtle);
             color: var(--text-warm-white);
@@ -182,21 +180,20 @@
             border-radius: 4px;
             font-size: 11px;
             font-family: 'JetBrains Mono', monospace;
-            transition: border-color 0.2s ease;
         }
 
-        .input-row input:focus {
+        .input-field input:focus {
             outline: none;
-            border-color: var(--accent-warm-gold);
+            border-color: var(--accent-gold);
         }
 
         button.apply-btn {
             margin-top: 4px;
             padding: 8px;
-            border: 1px solid var(--accent-warm-gold);
-            background: var(--accent-warm-gold-soft);
-            color: var(--accent-warm-gold);
-            border-radius: 4px;
+            border: 1px solid var(--accent-gold);
+            background: var(--accent-gold-soft);
+            color: var(--accent-gold);
+            border-radius: 6px;
             font-size: 11px;
             font-family: 'JetBrains Mono', monospace;
             cursor: pointer;
@@ -204,17 +201,17 @@
         }
 
         button.apply-btn:hover {
-            background: var(--accent-warm-gold);
-            color: #07080b;
+            background: var(--accent-gold);
+            color: #060709;
         }
 
-        .slider-group {
+        .slider-box {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
         }
 
-        .label-row {
+        .slider-header {
             display: flex;
             justify-content: space-between;
             font-size: 11px;
@@ -223,159 +220,98 @@
 
         input[type="range"] {
             width: 100%;
-            accent-color: var(--accent-warm-gold);
+            accent-color: var(--accent-gold);
             cursor: pointer;
         }
 
-        .checkbox-list {
+        .filter-list {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
         }
 
-        .checkbox-item {
+        .filter-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-warm-white);
             cursor: pointer;
         }
 
-        .checkbox-item input {
-            accent-color: var(--accent-warm-gold);
-            cursor: pointer;
-        }
-
         .dot {
-            width: 6px;
-            height: 6px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             display: inline-block;
             margin-right: 8px;
-        }
-
-        .applet-container {
-            flex-grow: 1;
-            background: #06070a;
-            border: 1px solid var(--border-subtle);
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
-        }
-
-        #ggb-element {
-            width: 100%;
-            height: 680px;
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>QUANTUM ORBITAL MODEL</h1>
-    </header>
+    <div class="ui-overlay">
+        <header>
+            <h1>QUANTUM ORBITAL 3D</h1>
+        </header>
 
-    <div class="container">
-        <div class="control-panel">
-            <div>
-                <div class="section-title">PRESETS</div>
-                <div class="btn-group">
-                    <button class="preset-btn" onclick="loadElement('C')">Carbon</button>
-                    <button class="preset-btn" onclick="loadElement('Fe')">Iron</button>
-                    <button class="preset-btn" onclick="loadElement('Mo')">Molybdenum</button>
-                </div>
-            </div>
-
-            <div>
-                <div class="section-title">CUSTOM PARAMETERS</div>
-                <div class="input-form">
-                    <div class="input-row">
-                        <label>Atomic Number (Z)</label>
-                        <input type="number" id="inputZ" value="42">
-                    </div>
-                    <div class="input-row">
-                        <label>Electrons (elec)</label>
-                        <input type="text" id="inputElec" value="2, 8, 8, 10, 8, 5, 1">
-                    </div>
-                    <div class="input-row">
-                        <label>Principal Quantum (n)</label>
-                        <input type="text" id="inputN" value="1, 2, 3, 3, 4, 4, 5">
-                    </div>
-                    <div class="input-row">
-                        <label>Azimuthal Quantum (l)</label>
-                        <input type="text" id="inputL" value="0, 1, 1, 2, 1, 2, 0">
-                    </div>
-                    <div class="input-row">
-                        <div class="label-with-action">
-                            <label>Binding Energies En (eV)</label>
-                            <span class="calc-link" onclick="autoCalcAndSyncEn()">[AUTO CALC]</span>
-                        </div>
-                        <input type="text" id="inputEn" value="-23658.82, -4872.96, -1429.45, -657.19, -201.81, -21.03, -7.4" placeholder="Leave empty to auto-calculate">
-                    </div>
-                    <button class="apply-btn" onclick="applyCustomParameters()">UPDATE MODEL</button>
-                </div>
-            </div>
-
-            <div class="slider-group">
-                <div class="section-title">DENSITY CONTROL</div>
-                <div class="label-row">
-                    <span>Opacity</span>
-                    <span id="opacityVal" style="color:var(--accent-warm-gold);">35%</span>
-                </div>
-                <input type="range" min="0.05" max="1" step="0.05" value="0.35" oninput="setOpacityFromUI(this.value)">
-            </div>
-
-            <div>
-                <div class="section-title">ORBITAL FILTER</div>
-                <div class="checkbox-list">
-                    <label class="checkbox-item">
-                        <span><span class="dot" style="background:var(--orb-s);"></span>s Orbital</span>
-                        <input type="checkbox" checked onchange="toggleOrbitalUI(0, this.checked)">
-                    </label>
-                    <label class="checkbox-item">
-                        <span><span class="dot" style="background:var(--orb-p);"></span>p Orbital</span>
-                        <input type="checkbox" checked onchange="toggleOrbitalUI(1, this.checked)">
-                    </label>
-                    <label class="checkbox-item">
-                        <span><span class="dot" style="background:var(--orb-d);"></span>d Orbital</span>
-                        <input type="checkbox" checked onchange="toggleOrbitalUI(2, this.checked)">
-                    </label>
-                    <label class="checkbox-item">
-                        <span><span class="dot" style="background:var(--orb-f);"></span>f Orbital</span>
-                        <input type="checkbox" checked onchange="toggleOrbitalUI(3, this.checked)">
-                    </label>
-                </div>
+        <div>
+            <div class="section-title">Presets</div>
+            <div class="preset-grid">
+                <button class="preset-btn" onclick="loadPreset('C')">Carbon</button>
+                <button class="preset-btn" onclick="loadPreset('Fe')">Iron</button>
+                <button class="preset-btn" onclick="loadPreset('Mo')">Molybdenum</button>
             </div>
         </div>
 
-        <div class="applet-container">
-            <div id="ggb-element"></div>
+        <div>
+            <div class="section-title">Quantum Parameters</div>
+            <div class="input-card">
+                <div class="input-field">
+                    <label>Atomic Number (Z)</label>
+                    <input type="number" id="inputZ" value="42">
+                </div>
+                <div class="input-field">
+                    <label>Electrons (elec)</label>
+                    <input type="text" id="inputElec" value="2, 8, 8, 10, 8, 5, 1">
+                </div>
+                <div class="input-field">
+                    <label>Principal Quantum (n)</label>
+                    <input type="text" id="inputN" value="1, 2, 3, 3, 4, 4, 5">
+                </div>
+                <div class="input-field">
+                    <label>Azimuthal Quantum (l)</label>
+                    <input type="text" id="inputL" value="0, 1, 1, 2, 1, 2, 0">
+                </div>
+                <div class="input-field">
+                    <div class="input-header">
+                        <label>Binding Energy En (eV)</label>
+                        <span class="action-link" onclick="autoCalculateEnUI()">[AUTO CALC]</span>
+                    </div>
+                    <input type="text" id="inputEn" value="" placeholder="Auto-calculated if empty">
+                </div>
+                <button class="apply-btn" onclick="applyCustomParameters()">UPDATE MODEL</button>
+            </div>
+        </div>
+
+        <div class="slider-box">
+            <div class="section-title">Density Control</div>
+            <div class="slider-header">
+                <span>Fill Opacity</span>
+                <span id="opacityVal" style="color:var(--accent-gold);">35%</span>
+            </div>
+            <input type="range" id="opacitySlider" min="0.05" max="0.9" step="0.01" value="0.35" oninput="updateOpacity(this.value)">
+        </div>
+
+        <div>
+            <div class="section-title">Active Orbitals Filter</div>
+            <div id="dynamicFilterContainer" class="filter-list">
+                <!-- Dynamically generated based on present 'l' values -->
+            </div>
         </div>
     </div>
 
-    <script>
-        var params = {
-            "appName": "3d",
-            "perspective": "5",
-            "width": 880,
-            "height": 680,
-            "showToolBar": false,
-            "showAlgebraView": false,
-            "showMenuBar": false,
-            "enable3D": true,
-            "appletOnLoad": function(api) {
-                window.ggbApplet = api;
-                if (typeof ggbOnInit === "function") {
-                    ggbOnInit();
-                }
-            }
-        };
+    <canvas id="renderCanvas"></canvas>
 
-        var applet = new GGBApplet(params, true);
-        window.addEventListener("load", function() {
-            applet.inject('ggb-element');
-        });
-    </script>
 </body>
 </html>
