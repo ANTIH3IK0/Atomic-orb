@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dynamic Quantum Orbital Visualizer (Atomic-orb WE v1.25)</title>
+    <title>Atomic-orb WE r1.0.1</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-    <!-- Babylon.js WebGL Engine -->
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="kernel.js" defer></script>
 
@@ -55,12 +54,11 @@
             outline: none;
         }
 
-        /* Left Side UI Overlay Panel */
         .ui-overlay {
             position: absolute;
             top: 20px;
             left: 20px;
-            width: 320px;
+            width: 340px;
             max-height: calc(100vh - 40px);
             background: var(--panel-gradient);
             border: 1px solid var(--border-subtle);
@@ -77,17 +75,16 @@
         }
 
         .ui-overlay.collapsed {
-            transform: translateX(-360px);
+            transform: translateX(-380px);
             opacity: 0;
             pointer-events: none;
         }
 
-        /* Top-Right Camera Panel */
         .tp-overlay {
             position: absolute;
             top: 20px;
             right: 20px;
-            width: 240px;
+            width: 250px;
             background: var(--panel-gradient);
             border: 1px solid var(--border-subtle);
             border-radius: 12px;
@@ -102,7 +99,7 @@
         }
 
         .tp-overlay.collapsed {
-            transform: translateX(300px);
+            transform: translateX(310px);
             opacity: 0;
             pointer-events: none;
         }
@@ -119,7 +116,6 @@
             align-items: center;
         }
 
-        /* Vertical Stack for XYZ Inputs */
         .tp-grid {
             display: flex;
             flex-direction: column;
@@ -150,7 +146,6 @@
             border-radius: 4px;
             font-size: 11px;
             font-family: 'JetBrains Mono', monospace;
-            text-align: left;
         }
 
         .tp-field input:focus {
@@ -178,61 +173,36 @@
             gap: 2px;
         }
 
-        /* Restore Buttons */
-        .restore-btn {
+        .restore-btn, .tp-restore-btn {
             position: absolute;
             top: 20px;
-            left: 20px;
             z-index: 9;
             background: var(--panel-gradient);
             border: 1px solid var(--border-subtle);
             color: var(--accent-gold);
-            padding: 10px 14px;
+            width: 38px;
+            height: 38px;
             border-radius: 8px;
             cursor: pointer;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
+            font-size: 18px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(12px);
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
             transition: all 0.2s ease;
         }
 
-        .tp-restore-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 9;
-            background: var(--panel-gradient);
-            border: 1px solid var(--border-subtle);
-            color: var(--accent-gold);
-            padding: 10px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(12px);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s ease;
-        }
+        .restore-btn { left: 20px; }
+        .tp-restore-btn { right: 20px; }
 
         .restore-btn:hover, .tp-restore-btn:hover {
             border-color: var(--border-hover);
             color: var(--text-warm-white);
         }
 
-        .ui-overlay::-webkit-scrollbar {
-            width: 4px;
-        }
-        .ui-overlay::-webkit-scrollbar-thumb {
-            background: var(--border-subtle);
-            border-radius: 2px;
-        }
+        .ui-overlay::-webkit-scrollbar { width: 4px; }
+        .ui-overlay::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 2px; }
 
         header {
             display: flex;
@@ -243,13 +213,13 @@
         header h1 {
             margin: 0;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 500;
             letter-spacing: 1.5px;
             color: var(--text-warm-white);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         header h1::before {
@@ -271,9 +241,7 @@
             transition: color 0.2s;
         }
 
-        .minimize-btn:hover {
-            color: var(--text-warm-white);
-        }
+        .minimize-btn:hover { color: var(--text-warm-white); }
 
         .section-title {
             font-family: 'JetBrains Mono', monospace;
@@ -342,9 +310,7 @@
             font-family: 'JetBrains Mono', monospace;
         }
 
-        .action-link:hover {
-            text-decoration: underline;
-        }
+        .action-link:hover { text-decoration: underline; }
 
         .input-field input {
             background: var(--input-bg);
@@ -440,17 +406,10 @@
 </head>
 <body>
 
-    <!-- Left Restore Button -->
-    <button class="restore-btn" id="restoreBtn" style="display:none;" onclick="togglePanel(false)">
-        <span>≣</span>
-    </button>
+    <button class="restore-btn" id="restoreBtn" style="display:none;" onclick="togglePanel(false)">☰</button>
 
-    <!-- Top-Right Restore Button -->
-    <button class="tp-restore-btn" id="tpRestoreBtn" style="display:none;" onclick="toggleTpPanel(false)">
-        <span>◘</span>
-    </button>
+    <button class="tp-restore-btn" id="tpRestoreBtn" style="display:none;" onclick="toggleTpPanel(false)">⧇</button>
 
-    <!-- Top-Right Panel: GOTO & Initial Camera Position Controls -->
     <div class="tp-overlay" id="tpOverlay">
         <div class="tp-title">
             <span>CAMERA POS & GOTO</span>
@@ -458,18 +417,9 @@
         </div>
 
         <div class="tp-grid">
-            <div class="tp-field">
-                <label>X</label>
-                <input type="text" id="tpX" placeholder="~">
-            </div>
-            <div class="tp-field">
-                <label>Y</label>
-                <input type="text" id="tpY" placeholder="~">
-            </div>
-            <div class="tp-field">
-                <label>Z</label>
-                <input type="text" id="tpZ" placeholder="~">
-            </div>
+            <div class="tp-field"><label>X</label><input type="text" id="tpX" placeholder="~"></div>
+            <div class="tp-field"><label>Y</label><input type="text" id="tpY" placeholder="~"></div>
+            <div class="tp-field"><label>Z</label><input type="text" id="tpZ" placeholder="~"></div>
         </div>
         
         <button class="apply-btn" onclick="teleportCamera()">GOTO POSITION</button>
@@ -485,10 +435,9 @@
         </div>
     </div>
 
-    <!-- Main UI Panel -->
     <div class="ui-overlay" id="uiOverlay">
         <header>
-            <h1>QUANTUM ORBITAL 3D</h1>
+            <h1>DIRAC RELATIVISTIC 3D</h1>
             <button class="minimize-btn" onclick="togglePanel(true)">✕</button>
         </header>
 
@@ -498,6 +447,8 @@
                 <button class="preset-btn" onclick="loadPreset('C')">Carbon</button>
                 <button class="preset-btn" onclick="loadPreset('Fe')">Iron</button>
                 <button class="preset-btn" onclick="loadPreset('Mo')">Molybdenum</button>
+                <button class="preset-btn" onclick="loadPreset('Og')">Og (118)</button>
+                <button class="preset-btn" onclick="loadPreset('E126')">E126 (5g)</button>
             </div>
         </div>
 
@@ -506,28 +457,28 @@
             <div class="input-card">
                 <div class="input-field">
                     <label>Atomic Number (Z)</label>
-                    <input type="number" id="inputZ" value="42">
+                    <input type="number" id="inputZ" value="126">
                 </div>
                 <div class="input-field">
                     <label>Electrons (elec)</label>
-                    <input type="text" id="inputElec" value="2, 8, 8, 10, 8, 5, 1">
+                    <input type="text" id="inputElec" value="2, 8, 18, 32, 50, 14, 2">
                 </div>
                 <div class="input-field">
                     <label>Principal Quantum (n)</label>
-                    <input type="text" id="inputN" value="1, 2, 3, 3, 4, 4, 5">
+                    <input type="text" id="inputN" value="1, 2, 3, 4, 5, 5, 6">
                 </div>
                 <div class="input-field">
                     <label>Azimuthal Quantum (l)</label>
-                    <input type="text" id="inputL" value="0, 1, 1, 2, 1, 2, 0">
+                    <input type="text" id="inputL" value="0, 1, 2, 3, 4, 2, 0">
                 </div>
                 <div class="input-field">
                     <div class="input-header">
                         <label>Binding Energy En (eV)</label>
-                        <span class="action-link" onclick="autoCalculateEnUI()">[AUTO CALC]</span>
+                        <span class="action-link" onclick="autoCalculateEnUI()">[DIRAC CALC]</span>
                     </div>
                     <input type="text" id="inputEn" value="" placeholder="Auto-calculated if empty">
                 </div>
-                <button class="apply-btn" onclick="applyCustomParameters()">UPDATE MODEL</button>
+                <button class="apply-btn" onclick="applyCustomParameters()">RUN DIRAC SOLVER</button>
             </div>
         </div>
 
@@ -541,7 +492,7 @@
         </div>
 
         <div>
-            <div class="section-title">Active Orbitals Filter</div>
+            <div class="section-title">Dirac j-Splitting Filter (j = l ± 1/2)</div>
             <div id="dynamicFilterContainer" class="filter-list"></div>
         </div>
     </div>
