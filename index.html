@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
+    <!-- Babylon.js WebGL Engine -->
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="kernel.js" defer></script>
 
@@ -439,14 +440,17 @@
 </head>
 <body>
 
+    <!-- Left Restore Button -->
     <button class="restore-btn" id="restoreBtn" style="display:none;" onclick="togglePanel(false)">
-        <span>CONTROLS</span>
+        <span>≣</span>
     </button>
 
+    <!-- Top-Right Restore Button -->
     <button class="tp-restore-btn" id="tpRestoreBtn" style="display:none;" onclick="toggleTpPanel(false)">
-        <span>CAMERA</span>
+        <span>◘</span>
     </button>
 
+    <!-- Top-Right Panel: GOTO & Initial Camera Position Controls -->
     <div class="tp-overlay" id="tpOverlay">
         <div class="tp-title">
             <span>CAMERA POS & GOTO</span>
@@ -481,6 +485,7 @@
         </div>
     </div>
 
+    <!-- Main UI Panel -->
     <div class="ui-overlay" id="uiOverlay">
         <header>
             <h1>QUANTUM ORBITAL 3D</h1>
