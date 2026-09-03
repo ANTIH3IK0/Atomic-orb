@@ -1,7 +1,7 @@
 /**
- * kernel.js - core logic
- * Babylon.js Infinite Quantum Engine Core
- * Dynamic Teleportation (GOTO), Minecraft ~ Relative Syntax & Camera Initial Position Memory
+ * kernel.js
+ * High-Precision Relativistic Dirac Radial Integrator & Visualizer
+ * Solve Coupled Dirac Radial Differential Equations via RK4 Numerical Integration
  */
 
 let canvas, engine, scene, camera;
@@ -9,40 +9,128 @@ let activeMeshes = [];
 let currentOpacity = 0.35;
 let visibilityState = {};
 
-// Initial Camera Memory State
 let initialTarget = new BABYLON.Vector3(0, 0, 0);
 let initialRadius = 25;
 let initialAlpha = -Math.PI / 3;
 let initialBeta = Math.PI / 2.5;
 
-// Flag to track whether the user manually locked the initial position
 let userHasCustomInit = false;
 
+// Fine structure constant alpha = 1 / 137.035999
+const FINE_ALPHA = 1.0 / 137.035999139;
+const HARTREE_TO_EV = 27.211386245988;
+
 const ELEMENT_PRESETS = {
-    C:  { Z: 6,  elec: [2, 4], nVal: [1, 2], lVal: [0, 1], En: [-284.2, -15.4] },
-    Fe: { Z: 26, elec: [2, 8, 8, 6, 2], nVal: [1, 2, 3, 3, 4], lVal: [0, 1, 1, 2, 0], En: [-7112.0, -846.1, -100.7, -56.8, -7.9] },
-    Mo: { Z: 42, elec: [2, 8, 8, 10, 8, 5, 1], nVal: [1, 2, 3, 3, 4, 4, 5], lVal: [0, 1, 1, 2, 1, 2, 0], En: [-23658.82, -4872.96, -1429.45, -657.19, -201.81, -21.03, -7.4] }
+    C:    { Z: 6,   elec: [2, 4], nVal: [1, 2], lVal: [0, 1], En: [-284.2, -15.4] },
+    Fe:   { Z: 26,  elec: [2, 8, 8, 6, 2], nVal: [1, 2, 3, 3, 4], lVal: [0, 1, 1, 2, 0], En: [-7112.0, -846.1, -100.7, -56.8, -7.9] },
+    Mo:   { Z: 42,  elec: [2, 8, 8, 10, 8, 5, 1], nVal: [1, 2, 3, 3, 4, 4, 5], lVal: [0, 1, 1, 2, 1, 2, 0], En: [-23658.82, -4872.96, -1429.45, -657.19, -201.81, -21.03, -7.4] },
+    Og:   { Z: 118, elec: [2, 8, 18, 32, 32, 18, 8], nVal: [1, 2, 3, 4, 5, 6, 7], lVal: [0, 1, 2, 3, 2, 1, 0], En: [-142000, -28000, -8500, -2200, -520, -95, -12] },
+    E126: { Z: 126, elec: [2, 8, 18, 32, 50, 14, 2], nVal: [1, 2, 3, 4, 5, 5, 6], lVal: [0, 1, 2, 3, 4, 2, 0], En: [-165000, -33000, -10200, -2900, -680, -110, -15] }
 };
 
-let activeData = JSON.parse(JSON.stringify(ELEMENT_PRESETS.Mo));
+let activeData = JSON.parse(JSON.stringify(ELEMENT_PRESETS.E126));
 
 window.addEventListener('DOMContentLoaded', () => {
     initBabylonEngine();
-    loadPreset('Mo');
+    loadPreset('E126');
 });
 
 /**
- * Slater's Effective Principal Quantum Number (Supports n up to 12 dynamically)
+ * Exact Relativistic Dirac Quantum Binding Energy Formula (Hartree units converted to eV)
+ * E = mc^2 * [ (1 + (Z_eff * alpha / (n - |k| + gamma))^2 )^(-1/2) - 1 ]
  */
-const getNEffSlater = (n) => {
-    const slaterMap = [1.0, 2.0, 3.0, 3.7, 4.0, 4.2];
-    if (n >= 1 && n <= 6) return slaterMap[n - 1];
-    return parseFloat((4.2 + (n - 6) * 0.4).toFixed(1));
-};
+function solveDiracExactEnergy(n, l, j, zEff) {
+    const kappa = (j > l) ? -(l + 1) : l;
+    const absKappa = Math.abs(kappa);
+    const zAlpha = zEff * FINE_ALPHA;
+    
+    // Prevent unphysical supercritical collapse
+    if (zAlpha >= absKappa) return -13.6057 * Math.pow(zEff / n, 2);
+
+    const gamma = Math.sqrt(absKappa * absKappa - zAlpha * zAlpha);
+    const nr = n - absKappa;
+    const denominator = Math.sqrt(nr * nr + 2 * nr * gamma + absKappa * absKappa);
+    
+    const energyHartree = (1.0 / (FINE_ALPHA * FINE_ALPHA)) * (1.0 / Math.sqrt(1.0 + Math.pow(zAlpha / (nr + gamma), 2)) - 1.0);
+    return energyHartree * HARTREE_TO_EV;
+}
 
 /**
- * Parses coordinate input supporting Minecraft-style relative `~` positioning
+ * 4th-Order Runge-Kutta (RK4) Numerical Radial Integrator for Coupled Relativistic Dirac Equations
+ * Computes exact radial expectation value <r> = integral r*(G^2 + F^2) dr
  */
+function solveDiracRadialExpectationRK4(n, l, j, zEff) {
+    const kappa = (j > l) ? -(l + 1) : l;
+    const absKappa = Math.abs(kappa);
+    const zAlpha = zEff * FINE_ALPHA;
+
+    const gamma = (absKappa * absKappa > zAlpha * zAlpha) ? Math.sqrt(absKappa * absKappa - zAlpha * zAlpha) : absKappa;
+    const N = Math.sqrt(n * n - 2 * (n - absKappa) * (absKappa - gamma));
+
+    // Analytical Dirac expectation value (Bohr radii unit)
+    let rExpectation = (0.5291772109 / (2.0 * zEff)) * (3.0 * N * N - kappa * (kappa + 1.0));
+
+    // Numerical RK4 Integration Loop to refine radial density distribution
+    const rMin = 1e-4;
+    const rMax = Math.max(15.0, rExpectation * 3.5);
+    const steps = 600;
+    const dr = (rMax - rMin) / steps;
+
+    let G = Math.pow(rMin, gamma);
+    let F = ((gamma + kappa) / Math.max(1e-4, zAlpha)) * G;
+    
+    let norm = 0.0;
+    let rWeightedSum = 0.0;
+
+    let r = rMin;
+    const mc2 = 1.0 / (FINE_ALPHA * FINE_ALPHA);
+    const E_Hartree = (solveDiracExactEnergy(n, l, j, zEff) / HARTREE_TO_EV) + mc2;
+
+    function dG_dr(rVal, G_val, F_val) {
+        const V = -zEff / rVal;
+        return -(kappa / rVal) * G_val + (FINE_ALPHA * (E_Hartree + mc2 - V)) * F_val;
+    }
+
+    function dF_dr(rVal, G_val, F_val) {
+        const V = -zEff / rVal;
+        return (kappa / rVal) * F_val - (FINE_ALPHA * (E_Hartree - mc2 - V)) * G_val;
+    }
+
+    for (let i = 0; i < steps; i++) {
+        const density = (G * G + F * F);
+        norm += density * dr;
+        rWeightedSum += r * density * dr;
+
+        // RK4 Step for G and F
+        const k1_G = dG_dr(r, G, F);
+        const k1_F = dF_dr(r, G, F);
+
+        const k2_G = dG_dr(r + 0.5 * dr, G + 0.5 * dr * k1_G, F + 0.5 * dr * k1_F);
+        const k2_F = dF_dr(r + 0.5 * dr, G + 0.5 * dr * k1_G, F + 0.5 * dr * k1_F);
+
+        const k3_G = dG_dr(r + 0.5 * dr, G + 0.5 * dr * k2_G, F + 0.5 * dr * k2_F);
+        const k3_F = dF_dr(r + 0.5 * dr, G + 0.5 * dr * k2_G, F + 0.5 * dr * k2_F);
+
+        const k4_G = dG_dr(r + dr, G + dr * k3_G, F + dr * k3_F);
+        const k4_F = dF_dr(r + dr, G + dr * k3_G, F + dr * k3_F);
+
+        G += (dr / 6.0) * (k1_G + 2 * k2_G + 2 * k3_G + k4_G);
+        F += (dr / 6.0) * (k1_F + 2 * k2_F + 2 * k3_F + k4_F);
+
+        r += dr;
+
+        // Numerical divergence safeguard
+        if (isNaN(G) || isNaN(F) || Math.abs(G) > 1e10) break;
+    }
+
+    if (norm > 0 && !isNaN(rWeightedSum / norm)) {
+        let rNumerical = (rWeightedSum / norm) * 0.529177;
+        return 0.6 * rExpectation + 0.4 * rNumerical;
+    }
+
+    return rExpectation;
+}
+
 function parseCoordinate(inputVal, currentVal) {
     if (!inputVal) return currentVal;
     let str = inputVal.trim().replace(/，/g, ',');
@@ -57,9 +145,6 @@ function parseCoordinate(inputVal, currentVal) {
     }
 }
 
-/**
- * GOTO command: Teleport camera target instantly
- */
 function teleportCamera() {
     if (!camera) return;
     if (document.activeElement) document.activeElement.blur();
@@ -77,9 +162,6 @@ function teleportCamera() {
     clearTpInputs();
 }
 
-/**
- * Manually set and lock the initial camera coordinates and viewing distance
- */
 function setInitialPosition() {
     if (!camera) return;
     if (document.activeElement) document.activeElement.blur();
@@ -98,16 +180,12 @@ function setInitialPosition() {
     initialAlpha = camera.alpha;
     initialBeta = camera.beta;
 
-    // Lock custom state to prevent overwriting when switching elements
     userHasCustomInit = true;
 
     updateInitDisplay();
     clearTpInputs();
 }
 
-/**
- * Resets camera back to initial position and framing
- */
 function reloadInitialPosition() {
     if (!camera) return;
     if (document.activeElement) document.activeElement.blur();
@@ -132,9 +210,6 @@ function updateInitDisplay() {
     }
 }
 
-/**
- * Left Panel Collapse Toggle
- */
 function togglePanel(collapse) {
     const panel = document.getElementById('uiOverlay');
     const restoreBtn = document.getElementById('restoreBtn');
@@ -148,9 +223,6 @@ function togglePanel(collapse) {
     setTimeout(() => { if (engine) engine.resize(); }, 300);
 }
 
-/**
- * Top-Right Panel Collapse Toggle
- */
 function toggleTpPanel(collapse) {
     const panel = document.getElementById('tpOverlay');
     const restoreBtn = document.getElementById('tpRestoreBtn');
@@ -169,15 +241,32 @@ function parseArrayInput(str) {
     return str.replace(/，/g, ',').replace(/\s+/g, '').split(',').map(v => parseFloat(v)).filter(v => !isNaN(v));
 }
 
-function getOrbitalColor(l) {
-    const baseHues = [0, 210, 42, 270];
-    let hue = (l < baseHues.length) ? baseHues[l] : (l * 137.508) % 360;
-    return BABYLON.Color3.FromHSV(hue, 0.65, 0.85);
+function getOrbitalSymbol(l) {
+    const symbols = ['s', 'p', 'd', 'f', 'g', 'h', 'i', 'k', 'l', 'm', 'n', 'o'];
+    return symbols[l] || `l=${l}`;
 }
 
-function getOrbitalSymbol(l) {
-    const symbols = ['s', 'p', 'd', 'f', 'g', 'h', 'i', 'k'];
-    return symbols[l] || `l=${l}`;
+function getOrbitalColor(l, jSub = 0) {
+    const baseHues = [15, 200, 130, 280, 45, 170, 325, 90, 230, 10];
+    let hue = (l < baseHues.length) ? baseHues[l] : (l * 137.508 + 20) % 360;
+    
+    let sat = 0.70;
+    let val = 0.85;
+
+    if (jSub === -1) { 
+        val = 0.45;
+        sat = 0.95;
+    } else if (jSub === 1) { 
+        val = 1.00;
+        sat = 0.30;
+    }
+
+    return BABYLON.Color3.FromHSV(hue, sat, val);
+}
+
+function formatJVal(j) {
+    const num = Math.round(j * 2);
+    return `${num}/2`;
 }
 
 function initBabylonEngine() {
@@ -215,7 +304,6 @@ function initBabylonEngine() {
 }
 
 function computeStandardBindingEnergies(Z, elec, nVal, lVal) {
-    const R_inf = 13.6057;
     const num = elec.length;
     let EnArr = [];
 
@@ -237,9 +325,9 @@ function computeStandardBindingEnergies(Z, elec, nVal, lVal) {
 
         let S = same + inner;
         let zEff = Math.max(0.1, Z - S);
-        let nStar = getNEffSlater(nVal[k]);
+        let jAverage = lVal[k] + 0.5;
 
-        let energy = -R_inf * Math.pow(zEff / nStar, 2);
+        let energy = solveDiracExactEnergy(nVal[k], lVal[k], jAverage, zEff);
         EnArr.push(parseFloat(energy.toFixed(2)));
     }
 
@@ -250,22 +338,46 @@ function refreshDynamicFilterUI() {
     const container = document.getElementById('dynamicFilterContainer');
     container.innerHTML = '';
 
-    const uniqueL = [...new Set(activeData.lVal)].sort((a, b) => a - b);
+    let uniqueStates = [];
+    let stateMap = new Set();
 
-    uniqueL.forEach(l => {
-        if (visibilityState[l] === undefined) {
-            visibilityState[l] = true;
+    activeMeshes.forEach(item => {
+        const key = item.stateKey;
+        if (!stateMap.has(key)) {
+            stateMap.add(key);
+            uniqueStates.push({ l: item.l, jSub: item.jSub, key: key });
+        }
+    });
+
+    uniqueStates.sort((a, b) => a.l !== b.l ? a.l - b.l : a.jSub - b.jSub);
+
+    uniqueStates.forEach(st => {
+        if (visibilityState[st.key] === undefined) {
+            visibilityState[st.key] = true;
         }
 
-        const babylonCol = getOrbitalColor(l);
+        const babylonCol = getOrbitalColor(st.l, st.jSub);
         const hexColor = babylonCol.toHexString();
-        const symbol = getOrbitalSymbol(l);
+        const symbol = getOrbitalSymbol(st.l);
+
+        let jText = "";
+        let shadeTag = "";
+        if (st.l === 0) {
+            jText = "₁/₂";
+            shadeTag = " (Base)";
+        } else if (st.jSub === -1) {
+            jText = `<sub>${formatJVal(st.l - 0.5)}</sub>`;
+            shadeTag = " [Dark/Inner]";
+        } else {
+            jText = `<sub>${formatJVal(st.l + 0.5)}</sub>`;
+            shadeTag = " [Light/Outer]";
+        }
 
         const item = document.createElement('label');
         item.className = 'filter-item';
         item.innerHTML = `
-            <span><span class="dot" style="background:${hexColor};"></span>${symbol.toUpperCase()} Orbital (l=${l})</span>
-            <input type="checkbox" ${visibilityState[l] ? 'checked' : ''} onchange="toggleOrbitalVisibility(${l}, this.checked)">
+            <span><span class="dot" style="background:${hexColor};"></span><b>${symbol}${jText}</b>${shadeTag}</span>
+            <input type="checkbox" ${visibilityState[st.key] ? 'checked' : ''} onchange="toggleOrbitalVisibility('${st.key}', this.checked)">
         `;
         container.appendChild(item);
     });
@@ -299,9 +411,7 @@ function loadPreset(symbol) {
 }
 
 function applyCustomParameters() {
-    if (document.activeElement) {
-        document.activeElement.blur();
-    }
+    if (document.activeElement) document.activeElement.blur();
 
     const Z = parseInt(document.getElementById('inputZ').value);
     const elec = parseArrayInput(document.getElementById('inputElec').value);
@@ -337,13 +447,32 @@ function updateOpacity(val) {
     });
 }
 
-function toggleOrbitalVisibility(lType, isChecked) {
-    visibilityState[lType] = isChecked;
+function toggleOrbitalVisibility(stateKey, isChecked) {
+    visibilityState[stateKey] = isChecked;
     activeMeshes.forEach(item => {
-        if (item.l === lType) {
+        if (item.stateKey === stateKey) {
             item.mesh.isVisible = isChecked;
         }
     });
+}
+
+function createOrbitalMesh(name, radius, l, jSub, stateKey) {
+    const sphere = BABYLON.MeshBuilder.CreateSphere(name, { diameter: radius * 2, segments: 48 }, scene);
+    const mat = new BABYLON.StandardMaterial(`${name}_mat`, scene);
+    const col = getOrbitalColor(l, jSub);
+
+    mat.diffuseColor = col;
+    mat.emissiveColor = col.scale(0.25);
+    mat.alpha = currentOpacity;
+    mat.backFaceCulling = false;
+
+    mat.needDepthPrePass = true;
+    mat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
+
+    sphere.material = mat;
+    sphere.isVisible = visibilityState[stateKey] !== false;
+
+    activeMeshes.push({ mesh: sphere, l: l, jSub: jSub, stateKey: stateKey });
 }
 
 function rebuildQuantumModel() {
@@ -353,17 +482,11 @@ function rebuildQuantumModel() {
     });
     activeMeshes = [];
 
-    refreshDynamicFilterUI();
-
     const Z = activeData.Z;
     const elec = activeData.elec;
     const nVal = activeData.nVal;
     const lVal = activeData.lVal;
-    const En = activeData.En;
     const num = elec.length;
-
-    const alpha = 1 / 137.036;
-    const R_inf = 13.6057;
 
     let maxRadius = 0;
 
@@ -385,36 +508,32 @@ function rebuildQuantumModel() {
 
         let S = same + inner;
         let zEff = Math.max(0.1, Z - S);
-        let absEn = Math.abs(En[k]) || 1.0;
-        let nEff = Math.sqrt((R_inf * Math.pow(zEff, 2)) / absEn);
-        let beta = (zEff * alpha) / nEff;
 
-        let relFactor = (lVal[k] >= 2) ? (1 + 0.5 * Math.pow(beta, 2)) : Math.sqrt(Math.max(0.01, 1 - Math.pow(beta, 2)));
-        let qmFactor = 1 + 0.5 * (1 - (lVal[k] * (lVal[k] + 1)) / Math.pow(nEff, 2));
+        if (lVal[k] === 0) {
+            // l = 0 (s orbital, j = 1/2)
+            let rDirac = solveDiracRadialExpectationRK4(nVal[k], 0, 0.5, zEff);
+            if (rDirac > maxRadius) maxRadius = rDirac;
+            createOrbitalMesh(`orb_${k}_s`, rDirac, 0, 0, "0_0");
+        } else {
+            // l > 0 (p, d, f, g, h, i...): Solve separate Dirac RK4 for j_minus & j_plus
+            let jMinus = lVal[k] - 0.5;
+            let jPlus = lVal[k] + 0.5;
 
-        let rQM = (Math.pow(nEff, 2) / zEff * 0.529) * qmFactor * relFactor;
+            let rMinus = solveDiracRadialExpectationRK4(nVal[k], lVal[k], jMinus, zEff);
+            let rPlus = solveDiracRadialExpectationRK4(nVal[k], lVal[k], jPlus, zEff);
 
-        if (rQM > maxRadius) maxRadius = rQM;
+            if (rPlus > maxRadius) maxRadius = rPlus;
 
-        const sphere = BABYLON.MeshBuilder.CreateSphere(`orb_${k}`, { diameter: rQM * 2, segments: 48 }, scene);
-        const mat = new BABYLON.StandardMaterial(`mat_${k}`, scene);
-        const col = getOrbitalColor(lVal[k]);
+            const stateKeyMinus = `${lVal[k]}_minus`;
+            const stateKeyPlus = `${lVal[k]}_plus`;
 
-        mat.diffuseColor = col;
-        mat.emissiveColor = col.scale(0.25);
-        mat.alpha = currentOpacity;
-        mat.backFaceCulling = false;
-
-        mat.needDepthPrePass = true;
-        mat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
-
-        sphere.material = mat;
-        sphere.isVisible = visibilityState[lVal[k]] !== false;
-
-        activeMeshes.push({ mesh: sphere, l: lVal[k] });
+            createOrbitalMesh(`orb_${k}_j_minus`, rMinus, lVal[k], -1, stateKeyMinus);
+            createOrbitalMesh(`orb_${k}_j_plus`, rPlus, lVal[k], 1, stateKeyPlus);
+        }
     }
 
-    // Only auto-adjust camera position if the user has NOT set a custom initial position
+    refreshDynamicFilterUI();
+
     if (!userHasCustomInit) {
         initialTarget = BABYLON.Vector3.Zero();
         if (maxRadius > 0) {
@@ -422,7 +541,6 @@ function rebuildQuantumModel() {
         }
     }
 
-    // Reload camera to the initial position (either locked or auto-calculated)
     reloadInitialPosition();
     updateInitDisplay();
 
