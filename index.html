@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Quantum Orbital Model Simulator</title>
+
+    <!-- Google Fonts for Elegant Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- GeoGebra Web API -->
+    <script src="https://www.geogebra.org/apps/deployggb.js"></script>
+
+    <!-- Custom GeoGebra JavaScript Logic -->
+    <script src="kernel.js"></script>
+
+    <!-- Dark Aesthetics & Gradients CSS -->
+    <style>
+        :root {
+            --bg-gradient: radial-gradient(circle at 50% 20%, #161b26 0%, #0d0f14 60%, #050608 100%);
+            --panel-bg: rgba(18, 22, 31, 0.65);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #e6e8ec;
+            --text-secondary: #8a94a6;
+            --accent-gold: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%);
+            --accent-glow: rgba(212, 175, 55, 0.15);
+            --btn-bg: linear-gradient(135deg, #1f2633 0%, #151922 100%);
+            --btn-hover: linear-gradient(135deg, #2a3447 0%, #1a202c 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 30px 20px;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-family: 'Cinzel', serif;
+            font-size: 26px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            background: linear-gradient(180deg, #ffffff 0%, #9ba0a8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .container {
+            display: flex;
+            flex-direction: row;
+            gap: 25px;
+            max-width: 1250px;
+            width: 100%;
+        }
+
+        /* Glassmorphism Dark Panel */
+        .control-panel {
+            width: 300px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .section-title {
+            font-family: 'Cinzel', serif;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #d4af37;
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        button {
+            padding: 12px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: var(--btn-bg);
+            color: var(--text-primary);
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            text-align: left;
+        }
+
+        button:hover {
+            background: var(--btn-hover);
+            border-color: rgba(212, 175, 55, 0.4);
+            box-shadow: 0 0 15px var(--accent-glow);
+            transform: translateY(-2px);
+            color: #ffffff;
+        }
+
+        /* Dark Aesthetic Legend Items */
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .color-box {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            box-shadow: 0 0 8px currentColor;
+        }
+
+        /* Instructions Text */
+        .instructions {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 2px solid #d4af37;
+        }
+
+        /* GeoGebra Container */
+        .applet-container {
+            flex-grow: 1;
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            position: relative;
+        }
+
+        #ggb-element {
+            width: 100%;
+            height: 650px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Quantum Mechanical Orbital Model</h1>
+
+    <div class="container">
+        <!-- Left: Dark Aesthetic UI Controls -->
+        <div class="control-panel">
+            <!-- Element Selection -->
+            <div>
+                <div class="section-title">Select Element</div>
+                <div class="btn-group">
+                    <button onclick="loadElement('C')">Carbon &nbsp;<span style="opacity:0.5;">(Z=6)</span></button>
+                    <button onclick="loadElement('Fe')">Iron &nbsp;<span style="opacity:0.5;">(Z=26)</span></button>
+                    <button onclick="loadElement('Mo')">Molybdenum &nbsp;<span style="opacity:0.5;">(Z=42)</span></button>
+                </div>
+            </div>
+
+            <!-- Orbital Color Legend -->
+            <div>
+                <div class="section-title">Orbital Spectra</div>
+                <div class="legend-item">
+                    <div class="color-box" style="background-color: #ff3333; color: #ff3333;"></div>
+                    <span><b style="color:#fff;">s Orbital</b> (l = 0)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="color-box" style="background-color: #3399ff; color: #3399ff;"></div>
+                    <span><b style="color:#fff;">p Orbital</b> (l = 1)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="color-box" style="background-color: #ff9900; color: #ff9900;"></div>
+                    <span><b style="color:#fff;">d Orbital</b> (l = 2)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="color-box" style="background-color: #b233e6; color: #b233e6;"></div>
+                    <span><b style="color:#fff;">f Orbital</b> (l ≥ 3)</span>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="instructions">
+                <b style="color: #e6e8ec;">Guide:</b><br>
+                • Adjust <b>Opacity</b> and <b>ShowS/P/D/F</b> directly in the 3D viewport.<br>
+                • Drag with left-click to orbit around the core. Scroll to zoom.
+            </div>
+        </div>
+
+        <!-- Right: GeoGebra Applet -->
+        <div class="applet-container">
+            <div id="ggb-element"></div>
+        </div>
+    </div>
+
+    <!-- GeoGebra Initialization -->
+    <script>
+        var params = {
+            "appName": "3d",
+            "width": 880,
+            "height": 650,
+            "showToolBar": false,
+            "showAlgebraView": false,
+            "showMenuBar": false,
+            "is3D": true,
+            "appletOnLoad": function(api) {
+                window.ggbApplet = api;
+                if (typeof ggbOnInit === "function") {
+                    ggbOnInit();
+                }
+            }
+        };
+
+        var applet = new GGBApplet(params, true);
+        window.addEventListener("load", function() {
+            applet.inject('ggb-element');
+        });
+    </script>
+</body>
+</html>
