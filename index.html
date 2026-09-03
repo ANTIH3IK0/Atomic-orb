@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dynamic Quantum Orbital Visualizer (Babylon.js)</title>
+    <title>Dynamic Quantum Orbital Visualizer (Atomic-orb web edition v1.5)</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,7 +54,7 @@
             outline: none;
         }
 
-        /* Responsive Side Panel with Collapse Animation */
+        /* Responsive Side Panel */
         .ui-overlay {
             position: absolute;
             top: 20px;
@@ -79,6 +79,91 @@
             transform: translateX(-360px);
             opacity: 0;
             pointer-events: none;
+        }
+
+        /* Top-Right Camera Control Panel (GOTO & Initial Position) */
+        .tp-overlay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 260px;
+            background: var(--panel-gradient);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(16px);
+            z-index: 10;
+        }
+
+        .tp-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--accent-gold);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tp-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .tp-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .tp-field label {
+            font-size: 9px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            text-align: center;
+        }
+
+        .tp-field input {
+            background: var(--input-bg);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-warm-white);
+            padding: 6px 4px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            text-align: center;
+        }
+
+        .tp-field input:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+        }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .tp-coords-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            color: var(--text-muted);
+            background: rgba(0, 0, 0, 0.4);
+            padding: 6px;
+            border-radius: 4px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
         }
 
         .restore-btn {
@@ -243,13 +328,12 @@
         }
 
         button.apply-btn {
-            margin-top: 4px;
             padding: 8px;
             border: 1px solid var(--accent-gold);
             background: var(--accent-gold-soft);
             color: var(--accent-gold);
             border-radius: 6px;
-            font-size: 11px;
+            font-size: 10px;
             font-family: 'JetBrains Mono', monospace;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -258,6 +342,23 @@
         button.apply-btn:hover {
             background: var(--accent-gold);
             color: #060709;
+        }
+
+        button.secondary-btn {
+            padding: 8px;
+            border: 1px solid var(--border-subtle);
+            background: var(--btn-gradient);
+            color: var(--text-warm-white);
+            border-radius: 6px;
+            font-size: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        button.secondary-btn:hover {
+            border-color: var(--border-hover);
+            background: var(--btn-hover);
         }
 
         .slider-box {
@@ -306,8 +407,41 @@
 <body>
 
     <button class="restore-btn" id="restoreBtn" style="display:none;" onclick="togglePanel(false)">
-        <span>⚙ CONTROLS</span>
+        <span>CONTROLS</span>
     </button>
+
+    <div class="tp-overlay">
+        <div class="tp-title">
+            <span>CAMERA POS & GOTO</span>
+            <span style="font-size:8px; opacity:0.6;">(REL ~)</span>
+        </div>
+        <div class="tp-grid">
+            <div class="tp-field">
+                <label>X</label>
+                <input type="text" id="tpX" placeholder="~">
+            </div>
+            <div class="tp-field">
+                <label>Y</label>
+                <input type="text" id="tpY" placeholder="~">
+            </div>
+            <div class="tp-field">
+                <label>Z</label>
+                <input type="text" id="tpZ" placeholder="~">
+            </div>
+        </div>
+        
+        <button class="apply-btn" onclick="teleportCamera()">GOTO POSITION</button>
+
+        <div class="btn-group">
+            <button class="secondary-btn" onclick="setInitialPosition()">SET INIT POS</button>
+            <button class="secondary-btn" onclick="reloadInitialPosition()">RELOAD INIT</button>
+        </div>
+
+        <div class="tp-coords-display">
+            <div id="cameraCoordsDisplay">CUR: X: 0.00 | Y: 0.00 | Z: 0.00</div>
+            <div id="initCoordsDisplay" style="color:var(--accent-gold);">INIT: X: 0.00 | Y: 0.00 | Z: 0.00</div>
+        </div>
+    </div>
 
     <div class="ui-overlay" id="uiOverlay">
         <header>
@@ -365,8 +499,7 @@
 
         <div>
             <div class="section-title">Active Orbitals Filter</div>
-            <div id="dynamicFilterContainer" class="filter-list">
-                </div>
+            <div id="dynamicFilterContainer" class="filter-list"></div>
         </div>
     </div>
 
