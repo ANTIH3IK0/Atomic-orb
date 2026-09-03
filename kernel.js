@@ -1,40 +1,87 @@
 // kernel.js - core logic
 /**
- * Ultra-Modern Subdued Dark Quantum Orbital Model Controller
- * Features automatic Binding Energy (En) calculation using Slater's Rules
+ * Babylon.js Infinite Quantum Engine Core
+ * Dynamic Color Generation & Adaptive UI Filter System
  */
 
-let currentElementKey = 'Mo';
+let canvas, engine, scene, camera;
+let activeMeshes = [];
 let currentOpacity = 0.35;
-let visibilityState = { 0: true, 1: true, 2: true, 3: true };
-
-let activeData = {
-    Z: 42,
-    elec: [2, 8, 8, 10, 8, 5, 1],
-    nVal: [1, 2, 3, 3, 4, 4, 5],
-    lVal: [0, 1, 1, 2, 1, 2, 0],
-    En: [-23658.82, -4872.96, -1429.45, -657.19, -201.81, -21.03, -7.4]
-};
+let visibilityState = {}; // Key: lVal (0, 1, 2, 3, 4...), Value: boolean
 
 const ELEMENT_PRESETS = {
-    Mo: { Z: 42, elec: [2, 8, 8, 10, 8, 5, 1], nVal: [1, 2, 3, 3, 4, 4, 5], lVal: [0, 1, 1, 2, 1, 2, 0], En: [-23658.82, -4872.96, -1429.45, -657.19, -201.81, -21.03, -7.4] },
+    C:  { Z: 6,  elec: [2, 4], nVal: [1, 2], lVal: [0, 1], En: [-284.2, -15.4] },
     Fe: { Z: 26, elec: [2, 8, 8, 6, 2], nVal: [1, 2, 3, 3, 4], lVal: [0, 1, 1, 2, 0], En: [-7112.0, -846.1, -100.7, -56.8, -7.9] },
-    C:  { Z: 6,  elec: [2, 4], nVal: [1, 2], lVal: [0, 1], En: [-284.2, -15.4] }
+    Mo: { Z: 42, elec: [2, 8, 8, 10, 8, 5, 1], nVal: [1, 2, 3, 3, 4, 4, 5], lVal: [0, 1, 1, 2, 1, 2, 0], En: [-23658.82, -4872.96, -1429.45, -657.19, -201.81, -21.03, -7.4] }
 };
 
-function ggbOnInit() {
-    ggbApplet.evalCommand('SetBackgroundColor(6, 7, 10)');
-    ggbApplet.evalCommand('ShowAxes(false)');
-    ggbApplet.evalCommand('ShowGrid(false)');
-    rebuildQuantumModel();
+let activeData = JSON.parse(JSON.stringify(ELEMENT_PRESETS.Mo));
+
+window.addEventListener('DOMContentLoaded', () => {
+    initBabylonEngine();
+    loadPreset('Mo');
+});
+
+/**
+ * 1. Infinite Orbital Color Algorithm
+ * Uses Hue mapping (s, p, d, f mapped to classic hues, g, h, i... procedurally computed via Golden Angle)
+ */
+function getOrbitalColor(l) {
+    const baseHues = [0, 210, 42, 270]; // 0:s (Red), 1:p (Blue), 2:d (Gold), 3:f (Purple)
+    let hue;
+
+    if (l < baseHues.length) {
+        hue = baseHues[l];
+    } else {
+        // Procedural golden-angle hue distribution for infinite l >= 4 (g, h, i, j...)
+        hue = (l * 137.508) % 360;
+    }
+
+    return BABYLON.Color3.FromHSV(hue, 0.65, 0.85);
 }
 
 /**
- * Theoretical JS calculation of standard Binding Energies (En) in eV
- * Uses Slater's Shielding Rules and Effective Principal Quantum Numbers (n*)
+ * Converts l integer to spectroscopic notation (s, p, d, f, g, h, i...)
+ */
+function getOrbitalSymbol(l) {
+    const symbols = ['s', 'p', 'd', 'f', 'g', 'h', 'i', 'k', 'l', 'm'];
+    return symbols[l] || `l=${l}`;
+}
+
+/**
+ * 2. Babylon.js Viewport & Scene Initialization
+ */
+function initBabylonEngine() {
+    canvas = document.getElementById("renderCanvas");
+    engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
+    
+    scene = new BABYLON.Scene(engine);
+    scene.clearColor = new BABYLON.Color4(0.02, 0.03, 0.04, 1.0);
+
+    camera = new BABYLON.ArcRotateCamera("Camera", -Math.PI / 3, Math.PI / 2.5, 25, BABYLON.Vector3.Zero(), scene);
+    camera.attachControl(canvas, true);
+    camera.lowerRadiusLimit = 2;
+    camera.upperRadiusLimit = 200;
+    camera.wheelPrecision = 15;
+
+    const hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(1, 1, 0), scene);
+    hemiLight.intensity = 0.8;
+
+    const pointLight = new BABYLON.PointLight("pointLight", new BABYLON.Vector3(0, 10, 0), scene);
+    pointLight.intensity = 0.5;
+
+    engine.runRenderLoop(() => {
+        scene.render();
+    });
+
+    window.addEventListener("resize", () => engine.resize());
+}
+
+/**
+ * 3. JS Calculation Engine for Binding Energies (Slater's Rules)
  */
 function computeStandardBindingEnergies(Z, elec, nVal, lVal) {
-    const R_inf = 13.6057; // Rydberg Constant in eV
+    const R_inf = 13.6057;
     const num = elec.length;
     let EnArr = [];
 
@@ -68,7 +115,6 @@ function computeStandardBindingEnergies(Z, elec, nVal, lVal) {
         let zEff = Math.max(1.0, Z - S);
         let nStar = getNEffSlater(nVal[k]);
 
-        // En ≈ -13.6057 * (Z_eff / n*)^2 (eV)
         let energy = -R_inf * Math.pow(zEff / nStar, 2);
         EnArr.push(parseFloat(energy.toFixed(2)));
     }
@@ -76,81 +122,121 @@ function computeStandardBindingEnergies(Z, elec, nVal, lVal) {
     return EnArr;
 }
 
-function loadElement(symbol) {
-    if (ELEMENT_PRESETS[symbol]) {
-        currentElementKey = symbol;
-        activeData = JSON.parse(JSON.stringify(ELEMENT_PRESETS[symbol]));
-        syncCustomInputsUI();
-        rebuildQuantumModel();
-    }
+/**
+ * 4. Dynamic UI Orbital Filter Generation
+ * Dynamically builds checkboxes ONLY for orbital types present in the current element
+ */
+function refreshDynamicFilterUI() {
+    const container = document.getElementById('dynamicFilterContainer');
+    container.innerHTML = '';
+
+    // Extract unique sorted l values from current active dataset
+    const uniqueL = [...new Set(activeData.lVal)].sort((a, b) => a - b);
+
+    uniqueL.forEach(l => {
+        if (visibilityState[l] === undefined) {
+            visibilityState[l] = true;
+        }
+
+        const babylonCol = getOrbitalColor(l);
+        const hexColor = babylonCol.toHexString();
+        const symbol = getOrbitalSymbol(l);
+
+        const item = document.createElement('label');
+        item.className = 'filter-item';
+        item.innerHTML = `
+            <span><span class="dot" style="background:${hexColor};"></span>${symbol.toUpperCase()} Orbital (l=${l})</span>
+            <input type="checkbox" ${visibilityState[l] ? 'checked' : ''} onchange="toggleOrbitalVisibility(${l}, this.checked)">
+        `;
+        container.appendChild(item);
+    });
 }
 
-function autoCalcAndSyncEn() {
-    const zVal = parseInt(document.getElementById('inputZ').value);
-    const elecArr = document.getElementById('inputElec').value.split(',').map(Number);
-    const nArr = document.getElementById('inputN').value.split(',').map(Number);
-    const lArr = document.getElementById('inputL').value.split(',').map(Number);
+function autoCalculateEnUI() {
+    const Z = parseInt(document.getElementById('inputZ').value);
+    const elec = document.getElementById('inputElec').value.split(',').map(Number);
+    const nVal = document.getElementById('inputN').value.split(',').map(Number);
+    const lVal = document.getElementById('inputL').value.split(',').map(Number);
 
-    if (!zVal || elecArr.some(isNaN) || nArr.some(isNaN) || lArr.some(isNaN)) {
-        alert('Please enter valid Z, Elec, n, and l values first.');
+    if (!Z || elec.some(isNaN) || nVal.some(isNaN) || lVal.some(isNaN)) {
+        alert('Please enter valid numerical Z, elec, n, and l values first.');
         return;
     }
 
-    const computedEn = computeStandardBindingEnergies(zVal, elecArr, nArr, lArr);
+    const computedEn = computeStandardBindingEnergies(Z, elec, nVal, lVal);
     document.getElementById('inputEn').value = computedEn.join(', ');
 }
 
-function applyCustomParameters() {
-    try {
-        const zVal = parseInt(document.getElementById('inputZ').value);
-        const elecArr = document.getElementById('inputElec').value.split(',').map(Number);
-        const nArr = document.getElementById('inputN').value.split(',').map(Number);
-        const lArr = document.getElementById('inputL').value.split(',').map(Number);
-        
-        let enInput = document.getElementById('inputEn').value.trim();
-        let enArr = [];
-
-        // Auto calculate En using JS if the field is empty
-        if (enInput === "") {
-            enArr = computeStandardBindingEnergies(zVal, elecArr, nArr, lArr);
-            document.getElementById('inputEn').value = enArr.join(', ');
-        } else {
-            enArr = enInput.split(',').map(Number);
-        }
-
-        if (!zVal || elecArr.some(isNaN) || nArr.some(isNaN) || lArr.some(isNaN) || enArr.some(isNaN)) {
-            alert('Invalid parameters. Please ensure comma-separated numeric values.');
-            return;
-        }
-
-        activeData = { Z: zVal, elec: elecArr, nVal: nArr, lVal: lArr, En: enArr };
+function loadPreset(symbol) {
+    if (ELEMENT_PRESETS[symbol]) {
+        activeData = JSON.parse(JSON.stringify(ELEMENT_PRESETS[symbol]));
+        document.getElementById('inputZ').value = activeData.Z;
+        document.getElementById('inputElec').value = activeData.elec.join(', ');
+        document.getElementById('inputN').value = activeData.nVal.join(', ');
+        document.getElementById('inputL').value = activeData.lVal.join(', ');
+        document.getElementById('inputEn').value = activeData.En.join(', ');
         rebuildQuantumModel();
-    } catch (e) {
-        console.error('Parameter Parsing Error:', e);
     }
 }
 
-function syncCustomInputsUI() {
-    document.getElementById('inputZ').value = activeData.Z;
-    document.getElementById('inputElec').value = activeData.elec.join(', ');
-    document.getElementById('inputN').value = activeData.nVal.join(', ');
-    document.getElementById('inputL').value = activeData.lVal.join(', ');
-    document.getElementById('inputEn').value = activeData.En.join(', ');
+function applyCustomParameters() {
+    const Z = parseInt(document.getElementById('inputZ').value);
+    const elec = document.getElementById('inputElec').value.split(',').map(Number);
+    const nVal = document.getElementById('inputN').value.split(',').map(Number);
+    const lVal = document.getElementById('inputL').value.split(',').map(Number);
+
+    let enText = document.getElementById('inputEn').value.trim();
+    let En = [];
+
+    if (enText === "") {
+        En = computeStandardBindingEnergies(Z, elec, nVal, lVal);
+        document.getElementById('inputEn').value = En.join(', ');
+    } else {
+        En = enText.split(',').map(Number);
+    }
+
+    if (!Z || elec.some(isNaN) || nVal.some(isNaN) || lVal.some(isNaN) || En.some(isNaN)) {
+        alert('Invalid input. Ensure proper numbers and array length consistency.');
+        return;
+    }
+
+    activeData = { Z, elec, nVal, lVal, En };
+    rebuildQuantumModel();
 }
 
-function setOpacityFromUI(val) {
+function updateOpacity(val) {
     currentOpacity = parseFloat(val);
     document.getElementById('opacityVal').innerText = Math.round(currentOpacity * 100) + '%';
-    updateOpacity();
+    
+    activeMeshes.forEach(item => {
+        if (item.mesh && item.mesh.material) {
+            item.mesh.material.alpha = currentOpacity;
+        }
+    });
 }
 
-function toggleOrbitalUI(lType, isChecked) {
+function toggleOrbitalVisibility(lType, isChecked) {
     visibilityState[lType] = isChecked;
-    updateVisibility();
+    activeMeshes.forEach(item => {
+        if (item.l === lType) {
+            item.mesh.isVisible = isChecked;
+        }
+    });
 }
 
+/**
+ * 5. Quantum Mathematical Reconstruction and Mesh Rendering Engine
+ */
 function rebuildQuantumModel() {
-    clearPreviousSpheres();
+    // Clear existing meshes
+    activeMeshes.forEach(item => {
+        if (item.mesh.material) item.mesh.material.dispose();
+        item.mesh.dispose();
+    });
+    activeMeshes = [];
+
+    // Rebuild UI filter list based on newly loaded activeData
+    refreshDynamicFilterUI();
 
     const Z = activeData.Z;
     const elec = activeData.elec;
@@ -188,45 +274,21 @@ function rebuildQuantumModel() {
 
         let rQM = (Math.pow(nEff, 2) / zEff * 0.529) * qmFactor * relFactor;
 
-        let sphereName = `orbSphere_${k}`;
-        ggbApplet.evalCommand(`${sphereName} = Sphere((0, 0, 0), ${rQM})`);
+        // Build 3D sphere
+        const sphere = BABYLON.MeshBuilder.CreateSphere(`orb_${k}`, { diameter: rQM * 2, segments: 48 }, scene);
+        const mat = new BABYLON.StandardMaterial(`mat_${k}`, scene);
+        
+        // Dynamically assign continuous color using mathematical algorithm
+        const col = getOrbitalColor(lVal[k]);
 
-        let r_col = 180, g_col = 180, b_col = 180;
-        switch (lVal[k]) {
-            case 0: r_col = 190; g_col = 95;  b_col = 95;  break;
-            case 1: r_col = 95;  g_col = 135; b_col = 185; break;
-            case 2: r_col = 200; g_col = 145; b_col = 80;  break;
-            default: r_col = 145; g_col = 115; b_col = 180; break;
-        }
+        mat.diffuseColor = col;
+        mat.emissiveColor = col.scale(0.25);
+        mat.alpha = currentOpacity;
+        mat.backFaceCulling = false;
 
-        ggbApplet.setColor(sphereName, r_col, g_col, b_col);
-        let visKey = lVal[k] >= 3 ? 3 : lVal[k];
-        ggbApplet.setVisible(sphereName, visibilityState[visKey]);
-        ggbApplet.evalCommand(`SetFilling(${sphereName}, ${currentOpacity})`);
-    }
-}
+        sphere.material = mat;
+        sphere.isVisible = visibilityState[lVal[k]] !== false;
 
-function updateVisibility() {
-    for (let k = 0; k < activeData.lVal.length; k++) {
-        let sphereName = `orbSphere_${k}`;
-        let l = activeData.lVal[k];
-        let visKey = l >= 3 ? 3 : l;
-        ggbApplet.setVisible(sphereName, visibilityState[visKey]);
-    }
-}
-
-function updateOpacity() {
-    for (let k = 0; k < activeData.lVal.length; k++) {
-        let sphereName = `orbSphere_${k}`;
-        ggbApplet.evalCommand(`SetFilling(${sphereName}, ${currentOpacity})`);
-    }
-}
-
-function clearPreviousSpheres() {
-    let allObjects = ggbApplet.getAllObjectNames();
-    for (let i = 0; i < allObjects.length; i++) {
-        if (allObjects[i].startsWith("orbSphere_")) {
-            ggbApplet.deleteObject(allObjects[i]);
-        }
+        activeMeshes.push({ mesh: sphere, l: lVal[k] });
     }
 }
