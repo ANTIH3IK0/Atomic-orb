@@ -2,14 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Quantum Orbital Visualizer (Atomic-orb Web Edition v1.2)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dynamic Quantum Orbital Visualizer (Babylon.js)</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-    <!-- Babylon.js WebGL Engine -->
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="kernel.js" defer></script>
 
@@ -34,6 +33,7 @@
             box-sizing: border-box;
             font-family: 'Inter', -apple-system, sans-serif;
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -54,6 +54,7 @@
             outline: none;
         }
 
+        /* Responsive Side Panel with Collapse Animation */
         .ui-overlay {
             position: absolute;
             top: 20px;
@@ -63,14 +64,47 @@
             background: var(--panel-gradient);
             border: 1px solid var(--border-subtle);
             border-radius: 12px;
-            padding: 20px;
+            padding: 18px;
             display: flex;
             flex-direction: column;
-            gap: 18px;
+            gap: 16px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(16px);
             z-index: 10;
             overflow-y: auto;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+        }
+
+        .ui-overlay.collapsed {
+            transform: translateX(-360px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .restore-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 9;
+            background: var(--panel-gradient);
+            border: 1px solid var(--border-subtle);
+            color: var(--accent-gold);
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .restore-btn:hover {
+            border-color: var(--border-hover);
+            color: var(--text-warm-white);
         }
 
         .ui-overlay::-webkit-scrollbar {
@@ -79,6 +113,12 @@
         .ui-overlay::-webkit-scrollbar-thumb {
             background: var(--border-subtle);
             border-radius: 2px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         header h1 {
@@ -99,6 +139,21 @@
             height: 6px;
             background: var(--accent-gold);
             border-radius: 50%;
+        }
+
+        .minimize-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: color 0.2s;
+        }
+
+        .minimize-btn:hover {
+            color: var(--text-warm-white);
         }
 
         .section-title {
@@ -250,9 +305,14 @@
 </head>
 <body>
 
-    <div class="ui-overlay">
+    <button class="restore-btn" id="restoreBtn" style="display:none;" onclick="togglePanel(false)">
+        <span>⚙ CONTROLS</span>
+    </button>
+
+    <div class="ui-overlay" id="uiOverlay">
         <header>
             <h1>QUANTUM ORBITAL 3D</h1>
+            <button class="minimize-btn" onclick="togglePanel(true)">✕</button>
         </header>
 
         <div>
@@ -306,8 +366,7 @@
         <div>
             <div class="section-title">Active Orbitals Filter</div>
             <div id="dynamicFilterContainer" class="filter-list">
-                <!-- Dynamically generated based on present 'l' values -->
-            </div>
+                </div>
         </div>
     </div>
 
