@@ -1,7 +1,7 @@
 // kernel.js - core logic
 /**
  * Babylon.js Infinite Quantum Engine Core
- * Dynamic Teleportation (GOTO), Minecraft ~ Relative Syntax & Camera Initial Position Memory
+ * Dynamic Teleportation (GOTO) & Camera Initial Position Memory
  */
 
 let canvas, engine, scene, camera;
@@ -27,6 +27,19 @@ window.addEventListener('DOMContentLoaded', () => {
     initBabylonEngine();
     loadPreset('Mo');
 });
+
+/**
+ * Slater's Effective Principal Quantum Number (Supports n up to 12 dynamically)
+ */
+const getNEffSlater = (n) => {
+    const slaterMap = [1.0, 2.0, 3.0, 3.7, 4.0, 4.2];
+    
+    if (n >= 1 && n <= 6) {
+        return slaterMap[n - 1];
+    }
+    
+    return parseFloat((4.2 + (n - 6) * 0.4).toFixed(1));
+};
 
 /**
  * Parses coordinate input supporting Minecraft-style relative `~` positioning
@@ -121,9 +134,30 @@ function updateInitDisplay() {
     }
 }
 
+/**
+ * Left Panel Collapse Toggle
+ */
 function togglePanel(collapse) {
     const panel = document.getElementById('uiOverlay');
     const restoreBtn = document.getElementById('restoreBtn');
+
+    if (collapse) {
+        panel.classList.add('collapsed');
+        setTimeout(() => { restoreBtn.style.display = 'flex'; }, 200);
+    } else {
+        panel.classList.remove('collapsed');
+        restoreBtn.style.display = 'none';
+    }
+    
+    setTimeout(() => { if (engine) engine.resize(); }, 300);
+}
+
+/**
+ * Top-Right Panel Collapse Toggle
+ */
+function toggleTpPanel(collapse) {
+    const panel = document.getElementById('tpOverlay');
+    const restoreBtn = document.getElementById('tpRestoreBtn');
 
     if (collapse) {
         panel.classList.add('collapsed');
@@ -195,14 +229,6 @@ function computeStandardBindingEnergies(Z, elec, nVal, lVal) {
     const R_inf = 13.6057;
     const num = elec.length;
     let EnArr = [];
-
-    const getNEffSlater = (n) => {
-        const slaterMap = [1.0, 2.0, 3.0, 3.7, 4.0, 4.2];
-        if (n >= 1 && n <= 6) {
-            return slaterMap[n - 1];
-        }
-        return parseFloat((4.2 + (n - 6) * 0.4).toFixed(1));
-    };
 
     for (let k = 0; k < num; k++) {
         let same = (nVal[k] === 1 && lVal[k] === 0) ? 0.30 * (elec[k] - 1) : 0.35 * (elec[k] - 1);
@@ -399,7 +425,6 @@ function rebuildQuantumModel() {
         activeMeshes.push({ mesh: sphere, l: lVal[k] });
     }
 
-    // Default target reset and initial dynamic radius calculation
     initialTarget = BABYLON.Vector3.Zero();
     if (maxRadius > 0) {
         initialRadius = maxRadius * 3.0;
