@@ -1,13 +1,19 @@
 // kernel.js - core logic
 /**
  * Babylon.js Infinite Quantum Engine Core
- * Dynamic Color Algorithm, Dynamic UI Filtering & Safari WebGL Viewport Fixes
+ * Dynamic Teleportation (GOTO), Minecraft ~ Relative Syntax & Camera Initial Position Memory
  */
 
 let canvas, engine, scene, camera;
 let activeMeshes = [];
 let currentOpacity = 0.35;
 let visibilityState = {};
+
+// Initial Camera Memory State
+let initialTarget = new BABYLON.Vector3(0, 0, 0);
+let initialRadius = 25;
+let initialAlpha = -Math.PI / 3;
+let initialBeta = Math.PI / 2.5;
 
 const ELEMENT_PRESETS = {
     C:  { Z: 6,  elec: [2, 4], nVal: [1, 2], lVal: [0, 1], En: [-284.2, -15.4] },
@@ -23,8 +29,98 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * Toggle Side Control Panel Visibility
+ * Parses coordinate input supporting Minecraft-style relative `~` positioning
  */
+function parseCoordinate(inputVal, currentVal) {
+    if (!inputVal) return currentVal;
+    
+    let str = inputVal.trim().replace(/，/g, ',');
+    
+    if (str.startsWith('~')) {
+        const offsetStr = str.slice(1);
+        if (offsetStr === '' || offsetStr === '+') {
+            return currentVal;
+        }
+        const offset = parseFloat(offsetStr);
+        return isNaN(offset) ? currentVal : currentVal + offset;
+    } else {
+        const val = parseFloat(str);
+        return isNaN(val) ? currentVal : val;
+    }
+}
+
+/**
+ * GOTO command: Teleport camera target instantly
+ */
+function teleportCamera() {
+    if (!camera) return;
+    if (document.activeElement) document.activeElement.blur();
+
+    const currentTarget = camera.target;
+    const inputX = document.getElementById('tpX').value;
+    const inputY = document.getElementById('tpY').value;
+    const inputZ = document.getElementById('tpZ').value;
+
+    const newX = parseCoordinate(inputX, currentTarget.x);
+    const newY = parseCoordinate(inputY, currentTarget.y);
+    const newZ = parseCoordinate(inputZ, currentTarget.z);
+
+    camera.setTarget(new BABYLON.Vector3(newX, newY, newZ));
+
+    clearTpInputs();
+}
+
+/**
+ * Saves input coordinates (or current camera target) as initial position
+ */
+function setInitialPosition() {
+    if (!camera) return;
+    if (document.activeElement) document.activeElement.blur();
+
+    const currentTarget = camera.target;
+    const inputX = document.getElementById('tpX').value;
+    const inputY = document.getElementById('tpY').value;
+    const inputZ = document.getElementById('tpZ').value;
+
+    const newX = parseCoordinate(inputX, currentTarget.x);
+    const newY = parseCoordinate(inputY, currentTarget.y);
+    const newZ = parseCoordinate(inputZ, currentTarget.z);
+
+    initialTarget = new BABYLON.Vector3(newX, newY, newZ);
+    initialRadius = camera.radius;
+    initialAlpha = camera.alpha;
+    initialBeta = camera.beta;
+
+    updateInitDisplay();
+    clearTpInputs();
+}
+
+/**
+ * Resets camera back to initial position and framing
+ */
+function reloadInitialPosition() {
+    if (!camera) return;
+    if (document.activeElement) document.activeElement.blur();
+
+    camera.setTarget(initialTarget.clone());
+    camera.radius = initialRadius;
+    camera.alpha = initialAlpha;
+    camera.beta = initialBeta;
+}
+
+function clearTpInputs() {
+    document.getElementById('tpX').value = '';
+    document.getElementById('tpY').value = '';
+    document.getElementById('tpZ').value = '';
+}
+
+function updateInitDisplay() {
+    const display = document.getElementById('initCoordsDisplay');
+    if (display && initialTarget) {
+        display.innerText = `INIT: X: ${initialTarget.x.toFixed(2)} | Y: ${initialTarget.y.toFixed(2)} | Z: ${initialTarget.z.toFixed(2)}`;
+    }
+}
+
 function togglePanel(collapse) {
     const panel = document.getElementById('uiOverlay');
     const restoreBtn = document.getElementById('restoreBtn');
@@ -50,9 +146,6 @@ function parseArrayInput(str) {
         .filter(v => !isNaN(v));
 }
 
-/**
- * Infinite HSL Orbital Color Distribution Generator
- */
 function getOrbitalColor(l) {
     const baseHues = [0, 210, 42, 270];
     let hue = (l < baseHues.length) ? baseHues[l] : (l * 137.508) % 360;
@@ -71,7 +164,7 @@ function initBabylonEngine() {
     scene = new BABYLON.Scene(engine);
     scene.clearColor = new BABYLON.Color4(0.02, 0.03, 0.04, 1.0);
 
-    camera = new BABYLON.ArcRotateCamera("Camera", -Math.PI / 3, Math.PI / 2.5, 25, BABYLON.Vector3.Zero(), scene);
+    camera = new BABYLON.ArcRotateCamera("Camera", initialAlpha, initialBeta, initialRadius, initialTarget.clone(), scene);
     camera.attachControl(canvas, true);
     camera.lowerRadiusLimit = 0.01;
     camera.upperRadiusLimit = 10000;
@@ -85,6 +178,15 @@ function initBabylonEngine() {
     const pointLight = new BABYLON.PointLight("pointLight", new BABYLON.Vector3(0, 10, 0), scene);
     pointLight.intensity = 0.5;
 
+    scene.registerBeforeRender(() => {
+        if (camera && camera.target) {
+            const display = document.getElementById('cameraCoordsDisplay');
+            if (display) {
+                display.innerText = `CUR: X: ${camera.target.x.toFixed(2)} | Y: ${camera.target.y.toFixed(2)} | Z: ${camera.target.z.toFixed(2)}`;
+            }
+        }
+    });
+
     engine.runRenderLoop(() => { scene.render(); });
     window.addEventListener("resize", () => engine.resize());
 }
@@ -95,13 +197,11 @@ function computeStandardBindingEnergies(Z, elec, nVal, lVal) {
     let EnArr = [];
 
     const getNEffSlater = (n) => {
-        if (n === 1) return 1.0;
-        if (n === 2) return 2.0;
-        if (n === 3) return 3.0;
-        if (n === 4) return 3.7;
-        if (n === 5) return 4.0;
-        if (n === 6) return 4.2;
-        return n;
+        const slaterMap = [1.0, 2.0, 3.0, 3.7, 4.0, 4.2];
+        if (n >= 1 && n <= 6) {
+            return slaterMap[n - 1];
+        }
+        return parseFloat((4.2 + (n - 6) * 0.4).toFixed(1));
     };
 
     for (let k = 0; k < num; k++) {
@@ -131,9 +231,6 @@ function computeStandardBindingEnergies(Z, elec, nVal, lVal) {
     return EnArr;
 }
 
-/**
- * Regenerates filter UI options dynamically matching present l-quantum numbers
- */
 function refreshDynamicFilterUI() {
     const container = document.getElementById('dynamicFilterContainer');
     container.innerHTML = '';
@@ -293,7 +390,6 @@ function rebuildQuantumModel() {
         mat.alpha = currentOpacity;
         mat.backFaceCulling = false;
 
-        // Safari Depth Pass & Alpha Blend Override
         mat.needDepthPrePass = true;
         mat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
 
@@ -303,11 +399,14 @@ function rebuildQuantumModel() {
         activeMeshes.push({ mesh: sphere, l: lVal[k] });
     }
 
-    // Auto-frame view camera radius dynamically
-    camera.setTarget(BABYLON.Vector3.Zero());
+    // Default target reset and initial dynamic radius calculation
+    initialTarget = BABYLON.Vector3.Zero();
     if (maxRadius > 0) {
-        camera.radius = maxRadius * 3.0;
+        initialRadius = maxRadius * 3.0;
     }
+
+    reloadInitialPosition();
+    updateInitDisplay();
 
     setTimeout(() => { if (engine) engine.resize(); }, 150);
 }
