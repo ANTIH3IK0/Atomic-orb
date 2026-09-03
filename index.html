@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dynamic Quantum Orbital Visualizer (Atomic-orb web edition v1.5)</title>
+    <title>Dynamic Quantum Orbital Visualizer (Babylon.js)</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,7 +54,7 @@
             outline: none;
         }
 
-        /* Responsive Side Panel */
+        /* Left Side UI Overlay Panel */
         .ui-overlay {
             position: absolute;
             top: 20px;
@@ -81,12 +81,12 @@
             pointer-events: none;
         }
 
-        /* Top-Right Camera Control Panel (GOTO & Initial Position) */
+        /* Top-Right Camera Panel */
         .tp-overlay {
             position: absolute;
             top: 20px;
             right: 20px;
-            width: 260px;
+            width: 240px;
             background: var(--panel-gradient);
             border: 1px solid var(--border-subtle);
             border-radius: 12px;
@@ -97,6 +97,13 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(16px);
             z-index: 10;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+        }
+
+        .tp-overlay.collapsed {
+            transform: translateX(300px);
+            opacity: 0;
+            pointer-events: none;
         }
 
         .tp-title {
@@ -111,34 +118,38 @@
             align-items: center;
         }
 
+        /* Vertical Stack for XYZ Inputs */
         .tp-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            display: flex;
+            flex-direction: column;
             gap: 6px;
         }
 
         .tp-field {
             display: flex;
-            flex-direction: column;
-            gap: 4px;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
         }
 
         .tp-field label {
-            font-size: 9px;
+            font-size: 10px;
             color: var(--text-muted);
             font-family: 'JetBrains Mono', monospace;
+            width: 14px;
             text-align: center;
         }
 
         .tp-field input {
+            flex: 1;
             background: var(--input-bg);
             border: 1px solid var(--border-subtle);
             color: var(--text-warm-white);
-            padding: 6px 4px;
+            padding: 6px 8px;
             border-radius: 4px;
             font-size: 11px;
             font-family: 'JetBrains Mono', monospace;
-            text-align: center;
+            text-align: left;
         }
 
         .tp-field input:focus {
@@ -166,6 +177,7 @@
             gap: 2px;
         }
 
+        /* Restore Buttons */
         .restore-btn {
             position: absolute;
             top: 20px;
@@ -187,7 +199,28 @@
             transition: all 0.2s ease;
         }
 
-        .restore-btn:hover {
+        .tp-restore-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 9;
+            background: var(--panel-gradient);
+            border: 1px solid var(--border-subtle);
+            color: var(--accent-gold);
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .restore-btn:hover, .tp-restore-btn:hover {
             border-color: var(--border-hover);
             color: var(--text-warm-white);
         }
@@ -407,14 +440,19 @@
 <body>
 
     <button class="restore-btn" id="restoreBtn" style="display:none;" onclick="togglePanel(false)">
-        <span>CONTROLS</span>
+        <span>⚙ CONTROLS</span>
     </button>
 
-    <div class="tp-overlay">
+    <button class="tp-restore-btn" id="tpRestoreBtn" style="display:none;" onclick="toggleTpPanel(false)">
+        <span>📍 CAMERA</span>
+    </button>
+
+    <div class="tp-overlay" id="tpOverlay">
         <div class="tp-title">
             <span>CAMERA POS & GOTO</span>
-            <span style="font-size:8px; opacity:0.6;">(REL ~)</span>
+            <button class="minimize-btn" onclick="toggleTpPanel(true)">✕</button>
         </div>
+
         <div class="tp-grid">
             <div class="tp-field">
                 <label>X</label>
