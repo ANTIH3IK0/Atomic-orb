@@ -1,13 +1,13 @@
 // kernel.js - core logic
 /**
  * Babylon.js Infinite Quantum Engine Core
- * Dynamic Color Generation & Adaptive UI Filter System
+ * Dynamic Color Algorithm, Dynamic UI Filtering & Safari WebGL Viewport Fixes
  */
 
 let canvas, engine, scene, camera;
 let activeMeshes = [];
 let currentOpacity = 0.35;
-let visibilityState = {}; // Key: lVal (0, 1, 2, 3, 4...), Value: boolean
+let visibilityState = {};
 
 const ELEMENT_PRESETS = {
     C:  { Z: 6,  elec: [2, 4], nVal: [1, 2], lVal: [0, 1], En: [-284.2, -15.4] },
@@ -23,34 +23,47 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * 1. Infinite Orbital Color Algorithm
- * Uses Hue mapping (s, p, d, f mapped to classic hues, g, h, i... procedurally computed via Golden Angle)
+ * Toggle Side Control Panel Visibility
+ */
+function togglePanel(collapse) {
+    const panel = document.getElementById('uiOverlay');
+    const restoreBtn = document.getElementById('restoreBtn');
+
+    if (collapse) {
+        panel.classList.add('collapsed');
+        setTimeout(() => { restoreBtn.style.display = 'flex'; }, 200);
+    } else {
+        panel.classList.remove('collapsed');
+        restoreBtn.style.display = 'none';
+    }
+    
+    setTimeout(() => { if (engine) engine.resize(); }, 300);
+}
+
+function parseArrayInput(str) {
+    if (!str) return [];
+    return str
+        .replace(/，/g, ',')
+        .replace(/\s+/g, '')
+        .split(',')
+        .map(v => parseFloat(v))
+        .filter(v => !isNaN(v));
+}
+
+/**
+ * Infinite HSL Orbital Color Distribution Generator
  */
 function getOrbitalColor(l) {
-    const baseHues = [0, 210, 42, 270]; // 0:s (Red), 1:p (Blue), 2:d (Gold), 3:f (Purple)
-    let hue;
-
-    if (l < baseHues.length) {
-        hue = baseHues[l];
-    } else {
-        // Procedural golden-angle hue distribution for infinite l >= 4 (g, h, i, j...)
-        hue = (l * 137.508) % 360;
-    }
-
+    const baseHues = [0, 210, 42, 270];
+    let hue = (l < baseHues.length) ? baseHues[l] : (l * 137.508) % 360;
     return BABYLON.Color3.FromHSV(hue, 0.65, 0.85);
 }
 
-/**
- * Converts l integer to spectroscopic notation (s, p, d, f, g, h, i...)
- */
 function getOrbitalSymbol(l) {
-    const symbols = ['s', 'p', 'd', 'f', 'g', 'h', 'i', 'k', 'l', 'm'];
+    const symbols = ['s', 'p', 'd', 'f', 'g', 'h', 'i', 'k'];
     return symbols[l] || `l=${l}`;
 }
 
-/**
- * 2. Babylon.js Viewport & Scene Initialization
- */
 function initBabylonEngine() {
     canvas = document.getElementById("renderCanvas");
     engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
@@ -60,9 +73,11 @@ function initBabylonEngine() {
 
     camera = new BABYLON.ArcRotateCamera("Camera", -Math.PI / 3, Math.PI / 2.5, 25, BABYLON.Vector3.Zero(), scene);
     camera.attachControl(canvas, true);
-    camera.lowerRadiusLimit = 2;
-    camera.upperRadiusLimit = 200;
+    camera.lowerRadiusLimit = 0.01;
+    camera.upperRadiusLimit = 10000;
     camera.wheelPrecision = 15;
+    camera.minZ = 0.001;
+    camera.maxZ = 20000;
 
     const hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(1, 1, 0), scene);
     hemiLight.intensity = 0.8;
@@ -70,16 +85,10 @@ function initBabylonEngine() {
     const pointLight = new BABYLON.PointLight("pointLight", new BABYLON.Vector3(0, 10, 0), scene);
     pointLight.intensity = 0.5;
 
-    engine.runRenderLoop(() => {
-        scene.render();
-    });
-
+    engine.runRenderLoop(() => { scene.render(); });
     window.addEventListener("resize", () => engine.resize());
 }
 
-/**
- * 3. JS Calculation Engine for Binding Energies (Slater's Rules)
- */
 function computeStandardBindingEnergies(Z, elec, nVal, lVal) {
     const R_inf = 13.6057;
     const num = elec.length;
@@ -112,7 +121,7 @@ function computeStandardBindingEnergies(Z, elec, nVal, lVal) {
         }
 
         let S = same + inner;
-        let zEff = Math.max(1.0, Z - S);
+        let zEff = Math.max(0.1, Z - S);
         let nStar = getNEffSlater(nVal[k]);
 
         let energy = -R_inf * Math.pow(zEff / nStar, 2);
@@ -123,14 +132,12 @@ function computeStandardBindingEnergies(Z, elec, nVal, lVal) {
 }
 
 /**
- * 4. Dynamic UI Orbital Filter Generation
- * Dynamically builds checkboxes ONLY for orbital types present in the current element
+ * Regenerates filter UI options dynamically matching present l-quantum numbers
  */
 function refreshDynamicFilterUI() {
     const container = document.getElementById('dynamicFilterContainer');
     container.innerHTML = '';
 
-    // Extract unique sorted l values from current active dataset
     const uniqueL = [...new Set(activeData.lVal)].sort((a, b) => a - b);
 
     uniqueL.forEach(l => {
@@ -154,12 +161,12 @@ function refreshDynamicFilterUI() {
 
 function autoCalculateEnUI() {
     const Z = parseInt(document.getElementById('inputZ').value);
-    const elec = document.getElementById('inputElec').value.split(',').map(Number);
-    const nVal = document.getElementById('inputN').value.split(',').map(Number);
-    const lVal = document.getElementById('inputL').value.split(',').map(Number);
+    const elec = parseArrayInput(document.getElementById('inputElec').value);
+    const nVal = parseArrayInput(document.getElementById('inputN').value);
+    const lVal = parseArrayInput(document.getElementById('inputL').value);
 
-    if (!Z || elec.some(isNaN) || nVal.some(isNaN) || lVal.some(isNaN)) {
-        alert('Please enter valid numerical Z, elec, n, and l values first.');
+    if (!Z || elec.length === 0 || nVal.length === 0 || lVal.length === 0) {
+        alert('Please enter valid numerical parameters for Z, elec, n, and l.');
         return;
     }
 
@@ -180,23 +187,26 @@ function loadPreset(symbol) {
 }
 
 function applyCustomParameters() {
-    const Z = parseInt(document.getElementById('inputZ').value);
-    const elec = document.getElementById('inputElec').value.split(',').map(Number);
-    const nVal = document.getElementById('inputN').value.split(',').map(Number);
-    const lVal = document.getElementById('inputL').value.split(',').map(Number);
-
-    let enText = document.getElementById('inputEn').value.trim();
-    let En = [];
-
-    if (enText === "") {
-        En = computeStandardBindingEnergies(Z, elec, nVal, lVal);
-        document.getElementById('inputEn').value = En.join(', ');
-    } else {
-        En = enText.split(',').map(Number);
+    if (document.activeElement) {
+        document.activeElement.blur();
     }
 
-    if (!Z || elec.some(isNaN) || nVal.some(isNaN) || lVal.some(isNaN) || En.some(isNaN)) {
-        alert('Invalid input. Ensure proper numbers and array length consistency.');
+    const Z = parseInt(document.getElementById('inputZ').value);
+    const elec = parseArrayInput(document.getElementById('inputElec').value);
+    const nVal = parseArrayInput(document.getElementById('inputN').value);
+    const lVal = parseArrayInput(document.getElementById('inputL').value);
+
+    let enText = document.getElementById('inputEn').value.trim();
+    let En = parseArrayInput(enText);
+
+    if (En.length === 0) {
+        En = computeStandardBindingEnergies(Z, elec, nVal, lVal);
+        document.getElementById('inputEn').value = En.join(', ');
+    }
+
+    const expectedLen = elec.length;
+    if (!Z || expectedLen === 0 || nVal.length !== expectedLen || lVal.length !== expectedLen || En.length !== expectedLen) {
+        alert('Input length mismatch. Ensure all parameter arrays have equal lengths.');
         return;
     }
 
@@ -224,18 +234,13 @@ function toggleOrbitalVisibility(lType, isChecked) {
     });
 }
 
-/**
- * 5. Quantum Mathematical Reconstruction and Mesh Rendering Engine
- */
 function rebuildQuantumModel() {
-    // Clear existing meshes
     activeMeshes.forEach(item => {
         if (item.mesh.material) item.mesh.material.dispose();
         item.mesh.dispose();
     });
     activeMeshes = [];
 
-    // Rebuild UI filter list based on newly loaded activeData
     refreshDynamicFilterUI();
 
     const Z = activeData.Z;
@@ -247,6 +252,8 @@ function rebuildQuantumModel() {
 
     const alpha = 1 / 137.036;
     const R_inf = 13.6057;
+
+    let maxRadius = 0;
 
     for (let k = 0; k < num; k++) {
         let same = (nVal[k] === 1 && lVal[k] === 0) ? 0.30 * (elec[k] - 1) : 0.35 * (elec[k] - 1);
@@ -265,20 +272,20 @@ function rebuildQuantumModel() {
         }
 
         let S = same + inner;
-        let zEff = Z - S;
-        let nEff = Math.sqrt((R_inf * Math.pow(zEff, 2)) / (-En[k]));
+        let zEff = Math.max(0.1, Z - S);
+        let absEn = Math.abs(En[k]) || 1.0;
+        let nEff = Math.sqrt((R_inf * Math.pow(zEff, 2)) / absEn);
         let beta = (zEff * alpha) / nEff;
 
-        let relFactor = (lVal[k] >= 2) ? (1 + 0.5 * Math.pow(beta, 2)) : Math.sqrt(1 - Math.pow(beta, 2));
+        let relFactor = (lVal[k] >= 2) ? (1 + 0.5 * Math.pow(beta, 2)) : Math.sqrt(Math.max(0.01, 1 - Math.pow(beta, 2)));
         let qmFactor = 1 + 0.5 * (1 - (lVal[k] * (lVal[k] + 1)) / Math.pow(nEff, 2));
 
         let rQM = (Math.pow(nEff, 2) / zEff * 0.529) * qmFactor * relFactor;
 
-        // Build 3D sphere
+        if (rQM > maxRadius) maxRadius = rQM;
+
         const sphere = BABYLON.MeshBuilder.CreateSphere(`orb_${k}`, { diameter: rQM * 2, segments: 48 }, scene);
         const mat = new BABYLON.StandardMaterial(`mat_${k}`, scene);
-        
-        // Dynamically assign continuous color using mathematical algorithm
         const col = getOrbitalColor(lVal[k]);
 
         mat.diffuseColor = col;
@@ -286,9 +293,21 @@ function rebuildQuantumModel() {
         mat.alpha = currentOpacity;
         mat.backFaceCulling = false;
 
+        // Safari Depth Pass & Alpha Blend Override
+        mat.needDepthPrePass = true;
+        mat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
+
         sphere.material = mat;
         sphere.isVisible = visibilityState[lVal[k]] !== false;
 
         activeMeshes.push({ mesh: sphere, l: lVal[k] });
     }
+
+    // Auto-frame view camera radius dynamically
+    camera.setTarget(BABYLON.Vector3.Zero());
+    if (maxRadius > 0) {
+        camera.radius = maxRadius * 3.0;
+    }
+
+    setTimeout(() => { if (engine) engine.resize(); }, 150);
 }
