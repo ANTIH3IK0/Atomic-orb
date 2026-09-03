@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Quantum Orbital Simulator</title>
+    <title>Quantum Orbital Model</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,24 +14,26 @@
 
     <style>
         :root {
-            /* Low-key Dark Gradient Palette */
-            --bg-gradient: linear-gradient(180deg, #080a0f 0%, #0d1117 100%);
-            --panel-gradient: linear-gradient(145deg, #161b22 0%, #11151c 100%);
-            --panel-border: #21262d;
-            --input-bg: #0d1117;
-            --btn-gradient: linear-gradient(180deg, #21262d 0%, #191e26 100%);
-            --btn-hover-gradient: linear-gradient(180deg, #2d333b 0%, #21262d 100%);
+            /* Ultra-Modern Dark Palette with Slight Warm Tone */
+            --bg-gradient: linear-gradient(165deg, #06070a 0%, #0d0f14 100%);
+            --panel-gradient: linear-gradient(180deg, #111319 0%, #0c0e12 100%);
+            --border-subtle: #1c1f26;
+            --border-hover: #2d323e;
             
-            /* Subtle Orange Accents & Muted Colors */
-            --accent-amber: #d99b4e;
-            --accent-amber-soft: rgba(217, 155, 78, 0.12);
-            --text-main: #e6edf3;
-            --text-muted: #7d8590;
+            --input-bg: #07080b;
+            --btn-gradient: linear-gradient(180deg, #161920 0%, #111319 100%);
+            --btn-hover: linear-gradient(180deg, #20242e 0%, #161920 100%);
 
-            --orb-s: #c96a6a;
-            --orb-p: #6888c4;
-            --orb-d: #d99b4e;
-            --orb-f: #9e82c4;
+            /* Subdued Off-White Text with Subtle Warm Yellow Tint */
+            --text-warm-white: #e5e2da;
+            --text-muted: #727068;
+            --accent-warm-gold: #c89b52;
+            --accent-warm-gold-soft: rgba(200, 155, 82, 0.08);
+
+            --orb-s: #be5e5e;
+            --orb-p: #5e87be;
+            --orb-d: #c89b52;
+            --orb-f: #9173be;
         }
 
         * {
@@ -41,9 +43,9 @@
 
         body {
             margin: 0;
-            padding: 24px;
+            padding: 28px;
             background: var(--bg-gradient);
-            color: var(--text-main);
+            color: var(--text-warm-white);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -55,64 +57,62 @@
             max-width: 1240px;
             display: flex;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--panel-border);
+            margin-bottom: 24px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border-subtle);
         }
 
         h1 {
             margin: 0;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
-            letter-spacing: 1px;
-            color: var(--text-main);
+            letter-spacing: 1.5px;
+            color: var(--text-warm-white);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
         h1::before {
             content: '';
             display: inline-block;
-            width: 6px;
-            height: 6px;
-            background: var(--accent-amber);
+            width: 5px;
+            height: 5px;
+            background: var(--accent-warm-gold);
             border-radius: 50%;
         }
 
         .container {
             display: flex;
             flex-direction: row;
-            gap: 20px;
+            gap: 24px;
             max-width: 1240px;
             width: 100%;
         }
 
-        /* Subdued Dark Panel with Subtle Gradient */
         .control-panel {
             width: 320px;
             background: var(--panel-gradient);
-            border: 1px solid var(--panel-border);
+            border: 1px solid var(--border-subtle);
             border-radius: 8px;
-            padding: 20px;
+            padding: 22px;
             display: flex;
             flex-direction: column;
             gap: 22px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
         }
 
         .section-title {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 500;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.2px;
             color: var(--text-muted);
             margin-bottom: 10px;
         }
 
-        /* Preset Buttons */
         .btn-group {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -121,30 +121,29 @@
 
         button.preset-btn {
             padding: 8px 6px;
-            border: 1px solid var(--panel-border);
+            border: 1px solid var(--border-subtle);
             background: var(--btn-gradient);
-            color: var(--text-main);
-            border-radius: 5px;
+            color: var(--text-warm-white);
+            border-radius: 4px;
             font-size: 12px;
             cursor: pointer;
             text-align: center;
-            transition: all 0.15s ease;
+            transition: all 0.2s ease;
         }
 
         button.preset-btn:hover {
-            border-color: var(--accent-amber);
-            background: var(--btn-hover-gradient);
+            border-color: var(--border-hover);
+            background: var(--btn-hover);
         }
 
-        /* Custom Inputs */
         .input-form {
             display: flex;
             flex-direction: column;
             gap: 8px;
-            background: rgba(0, 0, 0, 0.2);
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.15) 100%);
             padding: 12px;
             border-radius: 6px;
-            border: 1px solid var(--panel-border);
+            border: 1px solid var(--border-subtle);
         }
 
         .input-row {
@@ -154,45 +153,45 @@
         }
 
         .input-row label {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--text-muted);
             font-family: 'JetBrains Mono', monospace;
         }
 
         .input-row input {
             background: var(--input-bg);
-            border: 1px solid var(--panel-border);
-            color: var(--text-main);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-warm-white);
             padding: 6px 8px;
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 11px;
             font-family: 'JetBrains Mono', monospace;
+            transition: border-color 0.2s ease;
         }
 
         .input-row input:focus {
             outline: none;
-            border-color: var(--accent-amber);
+            border-color: var(--accent-warm-gold);
         }
 
         button.apply-btn {
             margin-top: 4px;
             padding: 8px;
-            border: 1px solid var(--accent-amber);
-            background: var(--accent-amber-soft);
-            color: var(--accent-amber);
+            border: 1px solid var(--accent-warm-gold);
+            background: var(--accent-warm-gold-soft);
+            color: var(--accent-warm-gold);
             border-radius: 4px;
-            font-size: 12px;
-            font-weight: 500;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
             cursor: pointer;
-            transition: all 0.15s ease;
+            transition: all 0.2s ease;
         }
 
         button.apply-btn:hover {
-            background: var(--accent-amber);
-            color: #0d1117;
+            background: var(--accent-warm-gold);
+            color: #07080b;
         }
 
-        /* Controls */
         .slider-group {
             display: flex;
             flex-direction: column;
@@ -202,13 +201,13 @@
         .label-row {
             display: flex;
             justify-content: space-between;
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-muted);
         }
 
         input[type="range"] {
             width: 100%;
-            accent-color: var(--accent-amber);
+            accent-color: var(--accent-warm-gold);
             cursor: pointer;
         }
 
@@ -223,30 +222,30 @@
             align-items: center;
             justify-content: space-between;
             font-size: 12px;
-            color: var(--text-main);
+            color: var(--text-warm-white);
             cursor: pointer;
         }
 
         .checkbox-item input {
-            accent-color: var(--accent-amber);
+            accent-color: var(--accent-warm-gold);
             cursor: pointer;
         }
 
         .dot {
-            width: 7px;
-            height: 7px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             display: inline-block;
             margin-right: 8px;
         }
 
-        /* 3D Viewport */
         .applet-container {
             flex-grow: 1;
-            background: #080a0f;
-            border: 1px solid var(--panel-border);
+            background: #06070a;
+            border: 1px solid var(--border-subtle);
             border-radius: 8px;
             overflow: hidden;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
         }
 
         #ggb-element {
@@ -258,12 +257,11 @@
 <body>
 
     <header>
-        <h1>QUANTUM ORBITAL MODEL SIMULATOR</h1>
+        <h1>QUANTUM ORBITAL MODEL</h1>
     </header>
 
     <div class="container">
         <div class="control-panel">
-            <!-- Presets -->
             <div>
                 <div class="section-title">PRESETS</div>
                 <div class="btn-group">
@@ -273,7 +271,6 @@
                 </div>
             </div>
 
-            <!-- Custom Controls -->
             <div>
                 <div class="section-title">CUSTOM PARAMETERS</div>
                 <div class="input-form">
@@ -301,17 +298,15 @@
                 </div>
             </div>
 
-            <!-- Opacity Control -->
             <div class="slider-group">
                 <div class="section-title">DENSITY CONTROL</div>
                 <div class="label-row">
                     <span>Opacity</span>
-                    <span id="opacityVal" style="color:var(--accent-amber);">35%</span>
+                    <span id="opacityVal" style="color:var(--accent-warm-gold);">35%</span>
                 </div>
                 <input type="range" min="0.05" max="1" step="0.05" value="0.35" oninput="setOpacityFromUI(this.value)">
             </div>
 
-            <!-- Filter -->
             <div>
                 <div class="section-title">ORBITAL FILTER</div>
                 <div class="checkbox-list">
