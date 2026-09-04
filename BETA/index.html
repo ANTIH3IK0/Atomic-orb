@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Atomic-orb Beta b1.2-73</title>
+    <title>Atomic-orb Beta b1.2-74</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,7 +34,7 @@
             --btn-glass: rgba(255, 255, 255, 0.03);
             --btn-glass-hover: rgba(255, 255, 255, 0.08);
 
-            /* Typography */
+            /* Typography & Accents */
             --text-main: #d1d5db;
             --text-sub: #9ca3af;
             --text-muted: #4b5563;
@@ -83,7 +83,7 @@
             pointer-events: none;
         }
 
-        /* Clean Smoked Glass Panels - Edge Highlight Lines Removed */
+        /* Clean Smoked Glass Panels */
         .ui-overlay, .tp-overlay, .pt-modal-window {
             position: absolute;
             background: var(--panel-glass);
@@ -123,6 +123,52 @@
         }
 
         .tp-overlay.collapsed { display: none; }
+
+        /* Mode Selector Toggle Switch */
+        .mode-switch-bar {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: var(--input-bg);
+            border: 1px solid var(--border-glass);
+            border-radius: 8px;
+            padding: 2px;
+            gap: 2px;
+        }
+
+        .mode-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 6px 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .mode-btn:hover {
+            color: var(--text-main);
+        }
+
+        .mode-btn.active {
+            background: var(--btn-glass-hover);
+            color: var(--text-accent);
+            border: 1px solid var(--border-glass-active);
+        }
+
+        /* Container Sections for Mode Toggle */
+        .mode-container {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .mode-container.hidden {
+            display: none !important;
+        }
 
         /* Floating Periodic Table Modal Overlay */
         .pt-modal-backdrop {
@@ -231,7 +277,6 @@
             justify-content: center;
         }
 
-        /* Restored Previous Dark Matte Element Cards */
         .pt-element-card {
             position: relative;
             height: 56px;
@@ -260,26 +305,6 @@
             border-color: var(--text-accent) !important;
             background: rgba(15, 23, 42, 0.95);
         }
-
-        /* Dark Matte Groups */
-        .pt-element-card[data-group="1"]  { --group-border: rgba(180, 83, 9, 0.3); }
-        .pt-element-card[data-group="2"]  { --group-border: rgba(161, 98, 7, 0.3); }
-        .pt-element-card[data-group="3"]  { --group-border: rgba(133, 77, 14, 0.3); }
-        .pt-element-card[data-group="4"]  { --group-border: rgba(113, 63, 18, 0.3); }
-        .pt-element-card[data-group="5"]  { --group-border: rgba(101, 163, 13, 0.3); }
-        .pt-element-card[data-group="6"]  { --group-border: rgba(22, 101, 52, 0.3); }
-        .pt-element-card[data-group="7"]  { --group-border: rgba(13, 148, 136, 0.3); }
-        .pt-element-card[data-group="8"]  { --group-border: rgba(3, 105, 161, 0.3); }
-        .pt-element-card[data-group="9"]  { --group-border: rgba(29, 78, 216, 0.3); }
-        .pt-element-card[data-group="10"] { --group-border: rgba(67, 56, 202, 0.3); }
-        .pt-element-card[data-group="11"] { --group-border: rgba(109, 40, 217, 0.3); }
-        .pt-element-card[data-group="12"] { --group-border: rgba(126, 34, 206, 0.3); }
-        .pt-element-card[data-group="13"] { --group-border: rgba(162, 28, 175, 0.3); }
-        .pt-element-card[data-group="14"] { --group-border: rgba(190, 24, 93, 0.3); }
-        .pt-element-card[data-group="15"] { --group-border: rgba(190, 18, 60, 0.3); }
-        .pt-element-card[data-group="16"] { --group-border: rgba(159, 18, 57, 0.3); }
-        .pt-element-card[data-group="17"] { --group-border: rgba(71, 85, 105, 0.3); }
-        .pt-element-card[data-group="18"] { --group-border: rgba(51, 65, 85, 0.2); }
 
         .pt-card-top {
             display: flex;
@@ -336,6 +361,7 @@
             font-size: 11px;
             font-family: 'JetBrains Mono', monospace;
             transition: border-color 0.15s ease;
+            width: 100%;
         }
 
         input[type="text"]:focus, input[type="number"]:focus {
@@ -433,6 +459,7 @@
             transition: border-color 0.15s ease, background 0.15s ease;
             position: relative;
             z-index: 3;
+            width: 100%;
         }
 
         button.apply-btn:hover {
@@ -462,7 +489,7 @@
         }
 
         .orbits-scroll-area {
-            max-height: 200px;
+            max-height: 180px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
@@ -472,80 +499,8 @@
             z-index: 3;
         }
 
-        .orbit-row {
-            display: grid;
-            grid-template-columns: 46px 80px 1fr;
-            align-items: center;
-            gap: 8px;
-            background: var(--card-glass);
-            padding: 4px 8px;
-            border-radius: 6px;
-            border: 1px solid var(--border-glass);
-        }
-
-        .orbit-row .ex-input {
-            width: 100%;
-            text-align: center;
-            padding: 3px;
-            font-size: 10px;
-        }
-
-        .orbit-row .orbit-label {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            font-weight: 500;
-            color: var(--text-sub);
-        }
-
-        .orbit-row .e-input {
-            width: 100%;
-            text-align: right;
-            padding: 3px 6px;
-            font-size: 10px;
-        }
-
-        input[type="checkbox"] {
-            appearance: none;
-            -webkit-appearance: none;
-            width: 14px;
-            height: 14px;
-            background: var(--chk-bg);
-            border: 1px solid var(--chk-border);
-            border-radius: 3px;
-            cursor: pointer;
-            position: relative;
-            outline: none;
-            transition: background 0.15s ease;
-        }
-
-        input[type="checkbox"]:checked {
-            background: var(--chk-checked-bg);
-            border-color: var(--chk-tick-color);
-        }
-
-        input[type="checkbox"]:checked::after {
-            content: '✓';
-            position: absolute;
-            top: -3px;
-            left: 2px;
-            font-size: 10px;
-            font-weight: bold;
-            color: var(--chk-tick-color);
-        }
-
         .filter-list { display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 3; }
-        .filter-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 11px;
-            color: var(--text-sub);
-            background: var(--card-glass);
-            padding: 6px 10px;
-            border-radius: 6px;
-            border: 1px solid var(--border-glass);
-        }
-
+        
         input[type="range"] {
             width: 100%;
             accent-color: var(--text-sub);
@@ -560,6 +515,7 @@
     <button class="restore-btn" id="restoreBtn" style="display:none;" onclick="togglePanel(false)">☰</button>
     <button class="tp-restore-btn" id="tpRestoreBtn" style="display:none;" onclick="toggleTpPanel(false)">⧇</button>
 
+    <!-- Camera / Teleport Overlay -->
     <div class="tp-overlay" id="tpOverlay">
         <div class="tp-title">
             <span>CAMERA POS & GOTO</span>
@@ -584,51 +540,100 @@
             <button class="minimize-btn" onclick="togglePanel(true)">✕</button>
         </header>
 
+        <!-- Element Selector via Periodic Table Modal -->
         <div>
             <div class="section-title">Element Selector</div>
             <button class="secondary-btn" style="margin-top:6px;" onclick="openPeriodicTableModal()">PERIODIC TABLE ⊞</button>
         </div>
 
-        <div>
-            <div class="section-title">Quantum System Setup</div>
-            <div class="input-card" style="margin-top:6px;">
-                <div class="input-field">
-                    <label>Atomic Number (Z)</label>
-                    <input type="number" id="inputZ" value="6" onchange="rebuildQuantumModel()">
-                </div>
+        <!-- Mode Switcher -->
+        <div class="mode-switch-bar">
+            <button class="mode-btn active" id="btnModeAuto" onclick="switchControlMode('auto')">AUTO BUILDER</button>
+            <button class="mode-btn" id="btnModeManual" onclick="switchControlMode('manual')">MANUAL (r1.1)</button>
+        </div>
 
-                <div class="input-field">
-                    <label>Max Principal Quantum Number (n)</label>
-                    <input type="number" id="inputMaxN" value="2" min="1" max="12" onchange="generateOrbitsBuilder()">
+        <!-- AUTO BUILDER MODE SECTION -->
+        <div id="autoModeContainer" class="mode-container">
+            <div>
+                <div class="section-title">Quantum System Setup</div>
+                <div class="input-card" style="margin-top:6px;">
+                    <div class="input-field">
+                        <label>Atomic Number (Z)</label>
+                        <input type="number" id="inputZ" value="6" onchange="rebuildQuantumModel()">
+                    </div>
+
+                    <div class="input-field">
+                        <label>Max Principal Quantum Number (n)</label>
+                        <input type="number" id="inputMaxN" value="2" min="1" max="12" onchange="generateOrbitsBuilder()">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-title">
+                    <span>Suborbit Configuration</span>
+                    <span style="font-size:8px; color:var(--text-muted);">EX | ORBIT | ELEC</span>
+                </div>
+                
+                <div class="orbits-scroll-area" id="orbitsBuilderContainer" style="margin-top:6px;"></div>
+            </div>
+
+            <div>
+                <div class="input-card">
+                    <div class="input-header">
+                        <label style="font-size:10px; color:var(--text-muted); font-family:'JetBrains Mono';">Binding Energy En (eV)</label>
+                        <span class="action-link" onclick="autoCalculateSuborbitEnergiesUI()">[CALC EN]</span>
+                    </div>
+                    <input type="text" id="inputEn" value="" placeholder="Calculated per split suborbit">
+                    <button class="apply-btn" style="margin-top:4px;" onclick="rebuildQuantumModel()">SOLVE DIRAC MODEL</button>
                 </div>
             </div>
         </div>
 
-        <div>
-            <div class="section-title">
-                <span>Suborbit Configuration</span>
-                <span style="font-size:8px; color:var(--text-muted);">EX | ORBIT | ELEC</span>
-            </div>
-            
-            <div class="orbits-scroll-area" id="orbitsBuilderContainer" style="margin-top:6px;"></div>
-        </div>
-
-        <div>
-            <div class="input-card">
-                <div class="input-header">
-                    <label style="font-size:10px; color:var(--text-muted); font-family:'JetBrains Mono';">Binding Energy En (eV)</label>
-                    <span class="action-link" onclick="autoCalculateSuborbitEnergiesUI()">[CALC EN]</span>
+        <!-- MANUAL MODE SECTION (r1.1 Parameters) -->
+        <div id="manualModeContainer" class="mode-container hidden">
+            <div>
+                <div class="section-title">Manual Quantum Parameters</div>
+                <div class="input-card" style="margin-top:6px;">
+                    <div class="input-field">
+                        <label>Atomic Number (Z)</label>
+                        <input type="number" id="inputZManual" value="6">
+                    </div>
+                    <div class="input-field">
+                        <label>Elec Config (e.g., 1s2 2s2 2p2)</label>
+                        <input type="text" id="inputConfig" value="1s2 2s2 2p2" oninput="if(typeof onConfigInputChanged === 'function') onConfigInputChanged();">
+                    </div>
+                    <div class="input-field">
+                        <label>Electrons Array (elec)</label>
+                        <input type="text" id="inputElec" value="2, 2, 2">
+                    </div>
+                    <div class="input-field">
+                        <label>Principal Quantum (n)</label>
+                        <input type="text" id="inputN" value="1, 2, 2">
+                    </div>
+                    <div class="input-field">
+                        <label>Azimuthal Quantum (l)</label>
+                        <input type="text" id="inputL" value="0, 0, 1">
+                    </div>
+                    <div class="input-field">
+                        <div class="input-header">
+                            <label>Binding Energy En (eV)</label>
+                            <span class="action-link" onclick="if(typeof autoCalculateEnUI === 'function') autoCalculateEnUI();">[DIRAC CALC]</span>
+                        </div>
+                        <input type="text" id="inputEnManual" value="" placeholder="Auto-calculated if empty">
+                    </div>
+                    <button class="apply-btn" style="margin-top:4px;" onclick="if(typeof applyCustomParameters === 'function') applyCustomParameters(); else rebuildQuantumModel();">RUN DIRAC SOLVER</button>
                 </div>
-                <input type="text" id="inputEn" value="" placeholder="Calculated per split suborbit">
-                <button class="apply-btn" style="margin-top:4px;" onclick="rebuildQuantumModel()">SOLVE DIRAC MODEL</button>
             </div>
         </div>
 
+        <!-- Shared Opacity Slider -->
         <div>
             <div class="section-title">Orbital Opacity</div>
             <input type="range" id="opacitySlider" min="0.05" max="0.9" step="0.01" value="0.35" style="margin-top:6px;" oninput="updateOpacity(this.value)">
         </div>
 
+        <!-- Shared Dirac Filters -->
         <div>
             <div class="section-title">Dirac j-Suborbit Filters</div>
             <div id="dynamicFilterContainer" class="filter-list" style="margin-top:6px;"></div>
@@ -653,5 +658,30 @@
 
     <canvas id="renderCanvas"></canvas>
 
+    <script>
+        // Mode switching handler
+        function switchControlMode(mode) {
+            const autoContainer = document.getElementById('autoModeContainer');
+            const manualContainer = document.getElementById('manualModeContainer');
+            const btnAuto = document.getElementById('btnModeAuto');
+            const btnManual = document.getElementById('btnModeManual');
+            const zAuto = document.getElementById('inputZ');
+            const zManual = document.getElementById('inputZManual');
+
+            if (mode === 'manual') {
+                autoContainer.classList.add('hidden');
+                manualContainer.classList.remove('hidden');
+                btnManual.classList.add('active');
+                btnAuto.classList.remove('active');
+                if (zAuto && zManual) zManual.value = zAuto.value;
+            } else {
+                manualContainer.classList.add('hidden');
+                autoContainer.classList.remove('hidden');
+                btnAuto.classList.add('active');
+                btnManual.classList.remove('active');
+                if (zAuto && zManual) zAuto.value = zManual.value;
+            }
+        }
+    </script>
 </body>
 </html>
