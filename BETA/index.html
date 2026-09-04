@@ -133,6 +133,8 @@
             border-radius: 8px;
             padding: 2px;
             gap: 2px;
+            position: relative;
+            z-index: 3;
         }
 
         .mode-btn {
@@ -277,6 +279,7 @@
             justify-content: center;
         }
 
+        /* Periodic Table Element Cards & Restored Dark Matte Colors */
         .pt-element-card {
             position: relative;
             height: 56px;
@@ -305,6 +308,26 @@
             border-color: var(--text-accent) !important;
             background: rgba(15, 23, 42, 0.95);
         }
+
+        /* Group-Specific Color Accents */
+        .pt-element-card[data-group="1"]  { --group-border: rgba(180, 83, 9, 0.3); }
+        .pt-element-card[data-group="2"]  { --group-border: rgba(161, 98, 7, 0.3); }
+        .pt-element-card[data-group="3"]  { --group-border: rgba(133, 77, 14, 0.3); }
+        .pt-element-card[data-group="4"]  { --group-border: rgba(113, 63, 18, 0.3); }
+        .pt-element-card[data-group="5"]  { --group-border: rgba(101, 163, 13, 0.3); }
+        .pt-element-card[data-group="6"]  { --group-border: rgba(22, 101, 52, 0.3); }
+        .pt-element-card[data-group="7"]  { --group-border: rgba(13, 148, 136, 0.3); }
+        .pt-element-card[data-group="8"]  { --group-border: rgba(3, 105, 161, 0.3); }
+        .pt-element-card[data-group="9"]  { --group-border: rgba(29, 78, 216, 0.3); }
+        .pt-element-card[data-group="10"] { --group-border: rgba(67, 56, 202, 0.3); }
+        .pt-element-card[data-group="11"] { --group-border: rgba(109, 40, 217, 0.3); }
+        .pt-element-card[data-group="12"] { --group-border: rgba(126, 34, 206, 0.3); }
+        .pt-element-card[data-group="13"] { --group-border: rgba(162, 28, 175, 0.3); }
+        .pt-element-card[data-group="14"] { --group-border: rgba(190, 24, 93, 0.3); }
+        .pt-element-card[data-group="15"] { --group-border: rgba(190, 18, 60, 0.3); }
+        .pt-element-card[data-group="16"] { --group-border: rgba(159, 18, 57, 0.3); }
+        .pt-element-card[data-group="17"] { --group-border: rgba(71, 85, 105, 0.3); }
+        .pt-element-card[data-group="18"] { --group-border: rgba(51, 65, 85, 0.2); }
 
         .pt-card-top {
             display: flex;
@@ -488,8 +511,9 @@
             color: var(--text-main);
         }
 
+        /* Restored Suborbit Builder Grid Styling */
         .orbits-scroll-area {
-            max-height: 180px;
+            max-height: 200px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
@@ -499,8 +523,85 @@
             z-index: 3;
         }
 
+        .orbit-row {
+            display: grid;
+            grid-template-columns: 36px 70px 1fr;
+            align-items: center;
+            gap: 8px;
+            background: var(--card-glass);
+            padding: 5px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border-glass);
+        }
+
+        .orbit-row .ex-input {
+            width: 100%;
+            text-align: center;
+            padding: 4px;
+            font-size: 10px;
+        }
+
+        .orbit-row .orbit-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-sub);
+            text-align: center;
+        }
+
+        .orbit-row .e-input {
+            width: 100%;
+            text-align: right;
+            padding: 4px 6px;
+            font-size: 10px;
+        }
+
+        /* Restored Custom Dark Theme Checkbox Rules */
+        input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--chk-bg);
+            border: 1px solid var(--chk-border);
+            border-radius: 3px;
+            cursor: pointer;
+            position: relative;
+            outline: none;
+            transition: background 0.15s ease, border-color 0.15s ease;
+            margin: 0;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        input[type="checkbox"]:checked {
+            background: var(--chk-checked-bg);
+            border-color: var(--chk-tick-color);
+        }
+
+        input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute;
+            top: -3px;
+            left: 2px;
+            font-size: 10px;
+            font-weight: bold;
+            color: var(--chk-tick-color);
+        }
+
         .filter-list { display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 3; }
-        
+        .filter-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-sub);
+            background: var(--card-glass);
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-glass);
+        }
+
         input[type="range"] {
             width: 100%;
             accent-color: var(--text-sub);
