@@ -80,6 +80,97 @@
             pointer-events: none;
         }
 
+        .template-overlay {
+            position: absolute;
+            top: 20px;
+            left: 375px;
+            width: 300px;
+            max-height: calc(100vh - 40px);
+            background: var(--panel-gradient);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(16px);
+            z-index: 11;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-15px);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .template-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(0);
+        }
+
+        .template-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            overflow-y: auto;
+            max-height: 480px;
+            padding-right: 2px;
+        }
+
+        .template-card-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: var(--btn-gradient);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            color: var(--text-warm-white);
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+        }
+
+        .template-card-btn:hover {
+            border-color: var(--border-hover);
+            background: var(--btn-hover);
+        }
+
+        .template-card-btn.active {
+            border-color: var(--accent-gold);
+            background: var(--accent-gold-soft);
+        }
+
+        .template-card-btn .symbol {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--accent-gold);
+            width: 28px;
+        }
+
+        .template-card-btn .details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .template-card-btn .name {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .template-card-btn .z-num {
+            font-size: 9px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
         .tp-overlay {
             position: absolute;
             top: 20px;
@@ -201,8 +292,8 @@
             color: var(--text-warm-white);
         }
 
-        .ui-overlay::-webkit-scrollbar { width: 4px; }
-        .ui-overlay::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 2px; }
+        .ui-overlay::-webkit-scrollbar, .template-grid::-webkit-scrollbar { width: 4px; }
+        .ui-overlay::-webkit-scrollbar-thumb, .template-grid::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 2px; }
 
         header {
             display: flex;
@@ -251,28 +342,6 @@
             letter-spacing: 1.2px;
             color: var(--text-muted);
             margin-bottom: 8px;
-        }
-
-        .preset-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 6px;
-        }
-
-        button.preset-btn {
-            padding: 8px 4px;
-            border: 1px solid var(--border-subtle);
-            background: var(--btn-gradient);
-            color: var(--text-warm-white);
-            border-radius: 6px;
-            font-size: 11px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        button.preset-btn:hover {
-            border-color: var(--border-hover);
-            background: var(--btn-hover);
         }
 
         .input-card {
@@ -354,6 +423,7 @@
             font-family: 'JetBrains Mono', monospace;
             cursor: pointer;
             transition: all 0.2s ease;
+            width: 100%;
         }
 
         button.secondary-btn:hover {
@@ -407,7 +477,6 @@
 <body>
 
     <button class="restore-btn" id="restoreBtn" style="display:none;" onclick="togglePanel(false)">☰</button>
-
     <button class="tp-restore-btn" id="tpRestoreBtn" style="display:none;" onclick="toggleTpPanel(false)">⧇</button>
 
     <div class="tp-overlay" id="tpOverlay">
@@ -435,6 +504,7 @@
         </div>
     </div>
 
+    <!-- Main UI Panel -->
     <div class="ui-overlay" id="uiOverlay">
         <header>
             <h1>DIRAC RELATIVISTIC 3D</h1>
@@ -442,12 +512,8 @@
         </header>
 
         <div>
-            <div class="section-title">Presets</div>
-            <div class="preset-grid">
-                <button class="preset-btn" onclick="loadPreset('C')">Carbon</button>
-                <button class="preset-btn" onclick="loadPreset('Fe')">Iron</button>
-                <button class="preset-btn" onclick="loadPreset('Mo')">Molybdenum</button>
-            </div>
+            <div class="section-title">Element Presets</div>
+            <button class="secondary-btn" onclick="toggleTemplatePanel()">SELECT ELEMENT TEMPLATE ⊞</button>
         </div>
 
         <div>
@@ -458,7 +524,11 @@
                     <input type="number" id="inputZ" value="6">
                 </div>
                 <div class="input-field">
-                    <label>Electrons (elec)</label>
+                    <label>Elec Config (e.g., 1s2 2s2 2p2)</label>
+                    <input type="text" id="inputConfig" value="1s2 2s2 2p2" oninput="onConfigInputChanged()">
+                </div>
+                <div class="input-field">
+                    <label>Electrons Array (elec)</label>
                     <input type="text" id="inputElec" value="2, 2, 2">
                 </div>
                 <div class="input-field">
@@ -493,6 +563,15 @@
             <div class="section-title">Dirac j-Splitting Filter (j = l ± 1/2)</div>
             <div id="dynamicFilterContainer" class="filter-list"></div>
         </div>
+    </div>
+
+    <!-- Secondary Template Panel -->
+    <div class="template-overlay" id="templateOverlay">
+        <div class="template-header">
+            <span class="section-title" style="margin:0;">ELEMENT TEMPLATES</span>
+            <button class="minimize-btn" onclick="toggleTemplatePanel(false)">✕</button>
+        </div>
+        <div class="template-grid" id="templateGridContainer"></div>
     </div>
 
     <canvas id="renderCanvas"></canvas>
