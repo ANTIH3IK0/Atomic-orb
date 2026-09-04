@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Atomic-orb Beta b1.2-74-ultimate</title>
+    <title>Atomic-orb p1.2</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -771,7 +771,6 @@
             const denom = Math.sqrt(1 + Math.pow((alpha * Z) / (n - (j + 0.5) + gamma), 2));
             const bindingEnergy = mc2 * (1 - (1 / denom));
             
-            // Fallback to Bohr model with screening if Dirac formula returns non-real or zero
             if (isNaN(bindingEnergy) || bindingEnergy <= 0) {
                 return (13.6057 * Math.pow(Z, 2) / Math.pow(n, 2));
             }
@@ -800,7 +799,7 @@
 
             const computedEnergies = nArray.map((n, idx) => {
                 const l = lArray[idx] !== undefined ? lArray[idx] : 0;
-                const j = l + 0.5; // Primary j-subshell estimate
+                const j = l + 0.5;
                 return calculateDiracEnergy(Z, n, j).toFixed(2);
             });
 
@@ -849,6 +848,41 @@
                 if (zAuto && zManual) zAuto.value = zManual.value;
             }
         }
+
+        // Automatic Bi-Directional Synchronizer for Z Inputs
+        function initZSynchronization() {
+            const zAuto = document.getElementById('inputZ');
+            const zManual = document.getElementById('inputZManual');
+            if (!zAuto || !zManual) return;
+
+            const syncFromAuto = () => { if (zManual.value !== zAuto.value) zManual.value = zAuto.value; };
+            const syncFromManual = () => { if (zAuto.value !== zManual.value) zAuto.value = zManual.value; };
+
+            zAuto.addEventListener('input', syncFromAuto);
+            zAuto.addEventListener('change', syncFromAuto);
+            zManual.addEventListener('input', syncFromManual);
+            zManual.addEventListener('change', syncFromManual);
+
+            // Intercept property setters so programmatic updates (e.g. Periodic Table selection) sync immediately
+            [zAuto, zManual].forEach(inputEl => {
+                const nativeValueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+                Object.defineProperty(inputEl, 'value', {
+                    get: function() {
+                        return nativeValueDescriptor.get.call(this);
+                    },
+                    set: function(val) {
+                        nativeValueDescriptor.set.call(this, val);
+                        if (this === zAuto && zManual && zManual.value !== String(val)) {
+                            nativeValueDescriptor.set.call(zManual, val);
+                        } else if (this === zManual && zAuto && zAuto.value !== String(val)) {
+                            nativeValueDescriptor.set.call(zAuto, val);
+                        }
+                    }
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initZSynchronization);
     </script>
 </body>
 </html>
