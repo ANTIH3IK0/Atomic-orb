@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Atomic-orb Beta b1.2-74</title>
+    <title>Atomic-orb Beta b1.2-74-ultimate</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -279,7 +279,7 @@
             justify-content: center;
         }
 
-        /* Periodic Table Element Cards & Restored Dark Matte Colors */
+        /* Periodic Table Element Cards & Dark Matte Group Colors */
         .pt-element-card {
             position: relative;
             height: 56px;
@@ -310,24 +310,24 @@
         }
 
         /* Group-Specific Color Accents */
-        .pt-element-card[data-group="1"]  { --group-border: rgba(180, 83, 9, 0.3); }
-        .pt-element-card[data-group="2"]  { --group-border: rgba(161, 98, 7, 0.3); }
-        .pt-element-card[data-group="3"]  { --group-border: rgba(133, 77, 14, 0.3); }
-        .pt-element-card[data-group="4"]  { --group-border: rgba(113, 63, 18, 0.3); }
-        .pt-element-card[data-group="5"]  { --group-border: rgba(101, 163, 13, 0.3); }
-        .pt-element-card[data-group="6"]  { --group-border: rgba(22, 101, 52, 0.3); }
-        .pt-element-card[data-group="7"]  { --group-border: rgba(13, 148, 136, 0.3); }
-        .pt-element-card[data-group="8"]  { --group-border: rgba(3, 105, 161, 0.3); }
-        .pt-element-card[data-group="9"]  { --group-border: rgba(29, 78, 216, 0.3); }
-        .pt-element-card[data-group="10"] { --group-border: rgba(67, 56, 202, 0.3); }
-        .pt-element-card[data-group="11"] { --group-border: rgba(109, 40, 217, 0.3); }
-        .pt-element-card[data-group="12"] { --group-border: rgba(126, 34, 206, 0.3); }
-        .pt-element-card[data-group="13"] { --group-border: rgba(162, 28, 175, 0.3); }
-        .pt-element-card[data-group="14"] { --group-border: rgba(190, 24, 93, 0.3); }
-        .pt-element-card[data-group="15"] { --group-border: rgba(190, 18, 60, 0.3); }
-        .pt-element-card[data-group="16"] { --group-border: rgba(159, 18, 57, 0.3); }
-        .pt-element-card[data-group="17"] { --group-border: rgba(71, 85, 105, 0.3); }
-        .pt-element-card[data-group="18"] { --group-border: rgba(51, 65, 85, 0.2); }
+        .pt-element-card[data-group="1"]  { --group-border: rgba(180, 83, 9, 0.4); }
+        .pt-element-card[data-group="2"]  { --group-border: rgba(161, 98, 7, 0.4); }
+        .pt-element-card[data-group="3"]  { --group-border: rgba(133, 77, 14, 0.4); }
+        .pt-element-card[data-group="4"]  { --group-border: rgba(113, 63, 18, 0.4); }
+        .pt-element-card[data-group="5"]  { --group-border: rgba(101, 163, 13, 0.4); }
+        .pt-element-card[data-group="6"]  { --group-border: rgba(22, 101, 52, 0.4); }
+        .pt-element-card[data-group="7"]  { --group-border: rgba(13, 148, 136, 0.4); }
+        .pt-element-card[data-group="8"]  { --group-border: rgba(3, 105, 161, 0.4); }
+        .pt-element-card[data-group="9"]  { --group-border: rgba(29, 78, 216, 0.4); }
+        .pt-element-card[data-group="10"] { --group-border: rgba(67, 56, 202, 0.4); }
+        .pt-element-card[data-group="11"] { --group-border: rgba(109, 40, 217, 0.4); }
+        .pt-element-card[data-group="12"] { --group-border: rgba(126, 34, 206, 0.4); }
+        .pt-element-card[data-group="13"] { --group-border: rgba(162, 28, 175, 0.4); }
+        .pt-element-card[data-group="14"] { --group-border: rgba(190, 24, 93, 0.4); }
+        .pt-element-card[data-group="15"] { --group-border: rgba(190, 18, 60, 0.4); }
+        .pt-element-card[data-group="16"] { --group-border: rgba(159, 18, 57, 0.4); }
+        .pt-element-card[data-group="17"] { --group-border: rgba(71, 85, 105, 0.4); }
+        .pt-element-card[data-group="18"] { --group-border: rgba(51, 65, 85, 0.3); }
 
         .pt-card-top {
             display: flex;
@@ -511,7 +511,7 @@
             color: var(--text-main);
         }
 
-        /* Restored Suborbit Builder Grid Styling */
+        /* Suborbit Builder Grid Styling */
         .orbits-scroll-area {
             max-height: 200px;
             overflow-y: auto;
@@ -556,7 +556,7 @@
             font-size: 10px;
         }
 
-        /* Restored Custom Dark Theme Checkbox Rules */
+        /* Custom Dark Theme Checkboxes */
         input[type="checkbox"] {
             appearance: none;
             -webkit-appearance: none;
@@ -719,7 +719,7 @@
                     <div class="input-field">
                         <div class="input-header">
                             <label>Binding Energy En (eV)</label>
-                            <span class="action-link" onclick="if(typeof autoCalculateEnUI === 'function') autoCalculateEnUI();">[DIRAC CALC]</span>
+                            <span class="action-link" onclick="autoCalculateEnUI()">[DIRAC CALC]</span>
                         </div>
                         <input type="text" id="inputEnManual" value="" placeholder="Auto-calculated if empty">
                     </div>
@@ -760,7 +760,73 @@
     <canvas id="renderCanvas"></canvas>
 
     <script>
-        // Mode switching handler
+        // Relativistic Dirac binding energy calculator helper (eV)
+        function calculateDiracEnergy(Z, n, j) {
+            const alpha = 1 / 137.035999;
+            const mc2 = 510998.94; // Electron rest energy in eV
+            
+            if (!j || j <= 0) j = n - 0.5;
+            
+            const gamma = Math.sqrt(Math.pow(j + 0.5, 2) - Math.pow(alpha * Z, 2));
+            const denom = Math.sqrt(1 + Math.pow((alpha * Z) / (n - (j + 0.5) + gamma), 2));
+            const bindingEnergy = mc2 * (1 - (1 / denom));
+            
+            // Fallback to Bohr model with screening if Dirac formula returns non-real or zero
+            if (isNaN(bindingEnergy) || bindingEnergy <= 0) {
+                return (13.6057 * Math.pow(Z, 2) / Math.pow(n, 2));
+            }
+            return bindingEnergy;
+        }
+
+        // Dirac calculation handler for Manual Mode ([DIRAC CALC])
+        function autoCalculateEnUI() {
+            const zInput = document.getElementById('inputZManual') || document.getElementById('inputZ');
+            const nInput = document.getElementById('inputN');
+            const lInput = document.getElementById('inputL');
+            const enInput = document.getElementById('inputEnManual');
+            
+            if (!zInput || !enInput) return;
+
+            const Z = parseFloat(zInput.value) || 1;
+            let nArray = [1];
+            let lArray = [0];
+
+            if (nInput && nInput.value.trim() !== "") {
+                nArray = nInput.value.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
+            }
+            if (lInput && lInput.value.trim() !== "") {
+                lArray = lInput.value.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
+            }
+
+            const computedEnergies = nArray.map((n, idx) => {
+                const l = lArray[idx] !== undefined ? lArray[idx] : 0;
+                const j = l + 0.5; // Primary j-subshell estimate
+                return calculateDiracEnergy(Z, n, j).toFixed(2);
+            });
+
+            enInput.value = computedEnergies.join(', ');
+        }
+
+        // Dirac calculation handler for Auto Builder Mode ([CALC EN])
+        function autoCalculateSuborbitEnergiesUI() {
+            const zInput = document.getElementById('inputZ');
+            const maxNInput = document.getElementById('inputMaxN');
+            const enInput = document.getElementById('inputEn');
+
+            if (!zInput || !enInput) return;
+
+            const Z = parseFloat(zInput.value) || 1;
+            const maxN = parseInt(maxNInput ? maxNInput.value : 1) || 1;
+            
+            let energies = [];
+            for (let n = 1; n <= maxN; n++) {
+                energies.push(calculateDiracEnergy(Z, n, n - 0.5).toFixed(2));
+            }
+
+            enInput.value = energies.join(', ');
+        }
+
+        // Control Mode Switching logic
         function switchControlMode(mode) {
             const autoContainer = document.getElementById('autoModeContainer');
             const manualContainer = document.getElementById('manualModeContainer');
