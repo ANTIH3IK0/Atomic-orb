@@ -3,12 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Atomic-orb Beta b1.2-3</title>
+    <title>Dirac Quantum Suborbital Visualizer</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
+    <!-- External UI & Effect APIs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/naughtyduk/liquidGL/scripts/liquidGL.js"></script>
+
+    <!-- 3D Engine & Application Core -->
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="effects.js" defer></script>
     <script src="kernel.js" defer></script>
@@ -18,25 +25,25 @@
             --bg-dark: #05070a;
             
             /* Dark Liquid Glass Palette */
-            --panel-glass: rgba(13, 17, 26, 0.55);
+            --panel-glass: rgba(13, 17, 26, 0.45);
             --card-glass: rgba(255, 255, 255, 0.02);
-            --border-glass: rgba(255, 255, 255, 0.06);
-            --border-glass-active: rgba(148, 163, 184, 0.25);
+            --border-glass: rgba(255, 255, 255, 0.07);
+            --border-glass-active: rgba(147, 197, 253, 0.3);
             
-            --input-bg: rgba(7, 10, 16, 0.6);
+            --input-bg: rgba(7, 10, 16, 0.65);
             --btn-glass: rgba(255, 255, 255, 0.03);
-            --btn-glass-hover: rgba(255, 255, 255, 0.07);
+            --btn-glass-hover: rgba(255, 255, 255, 0.08);
 
             /* Off-White Grey-Blue Typography */
             --text-main: #e2e8f0;
             --text-sub: #cbd5e1;
             --text-muted: #64748b;
             --text-accent: #93c5fd;
-            --accent-glow: rgba(147, 197, 253, 0.1);
+            --accent-glow: rgba(147, 197, 253, 0.12);
 
-            --chk-bg: rgba(10, 14, 22, 0.8);
+            --chk-bg: rgba(10, 14, 22, 0.85);
             --chk-border: rgba(255, 255, 255, 0.1);
-            --chk-checked-bg: rgba(30, 41, 59, 0.85);
+            --chk-checked-bg: rgba(30, 41, 59, 0.9);
             --chk-tick-color: #cbd5e1;
         }
 
@@ -65,7 +72,7 @@
             outline: none;
         }
 
-        /* Dark Liquid Glass Panels */
+        /* Liquid Glass Panels */
         .ui-overlay, .template-overlay, .tp-overlay {
             position: absolute;
             background: var(--panel-glass);
@@ -74,13 +81,13 @@
             box-shadow: 
                 0 30px 60px rgba(0, 0, 0, 0.8),
                 inset 0 1px 0 rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(32px) saturate(150%);
-            -webkit-backdrop-filter: blur(32px) saturate(150%);
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+            backdrop-filter: blur(32px) saturate(160%);
+            -webkit-backdrop-filter: blur(32px) saturate(160%);
+            will-change: transform, opacity;
             overflow: hidden;
         }
 
-        /* Dynamic Mouse Sheen Effect Overlay */
+        /* Mouse Light Reflection */
         .ui-overlay::before, .template-overlay::before, .tp-overlay::before {
             content: '';
             position: absolute;
@@ -90,7 +97,7 @@
             height: 100%;
             background: radial-gradient(
                 450px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), 
-                rgba(255, 255, 255, 0.04), 
+                rgba(255, 255, 255, 0.05), 
                 transparent 70%
             );
             pointer-events: none;
@@ -111,9 +118,7 @@
         }
 
         .ui-overlay.collapsed {
-            transform: translateX(-440px) !important;
-            opacity: 0;
-            pointer-events: none;
+            display: none;
         }
 
         .template-overlay {
@@ -128,13 +133,11 @@
             z-index: 11;
             opacity: 0;
             pointer-events: none;
-            transform: translateX(-15px);
         }
 
         .template-overlay.open {
             opacity: 1;
             pointer-events: auto;
-            transform: translateX(0);
         }
 
         .template-grid {
@@ -156,7 +159,7 @@
             border-radius: 12px;
             color: var(--text-main);
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: border-color 0.2s ease, background 0.2s ease;
         }
 
         .template-card-btn:hover {
@@ -189,9 +192,7 @@
         }
 
         .tp-overlay.collapsed {
-            transform: translateX(290px) !important;
-            opacity: 0;
-            pointer-events: none;
+            display: none;
         }
 
         .tp-title, .section-title {
@@ -218,7 +219,7 @@
             border-radius: 8px;
             font-size: 11px;
             font-family: 'JetBrains Mono', monospace;
-            transition: all 0.2s ease;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         input[type="text"]:focus, input[type="number"]:focus {
@@ -246,7 +247,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s ease;
         }
 
         .restore-btn { left: 16px; }
@@ -313,7 +313,7 @@
             font-family: 'JetBrains Mono', monospace;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: border-color 0.2s ease, background 0.2s ease;
         }
 
         button.apply-btn:hover {
@@ -331,7 +331,7 @@
             font-size: 10px;
             font-family: 'JetBrains Mono', monospace;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: border-color 0.2s ease, background 0.2s ease;
             width: 100%;
         }
 
@@ -341,7 +341,6 @@
             color: var(--text-main);
         }
 
-        /* Suborbit Builder Grid */
         .orbits-scroll-area {
             max-height: 200px;
             overflow-y: auto;
@@ -383,7 +382,6 @@
             font-size: 10px;
         }
 
-        /* Dark Liquid Checkbox */
         input[type="checkbox"] {
             appearance: none;
             -webkit-appearance: none;
@@ -395,7 +393,7 @@
             cursor: pointer;
             position: relative;
             outline: none;
-            transition: all 0.2s ease;
+            transition: background 0.2s ease;
         }
 
         input[type="checkbox"]:checked {
