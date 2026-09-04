@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Atomic-orb WE Beta b1.2</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="kernel.js" defer></script>
+
+    <style>
+        :root {
+            --bg-dark: #030407;
+            --panel-bg: rgba(10, 12, 18, 0.75);
+            --card-bg: rgba(16, 20, 30, 0.6);
+            --border-glow: rgba(0, 229, 255, 0.15);
+            --border-subtle: rgba(255, 255, 255, 0.07);
+            --border-hover: rgba(0, 229, 255, 0.4);
+            
+            --input-bg: #07090e;
+            --btn-gradient: linear-gradient(135deg, #121622 0%, #0a0d14 100%);
+            --btn-hover: linear-gradient(135deg, #1e2538 0%, #121724 100%);
+
+            --text-main: #e2e8f0;
+            --text-muted: #64748b;
+            --accent-cyan: #00e5ff;
+            --accent-neon: #7c3aed;
+            
+            /* Custom Dark Grey Checkbox Styling */
+            --chk-bg: #11141c;
+            --chk-border: #2a3142;
+            --chk-checked-bg: #222736;
+            --chk-tick-color: #78859e;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, sans-serif;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            overflow: hidden;
+            display: flex;
+        }
+
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+            outline: none;
+        }
+
+        /* Glassmorphism Panels */
+        .ui-overlay {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            width: 420px;
+            max-height: calc(100vh - 32px);
+            background: var(--panel-bg);
+            border: 1px solid var(--border-glow);
+            border-radius: 14px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.9), inset 0 0 15px rgba(0, 229, 255, 0.03);
+            backdrop-filter: blur(24px);
+            z-index: 10;
+            overflow-y: auto;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+        }
+
+        .ui-overlay.collapsed {
+            transform: translateX(-460px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .template-overlay {
+            position: absolute;
+            top: 16px;
+            left: 450px;
+            width: 310px;
+            max-height: calc(100vh - 32px);
+            background: var(--panel-bg);
+            border: 1px solid var(--border-glow);
+            border-radius: 14px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(24px);
+            z-index: 11;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-15px);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .template-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(0);
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            overflow-y: auto;
+            max-height: 480px;
+            padding-right: 2px;
+        }
+
+        .template-card-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: var(--btn-gradient);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .template-card-btn:hover {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+        }
+
+        .template-card-btn.active {
+            border-color: var(--accent-cyan);
+            background: rgba(0, 229, 255, 0.1);
+        }
+
+        .template-card-btn .symbol {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--accent-cyan);
+            width: 28px;
+        }
+
+        .tp-overlay {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 260px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-glow);
+            border-radius: 14px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(24px);
+            z-index: 10;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+        }
+
+        .tp-overlay.collapsed {
+            transform: translateX(310px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .tp-title, .section-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--accent-cyan);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tp-grid { display: flex; flex-direction: column; gap: 6px; }
+        .tp-field { display: flex; flex-direction: row; align-items: center; gap: 8px; }
+        .tp-field label { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; width: 14px; }
+        
+        input[type="text"], input[type="number"] {
+            background: var(--input-bg);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-main);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.2s ease;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 8px rgba(0, 229, 255, 0.3);
+        }
+
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+
+        .restore-btn, .tp-restore-btn {
+            position: absolute;
+            top: 16px;
+            z-index: 9;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-glow);
+            color: var(--accent-cyan);
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .restore-btn { left: 16px; }
+        .tp-restore-btn { right: 16px; }
+
+        .ui-overlay::-webkit-scrollbar, .template-grid::-webkit-scrollbar, .orbits-scroll-area::-webkit-scrollbar { width: 4px; }
+        .ui-overlay::-webkit-scrollbar-thumb, .template-grid::-webkit-scrollbar-thumb, .orbits-scroll-area::-webkit-scrollbar-thumb { background: var(--chk-border); border-radius: 2px; }
+
+        header h1 {
+            margin: 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        header h1::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--accent-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent-cyan);
+        }
+
+        .minimize-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .input-card {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .input-field { display: flex; flex-direction: column; gap: 4px; }
+        .input-header { display: flex; justify-content: space-between; align-items: center; }
+        .input-field label { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        .action-link { font-size: 9px; color: var(--accent-cyan); cursor: pointer; font-family: 'JetBrains Mono', monospace; }
+        .action-link:hover { text-decoration: underline; }
+
+        button.apply-btn {
+            padding: 9px;
+            border: 1px solid var(--accent-cyan);
+            background: rgba(0, 229, 255, 0.1);
+            color: var(--accent-cyan);
+            border-radius: 6px;
+            font-size: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        button.apply-btn:hover {
+            background: var(--accent-cyan);
+            color: #030407;
+            box-shadow: 0 0 12px rgba(0, 229, 255, 0.5);
+        }
+
+        button.secondary-btn {
+            padding: 8px;
+            border: 1px solid var(--border-subtle);
+            background: var(--btn-gradient);
+            color: var(--text-main);
+            border-radius: 6px;
+            font-size: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        button.secondary-btn:hover {
+            border-color: var(--border-hover);
+            background: var(--btn-hover);
+        }
+
+        /* Dynamic Suborbit Builder Grid */
+        .orbits-scroll-area {
+            max-height: 220px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding-right: 4px;
+        }
+
+        .orbit-row {
+            display: grid;
+            grid-template-columns: 50px 85px 1fr;
+            align-items: center;
+            gap: 8px;
+            background: rgba(8, 11, 18, 0.7);
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .orbit-row .ex-input {
+            width: 100%;
+            text-align: center;
+            padding: 3px;
+            font-size: 10px;
+        }
+
+        .orbit-row .orbit-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent-cyan);
+        }
+
+        .orbit-row .e-input {
+            width: 100%;
+            text-align: right;
+            padding: 3px 6px;
+            font-size: 10px;
+        }
+
+        /* Dark Grey Custom Checkbox Styling (Requirement #3) */
+        input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            background: var(--chk-bg);
+            border: 1px solid var(--chk-border);
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        input[type="checkbox"]:checked {
+            background: var(--chk-checked-bg);
+            border-color: var(--chk-tick-color);
+        }
+
+        input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute;
+            top: -2px;
+            left: 2px;
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--chk-tick-color);
+        }
+
+        .filter-list { display: flex; flex-direction: column; gap: 6px; }
+        .filter-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-main);
+            background: rgba(10, 14, 22, 0.5);
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+    </style>
+</head>
+<body>
+
+    <button class="restore-btn" id="restoreBtn" style="display:none;" onclick="togglePanel(false)">☰</button>
+    <button class="tp-restore-btn" id="tpRestoreBtn" style="display:none;" onclick="toggleTpPanel(false)">⧇</button>
+
+    <div class="tp-overlay" id="tpOverlay">
+        <div class="tp-title">
+            <span>CAMERA CONTROLS</span>
+            <button class="minimize-btn" onclick="toggleTpPanel(true)">✕</button>
+        </div>
+        <div class="tp-grid">
+            <div class="tp-field"><label>X</label><input type="text" id="tpX" placeholder="~"></div>
+            <div class="tp-field"><label>Y</label><input type="text" id="tpY" placeholder="~"></div>
+            <div class="tp-field"><label>Z</label><input type="text" id="tpZ" placeholder="~"></div>
+        </div>
+        <button class="apply-btn" onclick="teleportCamera()">GOTO POSITION</button>
+        <div class="btn-group">
+            <button class="secondary-btn" onclick="setInitialPosition()">SET INIT</button>
+            <button class="secondary-btn" onclick="reloadInitialPosition()">RESET</button>
+        </div>
+    </div>
+
+    <!-- Main UI Panel -->
+    <div class="ui-overlay" id="uiOverlay">
+        <header style="display:flex; justify-content:space-between; align-items:center;">
+            <h1>DIRAC QUANTUM 3D</h1>
+            <button class="minimize-btn" onclick="togglePanel(true)">✕</button>
+        </header>
+
+        <div>
+            <div class="section-title">Element Presets</div>
+            <button class="secondary-btn" style="margin-top:6px;" onclick="toggleTemplatePanel()">SELECT ELEMENT PRESET ⊞</button>
+        </div>
+
+        <div>
+            <div class="section-title">Quantum System Setup</div>
+            <div class="input-card" style="margin-top:6px;">
+                <div class="input-field">
+                    <label>Atomic Number (Z)</label>
+                    <input type="number" id="inputZ" value="6" onchange="rebuildQuantumModel()">
+                </div>
+
+                <div class="input-field">
+                    <label>Max Principal Quantum Number (n)</label>
+                    <input type="number" id="inputMaxN" value="2" min="1" max="12" onchange="generateOrbitsBuilder()">
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="section-title">
+                <span>Suborbit Configuration</span>
+                <span style="font-size:8px; color:var(--text-muted);">Ex. Level | Orbit | Electrons</span>
+            </div>
+            
+            <div class="orbits-scroll-area" id="orbitsBuilderContainer" style="margin-top:6px;">
+                <!-- Dynamically populated suborbit rows -->
+            </div>
+        </div>
+
+        <div>
+            <div class="input-card">
+                <div class="input-header">
+                    <label style="font-size:10px; color:var(--text-muted); font-family:'JetBrains Mono';">Binding Energy En (eV)</label>
+                    <span class="action-link" onclick="autoCalculateSuborbitEnergiesUI()">[CALC SUBORBITS EN]</span>
+                </div>
+                <input type="text" id="inputEn" value="" placeholder="Calculated per split suborbit">
+                <button class="apply-btn" onclick="rebuildQuantumModel()">SOLVE DIRAC MODEL</button>
+            </div>
+        </div>
+
+        <div>
+            <div class="section-title">Orbital Opacity</div>
+            <input type="range" id="opacitySlider" min="0.05" max="0.9" step="0.01" value="0.35" style="width:100%; margin-top:6px; accent-color:var(--accent-cyan);" oninput="updateOpacity(this.value)">
+        </div>
+
+        <div>
+            <div class="section-title">Dirac j-Suborbit Filters</div>
+            <div id="dynamicFilterContainer" class="filter-list" style="margin-top:6px;"></div>
+        </div>
+    </div>
+
+    <!-- Secondary Template Panel -->
+    <div class="template-overlay" id="templateOverlay">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="section-title">ELEMENT PRESETS</span>
+            <button class="minimize-btn" onclick="toggleTemplatePanel(false)">✕</button>
+        </div>
+        <div class="template-grid" id="templateGridContainer"></div>
+    </div>
+
+    <canvas id="renderCanvas"></canvas>
+
+</body>
+</html>
