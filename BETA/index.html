@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Atomic-orb p1.2</title>
+    <title>Atomic-orb pre1.2</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -777,6 +777,77 @@
             return bindingEnergy;
         }
 
+        // Generate Electron Configuration & Quantum parameters dynamically for any Atomic Number Z
+        function getElectronConfiguration(Z) {
+            const subshells = [
+                { n: 1, l: 0, label: '1s', capacity: 2 },
+                { n: 2, l: 0, label: '2s', capacity: 2 },
+                { n: 2, l: 1, label: '2p', capacity: 6 },
+                { n: 3, l: 0, label: '3s', capacity: 2 },
+                { n: 3, l: 1, label: '3p', capacity: 6 },
+                { n: 4, l: 0, label: '4s', capacity: 2 },
+                { n: 3, l: 2, label: '3d', capacity: 10 },
+                { n: 4, l: 1, label: '4p', capacity: 6 },
+                { n: 5, l: 0, label: '5s', capacity: 2 },
+                { n: 4, l: 2, label: '4d', capacity: 10 },
+                { n: 5, l: 1, label: '5p', capacity: 6 },
+                { n: 6, l: 0, label: '6s', capacity: 2 },
+                { n: 4, l: 3, label: '4f', capacity: 14 },
+                { n: 5, l: 2, label: '5d', capacity: 10 },
+                { n: 6, l: 1, label: '6p', capacity: 6 },
+                { n: 7, l: 0, label: '7s', capacity: 2 },
+                { n: 5, l: 3, label: '5f', capacity: 14 },
+                { n: 6, l: 2, label: '6d', capacity: 10 },
+                { n: 7, l: 1, label: '7p', capacity: 6 }
+            ];
+
+            let remaining = Z;
+            let configParts = [];
+            let elecs = [];
+            let ns = [];
+            let ls = [];
+
+            for (let sub of subshells) {
+                if (remaining <= 0) break;
+                let count = Math.min(remaining, sub.capacity);
+                configParts.push(`${sub.label}${count}`);
+                elecs.push(count);
+                ns.push(sub.n);
+                ls.push(sub.l);
+                remaining -= count;
+            }
+
+            return {
+                config: configParts.join(' '),
+                elec: elecs.join(', '),
+                n: ns.join(', '),
+                l: ls.join(', '),
+                maxN: ns.length > 0 ? Math.max(...ns) : 1
+            };
+        }
+
+        // Synchronize Manual Input fields based on Atomic Number Z
+        function syncManualFieldsFromZ(Z) {
+            const parsedZ = parseInt(Z) || 1;
+            const data = getElectronConfiguration(parsedZ);
+            
+            const configInput = document.getElementById('inputConfig');
+            const elecInput = document.getElementById('inputElec');
+            const nInput = document.getElementById('inputN');
+            const lInput = document.getElementById('inputL');
+            const maxNInput = document.getElementById('inputMaxN');
+
+            if (configInput) configInput.value = data.config;
+            if (elecInput) elecInput.value = data.elec;
+            if (nInput) nInput.value = data.n;
+            if (lInput) lInput.value = data.l;
+            if (maxNInput) maxNInput.value = data.maxN;
+
+            autoCalculateEnUI();
+            if (typeof generateOrbitsBuilder === 'function') generateOrbitsBuilder();
+            if (typeof autoCalculateSuborbitEnergiesUI === 'function') autoCalculateSuborbitEnergiesUI();
+        }
+
         // Dirac calculation handler for Manual Mode ([DIRAC CALC])
         function autoCalculateEnUI() {
             const zInput = document.getElementById('inputZManual') || document.getElementById('inputZ');
@@ -839,7 +910,10 @@
                 manualContainer.classList.remove('hidden');
                 btnManual.classList.add('active');
                 btnAuto.classList.remove('active');
-                if (zAuto && zManual) zManual.value = zAuto.value;
+                if (zAuto && zManual) {
+                    zManual.value = zAuto.value;
+                    syncManualFieldsFromZ(zManual.value);
+                }
             } else {
                 manualContainer.classList.add('hidden');
                 autoContainer.classList.remove('hidden');
@@ -849,21 +923,27 @@
             }
         }
 
-        // Automatic Bi-Directional Synchronizer for Z Inputs
+        // Automatic Full Bi-Directional Synchronizer for Z and Manual Quantum Parameters
         function initZSynchronization() {
             const zAuto = document.getElementById('inputZ');
             const zManual = document.getElementById('inputZManual');
             if (!zAuto || !zManual) return;
 
-            const syncFromAuto = () => { if (zManual.value !== zAuto.value) zManual.value = zAuto.value; };
-            const syncFromManual = () => { if (zAuto.value !== zManual.value) zAuto.value = zManual.value; };
+            const syncFromAuto = () => { 
+                if (zManual.value !== zAuto.value) zManual.value = zAuto.value; 
+                syncManualFieldsFromZ(zAuto.value);
+            };
+            const syncFromManual = () => { 
+                if (zAuto.value !== zManual.value) zAuto.value = zManual.value; 
+                syncManualFieldsFromZ(zManual.value);
+            };
 
             zAuto.addEventListener('input', syncFromAuto);
             zAuto.addEventListener('change', syncFromAuto);
             zManual.addEventListener('input', syncFromManual);
             zManual.addEventListener('change', syncFromManual);
 
-            // Intercept property setters so programmatic updates (e.g. Periodic Table selection) sync immediately
+            // Property setter interceptor for programmatic updates (e.g., Periodic Table modal selection)
             [zAuto, zManual].forEach(inputEl => {
                 const nativeValueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
                 Object.defineProperty(inputEl, 'value', {
@@ -872,14 +952,17 @@
                     },
                     set: function(val) {
                         nativeValueDescriptor.set.call(this, val);
-                        if (this === zAuto && zManual && zManual.value !== String(val)) {
-                            nativeValueDescriptor.set.call(zManual, val);
-                        } else if (this === zManual && zAuto && zAuto.value !== String(val)) {
-                            nativeValueDescriptor.set.call(zAuto, val);
+                        const other = (this === zAuto) ? zManual : zAuto;
+                        if (other && nativeValueDescriptor.get.call(other) !== String(val)) {
+                            nativeValueDescriptor.set.call(other, val);
                         }
+                        syncManualFieldsFromZ(val);
                     }
                 });
             });
+
+            // Initial alignment run
+            syncManualFieldsFromZ(zAuto.value);
         }
 
         document.addEventListener('DOMContentLoaded', initZSynchronization);
