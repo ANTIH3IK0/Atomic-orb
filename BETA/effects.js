@@ -16,7 +16,7 @@ function initLiquidGLEffects() {
     if (typeof LiquidGL === 'undefined') return;
 
     // Attach liquid WebGL shaders to dark glass panels
-    const glassPanels = document.querySelectorAll('.ui-overlay, .tp-overlay, .template-overlay');
+    const glassPanels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
     glassPanels.forEach(panel => {
         new LiquidGL(panel, {
             refraction: 0.04,
@@ -30,7 +30,7 @@ function initLiquidGLEffects() {
     });
 
     // Attach subtle liquid feedback to interactive buttons
-    const liquidButtons = document.querySelectorAll('button.apply-btn, button.secondary-btn, .template-card-btn');
+    const liquidButtons = document.querySelectorAll('button.apply-btn, button.secondary-btn, .close-btn');
     liquidButtons.forEach(btn => {
         new LiquidGL(btn, {
             refraction: 0.02,
@@ -67,12 +67,12 @@ function initGSAPAnimations() {
     });
 
     // Button Hover Spring Micro-Animations
-    const buttons = document.querySelectorAll('button, .template-card-btn');
+    const buttons = document.querySelectorAll('button, .pt-element-card');
     buttons.forEach(btn => {
         btn.addEventListener('mouseenter', () => {
             gsap.to(btn, {
-                scale: 1.02,
-                duration: 0.25,
+                scale: 1.03,
+                duration: 0.2,
                 ease: 'back.out(1.7)'
             });
         });
@@ -87,7 +87,7 @@ function initGSAPAnimations() {
 
         btn.addEventListener('mousedown', () => {
             gsap.to(btn, {
-                scale: 0.97,
+                scale: 0.96,
                 duration: 0.1,
                 ease: 'power1.inOut'
             });
@@ -99,7 +99,7 @@ function initGSAPAnimations() {
  * Dynamic Mouse Sheen & Subtle 3D Tilt
  */
 function initGlassInteractivity() {
-    const glassPanels = document.querySelectorAll('.ui-overlay, .tp-overlay, .template-overlay');
+    const glassPanels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
 
     glassPanels.forEach(panel => {
         panel.addEventListener('mousemove', (e) => {
@@ -110,7 +110,7 @@ function initGlassInteractivity() {
             panel.style.setProperty('--mouse-x', `${x}px`);
             panel.style.setProperty('--mouse-y', `${y}px`);
 
-            if (typeof gsap !== 'undefined') {
+            if (typeof gsap !== 'undefined' && !panel.classList.contains('pt-modal-window')) {
                 const centerX = rect.left + rect.width / 2;
                 const centerY = rect.top + rect.height / 2;
                 const rotateX = ((e.clientY - centerY) / (rect.height / 2)) * -2;
@@ -127,7 +127,7 @@ function initGlassInteractivity() {
         });
 
         panel.addEventListener('mouseleave', () => {
-            if (typeof gsap !== 'undefined') {
+            if (typeof gsap !== 'undefined' && !panel.classList.contains('pt-modal-window')) {
                 gsap.to(panel, {
                     rotateX: 0,
                     rotateY: 0,
