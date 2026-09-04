@@ -41,22 +41,23 @@ function initGroupAttributesObserver() {
 }
 
 /**
- * Initialize WebGL Fluid Distortion via LiquidGL
+ * Initialize High-Realism WebGL Fluid Distortion via LiquidGL
  */
 function initLiquidGLEffects() {
     if (typeof LiquidGL === 'undefined') return;
 
-    // Attach liquid WebGL shaders to panels
+    // Attach high-precision refractive liquid WebGL shaders to main panels
     const glassPanels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
     glassPanels.forEach(panel => {
         new LiquidGL(panel, {
-            refraction: 0.05,
-            reflection: 0.2,
-            liquidColor: '#0d111a',
-            glassColor: 'rgba(13, 17, 26, 0.55)',
-            dispersion: 0.03,
+            refraction: 0.085,      // Higher refractive index for strong lens distortion
+            reflection: 0.38,       // Vivid specular highlights off panel rim
+            liquidColor: '#0a0f1d',
+            glassColor: 'rgba(13, 17, 26, 0.45)',
+            dispersion: 0.07,       // Vivid chromatic edge split (prism effect)
             interactive: true,
-            intensity: 0.35
+            intensity: 0.60,        // Enhanced fluid ripple response to pointer movement
+            viscosity: 0.85         // Heavy fluid decay for realistic liquid feedback
         });
     });
 
@@ -64,12 +65,12 @@ function initLiquidGLEffects() {
     const liquidButtons = document.querySelectorAll('button.apply-btn, button.secondary-btn, .close-btn');
     liquidButtons.forEach(btn => {
         new LiquidGL(btn, {
-            refraction: 0.03,
-            reflection: 0.15,
+            refraction: 0.04,
+            reflection: 0.22,
             liquidColor: '#121824',
-            dispersion: 0.02,
+            dispersion: 0.03,
             interactive: true,
-            intensity: 0.2
+            intensity: 0.3
         });
     });
 }
@@ -144,8 +145,8 @@ function initGlassInteractivity() {
             if (typeof gsap !== 'undefined' && !panel.classList.contains('pt-modal-window')) {
                 const centerX = rect.left + rect.width / 2;
                 const centerY = rect.top + rect.height / 2;
-                const rotateX = ((e.clientY - centerY) / (rect.height / 2)) * -2.5;
-                const rotateY = ((e.clientX - centerX) / (rect.width / 2)) * 2.5;
+                const rotateX = ((e.clientY - centerY) / (rect.height / 2)) * -3.2;
+                const rotateY = ((e.clientX - centerX) / (rect.width / 2)) * 3.2;
 
                 gsap.to(panel, {
                     rotateX: rotateX,
