@@ -3,37 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Atomic-orb Beta b1.2-2</title>
+    <title>Dirac Quantum Suborbital Visualizer</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="effects.js" defer></script>
     <script src="kernel.js" defer></script>
 
     <style>
         :root {
-            --bg-dark: #030508;
-            --panel-glass: rgba(11, 15, 25, 0.65);
-            --card-glass: rgba(255, 255, 255, 0.025);
-            --border-glass: rgba(255, 255, 255, 0.08);
-            --border-glass-hover: rgba(56, 189, 248, 0.35);
+            --bg-dark: #05070a;
             
-            --input-bg: rgba(0, 0, 0, 0.45);
-            --btn-glass: rgba(255, 255, 255, 0.04);
-            --btn-glass-hover: rgba(255, 255, 255, 0.09);
+            /* Dark Liquid Glass Palette */
+            --panel-glass: rgba(13, 17, 26, 0.55);
+            --card-glass: rgba(255, 255, 255, 0.02);
+            --border-glass: rgba(255, 255, 255, 0.06);
+            --border-glass-active: rgba(148, 163, 184, 0.25);
+            
+            --input-bg: rgba(7, 10, 16, 0.6);
+            --btn-glass: rgba(255, 255, 255, 0.03);
+            --btn-glass-hover: rgba(255, 255, 255, 0.07);
 
-            --text-main: #f1f5f9;
+            /* Off-White Grey-Blue Typography */
+            --text-main: #e2e8f0;
             --text-sub: #cbd5e1;
             --text-muted: #64748b;
-            --text-accent: #38bdf8;
-            --accent-soft: rgba(56, 189, 248, 0.12);
+            --text-accent: #93c5fd;
+            --accent-glow: rgba(147, 197, 253, 0.1);
 
-            --chk-bg: rgba(15, 20, 32, 0.8);
-            --chk-border: rgba(255, 255, 255, 0.12);
-            --chk-checked-bg: rgba(30, 41, 59, 0.9);
-            --chk-tick-color: #94a3b8;
+            --chk-bg: rgba(10, 14, 22, 0.8);
+            --chk-border: rgba(255, 255, 255, 0.1);
+            --chk-checked-bg: rgba(30, 41, 59, 0.85);
+            --chk-tick-color: #cbd5e1;
         }
 
         * {
@@ -48,7 +52,7 @@
             padding: 0;
             width: 100vw;
             height: 100vh;
-            background: radial-gradient(circle at 50% 50%, #0a0e1a 0%, var(--bg-dark) 100%);
+            background: radial-gradient(circle at 50% 50%, #0d121d 0%, var(--bg-dark) 100%);
             color: var(--text-main);
             overflow: hidden;
             display: flex;
@@ -61,55 +65,70 @@
             outline: none;
         }
 
-        /* Glassmorphism Floating Panels */
-        .ui-overlay {
+        /* Dark Liquid Glass Panels */
+        .ui-overlay, .template-overlay, .tp-overlay {
             position: absolute;
+            background: var(--panel-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 18px;
+            box-shadow: 
+                0 30px 60px rgba(0, 0, 0, 0.8),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(32px) saturate(150%);
+            -webkit-backdrop-filter: blur(32px) saturate(150%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+            overflow: hidden;
+        }
+
+        /* Dynamic Mouse Sheen Effect Overlay */
+        .ui-overlay::before, .template-overlay::before, .tp-overlay::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(
+                450px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), 
+                rgba(255, 255, 255, 0.04), 
+                transparent 70%
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .ui-overlay {
             top: 16px;
             left: 16px;
             width: 400px;
             max-height: calc(100vh - 32px);
-            background: var(--panel-glass);
-            border: 1px solid var(--border-glass);
-            border-radius: 16px;
-            padding: 18px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             gap: 16px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(28px) saturate(180%);
-            -webkit-backdrop-filter: blur(28px) saturate(180%);
             z-index: 10;
             overflow-y: auto;
-            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
         }
 
         .ui-overlay.collapsed {
-            transform: translateX(-440px);
+            transform: translateX(-440px) !important;
             opacity: 0;
             pointer-events: none;
         }
 
         .template-overlay {
-            position: absolute;
             top: 16px;
             left: 432px;
             width: 310px;
             max-height: calc(100vh - 32px);
-            background: var(--panel-glass);
-            border: 1px solid var(--border-glass);
-            border-radius: 16px;
             padding: 16px;
             display: flex;
             flex-direction: column;
             gap: 12px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(28px) saturate(180%);
-            -webkit-backdrop-filter: blur(28px) saturate(180%);
             z-index: 11;
             opacity: 0;
             pointer-events: none;
             transform: translateX(-15px);
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .template-overlay.open {
@@ -134,51 +153,43 @@
             padding: 10px;
             background: var(--btn-glass);
             border: 1px solid var(--border-glass);
-            border-radius: 10px;
+            border-radius: 12px;
             color: var(--text-main);
             cursor: pointer;
             transition: all 0.2s ease;
         }
 
         .template-card-btn:hover {
-            border-color: var(--border-glass-hover);
+            border-color: var(--border-glass-active);
             background: var(--btn-glass-hover);
         }
 
         .template-card-btn.active {
             border-color: var(--text-accent);
-            background: var(--accent-soft);
+            background: var(--accent-glow);
         }
 
         .template-card-btn .symbol {
             font-family: 'JetBrains Mono', monospace;
-            font-weight: 600;
+            font-weight: 500;
             font-size: 14px;
             color: var(--text-accent);
             width: 28px;
         }
 
         .tp-overlay {
-            position: absolute;
             top: 16px;
             right: 16px;
             width: 250px;
-            background: var(--panel-glass);
-            border: 1px solid var(--border-glass);
-            border-radius: 16px;
-            padding: 14px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(28px) saturate(180%);
-            -webkit-backdrop-filter: blur(28px) saturate(180%);
+            gap: 12px;
             z-index: 10;
-            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
         }
 
         .tp-overlay.collapsed {
-            transform: translateX(290px);
+            transform: translateX(290px) !important;
             opacity: 0;
             pointer-events: none;
         }
@@ -203,7 +214,7 @@
             background: var(--input-bg);
             border: 1px solid var(--border-glass);
             color: var(--text-main);
-            padding: 6px 10px;
+            padding: 7px 10px;
             border-radius: 8px;
             font-size: 11px;
             font-family: 'JetBrains Mono', monospace;
@@ -212,8 +223,8 @@
 
         input[type="text"]:focus, input[type="number"]:focus {
             outline: none;
-            border-color: var(--border-glass-hover);
-            box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
+            border-color: var(--border-glass-active);
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.05);
         }
 
         .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
@@ -242,7 +253,7 @@
         .tp-restore-btn { right: 16px; }
 
         .ui-overlay::-webkit-scrollbar, .template-grid::-webkit-scrollbar, .orbits-scroll-area::-webkit-scrollbar { width: 4px; }
-        .ui-overlay::-webkit-scrollbar-thumb, .template-grid::-webkit-scrollbar-thumb, .orbits-scroll-area::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 2px; }
+        .ui-overlay::-webkit-scrollbar-thumb, .template-grid::-webkit-scrollbar-thumb, .orbits-scroll-area::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 2px; }
 
         header h1 {
             margin: 0;
@@ -250,7 +261,7 @@
             font-size: 11px;
             font-weight: 600;
             letter-spacing: 1.5px;
-            color: var(--text-main);
+            color: var(--text-sub);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -262,7 +273,7 @@
             height: 6px;
             background: var(--text-accent);
             border-radius: 50%;
-            box-shadow: 0 0 8px var(--text-accent);
+            box-shadow: 0 0 8px rgba(147, 197, 253, 0.3);
         }
 
         .minimize-btn {
@@ -294,8 +305,8 @@
 
         button.apply-btn {
             padding: 8px 12px;
-            border: 1px solid var(--border-glass-hover);
-            background: var(--accent-soft);
+            border: 1px solid var(--border-glass-active);
+            background: var(--accent-glow);
             color: var(--text-accent);
             border-radius: 8px;
             font-size: 10px;
@@ -306,9 +317,9 @@
         }
 
         button.apply-btn:hover {
-            background: var(--text-accent);
-            color: var(--bg-dark);
-            box-shadow: 0 0 14px rgba(56, 189, 248, 0.3);
+            background: rgba(147, 197, 253, 0.2);
+            color: var(--text-main);
+            box-shadow: 0 0 12px rgba(147, 197, 253, 0.15);
         }
 
         button.secondary-btn {
@@ -325,7 +336,7 @@
         }
 
         button.secondary-btn:hover {
-            border-color: var(--border-glass-hover);
+            border-color: var(--border-glass-active);
             background: var(--btn-glass-hover);
             color: var(--text-main);
         }
@@ -372,7 +383,7 @@
             font-size: 10px;
         }
 
-        /* Subtle Dark Grey Custom Checkbox */
+        /* Dark Liquid Checkbox */
         input[type="checkbox"] {
             appearance: none;
             -webkit-appearance: none;
@@ -417,7 +428,7 @@
 
         input[type="range"] {
             width: 100%;
-            accent-color: var(--text-accent);
+            accent-color: var(--text-sub);
             cursor: pointer;
         }
     </style>
