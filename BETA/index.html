@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Atomic-orb Beta b1.2-4</title>
+    <title>Atomic-orb Beta b1.2-5</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -70,10 +70,21 @@
             height: 100%;
             touch-action: none;
             outline: none;
+            transition: filter 0.3s ease;
+        }
+
+        /* Blur target when modal is active */
+        body.modal-open #renderCanvas,
+        body.modal-open .ui-overlay,
+        body.modal-open .tp-overlay,
+        body.modal-open .restore-btn,
+        body.modal-open .tp-restore-btn {
+            filter: blur(8px);
+            pointer-events: none;
         }
 
         /* Liquid Glass Panels */
-        .ui-overlay, .template-overlay, .tp-overlay {
+        .ui-overlay, .tp-overlay {
             position: absolute;
             background: var(--panel-glass);
             border: 1px solid var(--border-glass);
@@ -87,8 +98,7 @@
             overflow: hidden;
         }
 
-        /* Mouse Light Reflection */
-        .ui-overlay::before, .template-overlay::before, .tp-overlay::before {
+        .ui-overlay::before, .tp-overlay::before, .pt-modal-window::before {
             content: '';
             position: absolute;
             top: 0;
@@ -117,68 +127,7 @@
             overflow-y: auto;
         }
 
-        .ui-overlay.collapsed {
-            display: none;
-        }
-
-        .template-overlay {
-            top: 16px;
-            left: 432px;
-            width: 310px;
-            max-height: calc(100vh - 32px);
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            z-index: 11;
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .template-overlay.open {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .template-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            overflow-y: auto;
-            max-height: 480px;
-            padding-right: 2px;
-        }
-
-        .template-card-btn {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px;
-            background: var(--btn-glass);
-            border: 1px solid var(--border-glass);
-            border-radius: 12px;
-            color: var(--text-main);
-            cursor: pointer;
-            transition: border-color 0.2s ease, background 0.2s ease;
-        }
-
-        .template-card-btn:hover {
-            border-color: var(--border-glass-active);
-            background: var(--btn-glass-hover);
-        }
-
-        .template-card-btn.active {
-            border-color: var(--text-accent);
-            background: var(--accent-glow);
-        }
-
-        .template-card-btn .symbol {
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 500;
-            font-size: 14px;
-            color: var(--text-accent);
-            width: 28px;
-        }
+        .ui-overlay.collapsed { display: none; }
 
         .tp-overlay {
             top: 16px;
@@ -191,9 +140,188 @@
             z-index: 10;
         }
 
-        .tp-overlay.collapsed {
-            display: none;
+        .tp-overlay.collapsed { display: none; }
+
+        /* Floating Periodic Table Modal Overlay */
+        .pt-modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(4, 7, 12, 0.65);
+            backdrop-filter: blur(16px) saturate(140%);
+            -webkit-backdrop-filter: blur(16px) saturate(140%);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
         }
+
+        .pt-modal-backdrop.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .pt-modal-window {
+            position: relative;
+            width: 95vw;
+            max-width: 1320px;
+            max-height: 92vh;
+            background: rgba(10, 14, 23, 0.85);
+            border: 1px solid var(--border-glass-active);
+            border-radius: 20px;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            overflow: hidden;
+        }
+
+        .pt-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .pt-modal-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .close-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-glass);
+            color: var(--text-sub);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.5);
+            color: #fca5a5;
+        }
+
+        /* Periodic Table Grid Layout */
+        .pt-scroll-area {
+            overflow: auto;
+            max-height: calc(92vh - 80px);
+            padding: 8px;
+        }
+
+        .pt-grid-container {
+            display: grid;
+            grid-template-columns: 28px repeat(18, minmax(58px, 1fr));
+            grid-gap: 4px;
+            min-width: 1100px;
+        }
+
+        .pt-header-cell {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 0;
+        }
+
+        .pt-period-cell {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pt-element-card {
+            background: var(--btn-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 6px;
+            padding: 4px;
+            height: 56px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .pt-element-card:hover {
+            border-color: var(--text-accent);
+            background: var(--accent-glow);
+            transform: scale(1.05);
+            z-index: 10;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+        }
+
+        .pt-element-card.active {
+            border-color: #60a5fa;
+            background: rgba(96, 165, 250, 0.25);
+            box-shadow: 0 0 12px rgba(96, 165, 250, 0.4);
+        }
+
+        .pt-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 8px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .pt-card-symbol {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--text-main);
+            text-align: center;
+            margin-top: 1px;
+        }
+
+        .pt-card-name {
+            font-size: 8px;
+            color: var(--text-sub);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: center;
+        }
+
+        /* Category Color Indicators */
+        .pt-element-card[data-cat="reactive-nonmetal"] { border-left: 3px solid #60a5fa; }
+        .pt-element-card[data-cat="noble-gas"] { border-left: 3px solid #c084fc; }
+        .pt-element-card[data-cat="alkali-metal"] { border-left: 3px solid #f87171; }
+        .pt-element-card[data-cat="alkaline-earth"] { border-left: 3px solid #fb923c; }
+        .pt-element-card[data-cat="metalloid"] { border-left: 3px solid #34d399; }
+        .pt-element-card[data-cat="post-transition"] { border-left: 3px solid #a3e635; }
+        .pt-element-card[data-cat="transition-metal"] { border-left: 3px solid #facc15; }
+        .pt-element-card[data-cat="lanthanide"] { border-left: 3px solid #38bdf8; }
+        .pt-element-card[data-cat="actinide"] { border-left: 3px solid #f472b6; }
 
         .tp-title, .section-title {
             font-family: 'JetBrains Mono', monospace;
@@ -252,8 +380,8 @@
         .restore-btn { left: 16px; }
         .tp-restore-btn { right: 16px; }
 
-        .ui-overlay::-webkit-scrollbar, .template-grid::-webkit-scrollbar, .orbits-scroll-area::-webkit-scrollbar { width: 4px; }
-        .ui-overlay::-webkit-scrollbar-thumb, .template-grid::-webkit-scrollbar-thumb, .orbits-scroll-area::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 2px; }
+        .ui-overlay::-webkit-scrollbar, .pt-scroll-area::-webkit-scrollbar, .orbits-scroll-area::-webkit-scrollbar { width: 4px; height: 4px; }
+        .ui-overlay::-webkit-scrollbar-thumb, .pt-scroll-area::-webkit-scrollbar-thumb, .orbits-scroll-area::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 2px; }
 
         header h1 {
             margin: 0;
@@ -461,8 +589,8 @@
         </header>
 
         <div>
-            <div class="section-title">Element Presets</div>
-            <button class="secondary-btn" style="margin-top:6px;" onclick="toggleTemplatePanel()">SELECT ELEMENT PRESET ⊞</button>
+            <div class="section-title">Element Selector</div>
+            <button class="secondary-btn" style="margin-top:6px;" onclick="openPeriodicTableModal()">PERIODIC TABLE ⊞</button>
         </div>
 
         <div>
@@ -486,9 +614,7 @@
                 <span style="font-size:8px; color:var(--text-muted);">EX | ORBIT | ELEC</span>
             </div>
             
-            <div class="orbits-scroll-area" id="orbitsBuilderContainer" style="margin-top:6px;">
-                <!-- Dynamically populated suborbit rows -->
-            </div>
+            <div class="orbits-scroll-area" id="orbitsBuilderContainer" style="margin-top:6px;"></div>
         </div>
 
         <div>
@@ -513,13 +639,20 @@
         </div>
     </div>
 
-    <!-- Secondary Template Panel -->
-    <div class="template-overlay" id="templateOverlay">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span class="section-title">ELEMENT PRESETS</span>
-            <button class="minimize-btn" onclick="toggleTemplatePanel(false)">✕</button>
+    <!-- Floating Periodic Table Window -->
+    <div class="pt-modal-backdrop" id="ptModalBackdrop" onclick="handleBackdropClick(event)">
+        <div class="pt-modal-window" id="ptModalWindow">
+            <div class="pt-modal-header">
+                <div class="pt-modal-title">
+                    <span>PERIODIC TABLE</span>
+                    <span id="selectedElementTag" style="font-size:10px; color:var(--text-accent); font-weight:normal;">[118 Elements]</span>
+                </div>
+                <button class="close-btn" onclick="closePeriodicTableModal()">✕</button>
+            </div>
+            <div class="pt-scroll-area">
+                <div class="pt-grid-container" id="ptGridContainer"></div>
+            </div>
         </div>
-        <div class="template-grid" id="templateGridContainer"></div>
     </div>
 
     <canvas id="renderCanvas"></canvas>
