@@ -1,23 +1,23 @@
 // effects.js
 
-/* Molten Quicksilver Primary Layer Configuration */
+/* Molten Quicksilver Primary Fluid Layer Configuration */
 const ACTINIUM_MELT_CONFIG = {
     layerClass: 'actinium-liquid-layer',
-    refraction: 0.022,
-    aberration: 0.002,
-    bevelDepth: 0.65,
-    bevelWidth: 0.32,
-    frost:      0
+    refraction: 0.014,    // Reduced for a smoother metallic fluid motion
+    aberration: 0.001,    // Subtle chromatic dispersion
+    bevelDepth: 0.38,     // Soft liquid edge transition
+    bevelWidth: 0.22,
+    frost:      0.0
 };
 
 /* Quicksilver Specular Film Configuration */
 const GLASS_FILM_CONFIG = {
     layerClass: 'actinium-glass-film',
-    refraction: 0.008,
-    aberration: 0.001,
-    bevelDepth: 0.20,
-    bevelWidth: 0.18,
-    frost:      0.08
+    refraction: 0.005,
+    aberration: 0.0005,
+    bevelDepth: 0.12,
+    bevelWidth: 0.10,
+    frost:      0.04
 };
 
 const TARGET_PANEL_SELECTOR = '.ui-overlay, .tp-overlay, .pt-modal-window';
