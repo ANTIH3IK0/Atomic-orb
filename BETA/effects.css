@@ -125,13 +125,14 @@ body.modal-open .tp-restore-btn {
     top: 16px;
     left: 16px;
     width: 380px;
-    max-height: calc(100vh - 32px);
+    max-height: calc(100dvh - 32px);  /* Dynamic viewport height accounts for iPad Safari address bar */
     padding: 24px;
     display: flex;
     flex-direction: column;
     gap: 18px;
     z-index: 10;
     overflow-y: auto;
+    pointer-events: auto;             /* Ensures touch events hit the container directly */
 }
 .ui-overlay.collapsed { display: none; }
 
@@ -643,6 +644,19 @@ input[type="checkbox"]:checked::after {
 .input-card, .restore-btn, .tp-restore-btn {
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
+}
+
+/* Touch Scrolling Fix for iPad / WebKit */
+.ui-overlay, 
+.pt-scroll-area, 
+.orbits-scroll-area {
+    -webkit-overflow-scrolling: touch; /* Enables WebKit momentum scrolling */
+    touch-action: pan-y !important;      /* Forces touch drag to handle vertical scroll instead of canvas pan */
+    overscroll-behavior-y: contain;   /* Prevents scroll chaining to the canvas underneath */
+}
+
+.pt-modal-window {
+    max-height: 92dvh;                /* Ensures dynamic modal height scaling */
 }
 
 input[type="range"] {
