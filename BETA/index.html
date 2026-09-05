@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Atomic-orb pre1.2</title>
+    <title>Atomic-orb r1.2</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -902,24 +902,19 @@
             const manualContainer = document.getElementById('manualModeContainer');
             const btnAuto = document.getElementById('btnModeAuto');
             const btnManual = document.getElementById('btnModeManual');
-            const zAuto = document.getElementById('inputZ');
-            const zManual = document.getElementById('inputZManual');
 
-            if (mode === 'manual') {
-                autoContainer.classList.add('hidden');
-                manualContainer.classList.remove('hidden');
-                btnManual.classList.add('active');
-                btnAuto.classList.remove('active');
-                if (zAuto && zManual) {
-                    zManual.value = zAuto.value;
-                    syncManualFieldsFromZ(zManual.value);
-                }
-            } else {
-                manualContainer.classList.add('hidden');
+            if (!autoContainer || !manualContainer) return;
+
+            if (mode === 'auto') {
                 autoContainer.classList.remove('hidden');
+                manualContainer.classList.add('hidden');
                 btnAuto.classList.add('active');
                 btnManual.classList.remove('active');
-                if (zAuto && zManual) zAuto.value = zManual.value;
+            } else {
+                autoContainer.classList.add('hidden');
+                manualContainer.classList.remove('hidden');
+                btnAuto.classList.remove('active');
+                btnManual.classList.add('active');
             }
         }
 
