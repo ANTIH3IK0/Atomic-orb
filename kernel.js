@@ -1,19 +1,22 @@
 /**
  * kernel.js
  * High-Precision Relativistic Dirac Radial Integrator & Visualizer
- * Complete 118-Element Periodic Table Integration & 3D Orbital Mesh Renderer
+ * Complete 118-Element Periodic Table Integration
  */
 
 let canvas, engine, scene, camera;
 let activeMeshes = [];
 let currentOpacity = 0.35;
 let visibilityState = {};
-let selectedElementSymbol = "C";
+let userHasCustomInit = false;
 
 let initialTarget = new BABYLON.Vector3(0, 0, 0);
 let initialRadius = 25;
 let initialAlpha = -Math.PI / 3;
 let initialBeta = Math.PI / 2.5;
+
+const FINE_ALPHA = 1.0 / 137.035999139;
+const HARTREE_TO_EV = 27.211386245988;
 
 /**
  * 118 Elements Data Repository (Z, Symbol, Name, Period, Group, Category)
@@ -21,6 +24,7 @@ let initialBeta = Math.PI / 2.5;
 const ELEMENTS_DATA = [
     { Z: 1, sym: "H", name: "Hydrogen", period: 1, group: 1, cat: "reactive-nonmetal" },
     { Z: 2, sym: "He", name: "Helium", period: 1, group: 18, cat: "noble-gas" },
+    
     { Z: 3, sym: "Li", name: "Lithium", period: 2, group: 1, cat: "alkali-metal" },
     { Z: 4, sym: "Be", name: "Beryllium", period: 2, group: 2, cat: "alkaline-earth" },
     { Z: 5, sym: "B", name: "Boron", period: 2, group: 13, cat: "metalloid" },
@@ -145,42 +149,264 @@ const ELEMENTS_DATA = [
 ];
 
 /**
- * Relativistic Spin-Orbit j-subshell Mappings
+ * Hardcoded Ground-State Subshell Electron Counts (Z = 1 to 118)
+ * Accounts for all anomalous fillings (Pd [Kr]4d10, Cr [Ar]3d5 4s1, Cu, Nb, Mo, Ru, Rh, Ag, La, Ce, Gd, Pt, Au, Ac, Th, Pa, U, Np, Cm, Lr, etc.)
  */
-const SUBSHELL_J_SPLIT = {
-    '1s': [{ j: '1/2', cap: 2 }],
-    '2s': [{ j: '1/2', cap: 2 }],
-    '2p': [{ j: '1/2', cap: 2 }, { j: '3/2', cap: 4 }],
-    '3s': [{ j: '1/2', cap: 2 }],
-    '3p': [{ j: '1/2', cap: 2 }, { j: '3/2', cap: 4 }],
-    '4s': [{ j: '1/2', cap: 2 }],
-    '3d': [{ j: '3/2', cap: 4 }, { j: '5/2', cap: 6 }],
-    '4p': [{ j: '1/2', cap: 2 }, { j: '3/2', cap: 4 }],
-    '5s': [{ j: '1/2', cap: 2 }],
-    '4d': [{ j: '3/2', cap: 4 }, { j: '5/2', cap: 6 }],
-    '5p': [{ j: '1/2', cap: 2 }, { j: '3/2', cap: 4 }],
-    '6s': [{ j: '1/2', cap: 2 }],
-    '4f': [{ j: '5/2', cap: 6 }, { j: '7/2', cap: 8 }],
-    '5d': [{ j: '3/2', cap: 4 }, { j: '5/2', cap: 6 }],
-    '6p': [{ j: '1/2', cap: 2 }, { j: '3/2', cap: 4 }],
-    '7s': [{ j: '1/2', cap: 2 }],
-    '5f': [{ j: '5/2', cap: 6 }, { j: '7/2', cap: 8 }],
-    '6d': [{ j: '3/2', cap: 4 }, { j: '5/2', cap: 6 }],
-    '7p': [{ j: '1/2', cap: 2 }, { j: '3/2', cap: 4 }]
+const HARDCODED_ELECTRON_CONFIGS = {
+    1:  { "1s": 1 },
+    2:  { "1s": 2 },
+    3:  { "1s": 2, "2s": 1 },
+    4:  { "1s": 2, "2s": 2 },
+    5:  { "1s": 2, "2s": 2, "2p": 1 },
+    6:  { "1s": 2, "2s": 2, "2p": 2 },
+    7:  { "1s": 2, "2s": 2, "2p": 3 },
+    8:  { "1s": 2, "2s": 2, "2p": 4 },
+    9:  { "1s": 2, "2s": 2, "2p": 5 },
+    10: { "1s": 2, "2s": 2, "2p": 6 },
+
+    11: { "1s": 2, "2s": 2, "2p": 6, "3s": 1 },
+    12: { "1s": 2, "2s": 2, "2p": 6, "3s": 2 },
+    13: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 1 },
+    14: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 2 },
+    15: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 3 },
+    16: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 4 },
+    17: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 5 },
+    18: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6 },
+
+    19: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "4s": 1 },
+    20: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "4s": 2 },
+    21: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 1, "4s": 2 },
+    22: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 2, "4s": 2 },
+    23: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 3, "4s": 2 },
+    24: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 5, "4s": 1 }, // Cr anomaly
+    25: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 5, "4s": 2 },
+    26: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 6, "4s": 2 },
+    27: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 7, "4s": 2 },
+    28: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 8, "4s": 2 },
+    29: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 1 }, // Cu anomaly
+    30: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2 },
+    31: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 1 },
+    32: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 2 },
+    33: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 3 },
+    34: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 4 },
+    35: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 5 },
+    36: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6 },
+
+    37: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "5s": 1 },
+    38: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "5s": 2 },
+    39: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 1, "5s": 2 },
+    40: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 2, "5s": 2 },
+    41: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 4, "5s": 1 }, // Nb anomaly
+    42: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 5, "5s": 1 }, // Mo anomaly
+    43: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 5, "5s": 2 },
+    44: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 7, "5s": 1 }, // Ru anomaly
+    45: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 8, "5s": 1 }, // Rh anomaly
+    46: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10 },        // Pd anomaly (5s0)
+    47: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "5s": 1 }, // Ag anomaly
+    48: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "5s": 2 },
+    49: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "5s": 2, "5p": 1 },
+    50: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "5s": 2, "5p": 2 },
+    51: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "5s": 2, "5p": 3 },
+    52: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "5s": 2, "5p": 4 },
+    53: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "5s": 2, "5p": 5 },
+    54: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "5s": 2, "5p": 6 },
+
+    55: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "5s": 2, "5p": 6, "6s": 1 },
+    56: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "5s": 2, "5p": 6, "6s": 2 },
+    57: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "5s": 2, "5p": 6, "5d": 1, "6s": 2 }, // La anomaly
+    58: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 1, "5s": 2, "5p": 6, "5d": 1, "6s": 2 }, // Ce anomaly
+    59: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 3, "5s": 2, "5p": 6, "6s": 2 },
+    60: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 4, "5s": 2, "5p": 6, "6s": 2 },
+    61: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 5, "5s": 2, "5p": 6, "6s": 2 },
+    62: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 6, "5s": 2, "5p": 6, "6s": 2 },
+    63: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 7, "5s": 2, "5p": 6, "6s": 2 },
+    64: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 7, "5s": 2, "5p": 6, "5d": 1, "6s": 2 }, // Gd anomaly
+    65: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 9, "5s": 2, "5p": 6, "6s": 2 },
+    66: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 10, "5s": 2, "5p": 6, "6s": 2 },
+    67: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 11, "5s": 2, "5p": 6, "6s": 2 },
+    68: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 12, "5s": 2, "5p": 6, "6s": 2 },
+    69: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 13, "5s": 2, "5p": 6, "6s": 2 },
+    70: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "6s": 2 },
+    71: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 1, "6s": 2 },
+    72: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 2, "6s": 2 },
+    73: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 3, "6s": 2 },
+    74: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 4, "6s": 2 },
+    75: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 5, "6s": 2 },
+    76: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 6, "6s": 2 },
+    77: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 7, "6s": 2 },
+    78: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 9, "6s": 1 }, // Pt anomaly
+    79: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "6s": 1 }, // Au anomaly
+    80: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "6s": 2 },
+    81: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "6s": 2, "6p": 1 },
+    82: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "6s": 2, "6p": 2 },
+    83: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "6s": 2, "6p": 3 },
+    84: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "6s": 2, "6p": 4 },
+    85: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "6s": 2, "6p": 5 },
+    86: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "6s": 2, "6p": 6 },
+
+    87: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "6s": 2, "6p": 6, "7s": 1 },
+    88: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "6s": 2, "6p": 6, "7s": 2 },
+    89: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "6s": 2, "6p": 6, "6d": 1, "7s": 2 }, // Ac anomaly
+    90: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "6s": 2, "6p": 6, "6d": 2, "7s": 2 }, // Th anomaly
+    91: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 2, "6s": 2, "6p": 6, "6d": 1, "7s": 2 }, // Pa anomaly
+    92: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 3, "6s": 2, "6p": 6, "6d": 1, "7s": 2 }, // U anomaly
+    93: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 4, "6s": 2, "6p": 6, "6d": 1, "7s": 2 }, // Np anomaly
+    94: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 6, "6s": 2, "6p": 6, "7s": 2 },
+    95: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 7, "6s": 2, "6p": 6, "7s": 2 },
+    96: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 7, "6s": 2, "6p": 6, "6d": 1, "7s": 2 }, // Cm anomaly
+    97: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 9, "6s": 2, "6p": 6, "7s": 2 },
+    98: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 10, "6s": 2, "6p": 6, "7s": 2 },
+    99: { "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 11, "6s": 2, "6p": 6, "7s": 2 },
+    100:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 12, "6s": 2, "6p": 6, "7s": 2 },
+    101:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 13, "6s": 2, "6p": 6, "7s": 2 },
+    102:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "6s": 2, "6p": 6, "7s": 2 },
+    103:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "6s": 2, "6p": 6, "7s": 2, "7p": 1 }, // Lr anomaly
+    104:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "6s": 2, "6p": 6, "6d": 2, "7s": 2 },
+    105:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "6s": 2, "6p": 6, "6d": 3, "7s": 2 },
+    106:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "6s": 2, "6p": 6, "6d": 4, "7s": 2 },
+    107:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "6s": 2, "6p": 6, "6d": 5, "7s": 2 },
+    108:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "6s": 2, "6p": 6, "6d": 6, "7s": 2 },
+    109:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "6s": 2, "6p": 6, "6d": 7, "7s": 2 },
+    110:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "6s": 2, "6p": 6, "6d": 8, "7s": 2 },
+    111:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "6s": 2, "6p": 6, "6d": 9, "7s": 2 },
+    112:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "6s": 2, "6p": 6, "6d": 10, "7s": 2 },
+    113:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "6s": 2, "6p": 6, "6d": 10, "7s": 2, "7p": 1 },
+    114:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "6s": 2, "6p": 6, "6d": 10, "7s": 2, "7p": 2 },
+    115:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "6s": 2, "6p": 6, "6d": 10, "7s": 2, "7p": 3 },
+    116:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "6s": 2, "6p": 6, "6d": 10, "7s": 2, "7p": 4 },
+    117:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "6s": 2, "6p": 6, "6d": 10, "7s": 2, "7p": 5 },
+    118:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "6s": 2, "6p": 6, "6d": 10, "7s": 2, "7p": 6 }
 };
 
+let selectedElementSymbol = 'C';
+
+window.addEventListener('DOMContentLoaded', () => {
+    initBabylonEngine();
+    renderPeriodicTableGrid();
+    selectElementBySymbol('C');
+});
+
 /**
- * Render 118 Periodic Table Element Grid Cards
+ * Maps subshell ground state electron occupations to relativistic Dirac j-suborbitals.
+ * Automatically splits p, d, and f orbitals into lower and upper j-components.
+ */
+function getElectronConfigForZ(Z) {
+    const counts = HARDCODED_ELECTRON_CONFIGS[Z] || HARDCODED_ELECTRON_CONFIGS[1];
+    const subConfig = {};
+    let maxN = 1;
+
+    for (const [subshell, count] of Object.entries(counts)) {
+        if (!count || count <= 0) continue;
+        const n = parseInt(subshell[0]);
+        const type = subshell[1];
+        if (n > maxN) maxN = n;
+
+        if (type === 's') {
+            subConfig[`${n}s1/2`] = count;
+        } else if (type === 'p') {
+            subConfig[`${n}p1/2`] = Math.min(count, 2);
+            if (count > 2) subConfig[`${n}p3/2`] = count - 2;
+        } else if (type === 'd') {
+            subConfig[`${n}d3/2`] = Math.min(count, 4);
+            if (count > 4) subConfig[`${n}d5/2`] = count - 4;
+        } else if (type === 'f') {
+            subConfig[`${n}f5/2`] = Math.min(count, 6);
+            if (count > 6) subConfig[`${n}f7/2`] = count - 6;
+        }
+    }
+
+    return { subConfig, maxN };
+}
+
+/**
+ * Builds standard 18-column Periodic Table with Lanthanides & Actinides
  */
 function renderPeriodicTableGrid() {
     const container = document.getElementById('ptGridContainer');
     if (!container) return;
+
     container.innerHTML = '';
 
+    // Row 0: Group numbers header (1 - 18)
+    const emptyTopCorner = document.createElement('div');
+    emptyTopCorner.className = 'pt-header-cell';
+    emptyTopCorner.innerText = '';
+    container.appendChild(emptyTopCorner);
+
+    for (let g = 1; g <= 18; g++) {
+        const groupHeader = document.createElement('div');
+        groupHeader.className = 'pt-header-cell';
+        groupHeader.innerText = g;
+        container.appendChild(groupHeader);
+    }
+
+    // Grid placement map for 118 elements
     ELEMENTS_DATA.forEach(elem => {
+        let gridRow = elem.period;
+        let gridCol = elem.group;
+
+        // Position Lanthanides (57-71) and Actinides (89-103) in f-block below main table
+        if (elem.Z >= 57 && elem.Z <= 71) {
+            gridRow = 9;
+            gridCol = elem.Z - 57 + 4;
+        } else if (elem.Z >= 89 && elem.Z <= 103) {
+            gridRow = 10;
+            gridCol = elem.Z - 89 + 4;
+        }
+
+        elem._gridRow = gridRow;
+        elem._gridCol = gridCol;
+    });
+
+    // Populate periods 1 to 7
+    for (let p = 1; p <= 7; p++) {
+        // Period header cell (left column)
+        const periodHeader = document.createElement('div');
+        periodHeader.className = 'pt-period-cell';
+        periodHeader.innerText = p;
+        periodHeader.style.gridRow = p + 1;
+        periodHeader.style.gridColumn = 1;
+        container.appendChild(periodHeader);
+
+        const periodElems = ELEMENTS_DATA.filter(e => e._gridRow === p);
+        periodElems.forEach(elem => {
+            const card = createPeriodicCard(elem);
+            card.style.gridRow = p + 1;
+            card.style.gridColumn = elem._gridCol + 1;
+            container.appendChild(card);
+        });
+    }
+
+    // Row 8: Gap spacer for Lanthanides/Actinides
+    const gapSpacer = document.createElement('div');
+    gapSpacer.style.gridRow = 9;
+    gapSpacer.style.gridColumn = '1 / span 19';
+    gapSpacer.style.height = '12px';
+    container.appendChild(gapSpacer);
+
+    // Lanthanides & Actinides row labels
+    const laLabel = document.createElement('div');
+    laLabel.className = 'pt-period-cell';
+    laLabel.innerText = '57-71';
+    laLabel.style.gridRow = 10;
+    laLabel.style.gridColumn = 1;
+    laLabel.style.fontSize = '8px';
+    container.appendChild(laLabel);
+
+    const acLabel = document.createElement('div');
+    acLabel.className = 'pt-period-cell';
+    acLabel.innerText = '89-103';
+    acLabel.style.gridRow = 11;
+    acLabel.style.gridColumn = 1;
+    acLabel.style.fontSize = '8px';
+    container.appendChild(acLabel);
+
+    // Populate Lanthanides & Actinides elements
+    const fBlockElems = ELEMENTS_DATA.filter(e => e._gridRow === 9 || e._gridRow === 10);
+    fBlockElems.forEach(elem => {
         const card = createPeriodicCard(elem);
-        card.style.gridColumn = elem.group;
-        card.style.gridRow = elem.period;
+        card.style.gridRow = elem._gridRow === 9 ? 10 : 11;
+        card.style.gridColumn = elem._gridCol + 1;
         container.appendChild(card);
     });
 }
@@ -190,7 +416,6 @@ function createPeriodicCard(elem) {
     card.className = `pt-element-card ${elem.sym === selectedElementSymbol ? 'active' : ''}`;
     card.id = `pt_card_${elem.sym}`;
     card.dataset.cat = elem.cat;
-    card.dataset.group = elem.group;
     card.onclick = () => {
         selectElementBySymbol(elem.sym);
         closePeriodicTableModal();
@@ -204,6 +429,7 @@ function createPeriodicCard(elem) {
         <div class="pt-card-symbol">${elem.sym}</div>
         <div class="pt-card-name">${elem.name}</div>
     `;
+
     return card;
 }
 
@@ -211,110 +437,265 @@ function selectElementBySymbol(symbol) {
     const elem = ELEMENTS_DATA.find(e => e.sym === symbol);
     if (!elem) return;
 
-    selectedElementSymbol = elem.sym;
-    const tag = document.getElementById('selectedElementTag');
-    if (tag) tag.textContent = `[${elem.Z} - ${elem.name}]`;
-
-    const zAuto = document.getElementById('inputZ');
-    const zManual = document.getElementById('inputZManual');
-    if (zAuto) zAuto.value = elem.Z;
-    if (zManual) zManual.value = elem.Z;
-
-    if (typeof syncManualFieldsFromZ === 'function') {
-        syncManualFieldsFromZ(elem.Z);
-    }
+    selectedElementSymbol = symbol;
 
     document.querySelectorAll('.pt-element-card').forEach(c => c.classList.remove('active'));
-    const activeCard = document.getElementById(`pt_card_${elem.sym}`);
+    const activeCard = document.getElementById(`pt_card_${symbol}`);
     if (activeCard) activeCard.classList.add('active');
+
+    const configData = getElectronConfigForZ(elem.Z);
+
+    document.getElementById('inputZ').value = elem.Z;
+    document.getElementById('inputMaxN').value = configData.maxN;
+
+    generateOrbitsBuilder();
+
+    // Populate electrons
+    document.querySelectorAll('.orbit-row').forEach(row => {
+        const label = row.querySelector('.orbit-label').innerText;
+        if (configData.subConfig[label] !== undefined) {
+            row.querySelector('.e-input').value = configData.subConfig[label];
+        }
+    });
+
+    const tag = document.getElementById('selectedElementTag');
+    if (tag) tag.innerText = `[Z = ${elem.Z} ${elem.name}]`;
 
     rebuildQuantumModel();
 }
 
+/* Modal Open / Close Handler */
 function openPeriodicTableModal() {
     const backdrop = document.getElementById('ptModalBackdrop');
-    if (backdrop) backdrop.classList.add('open');
-    document.body.classList.add('modal-open');
+    if (backdrop) {
+        backdrop.classList.add('open');
+        document.body.classList.add('modal-open');
+    }
 }
 
 function closePeriodicTableModal() {
     const backdrop = document.getElementById('ptModalBackdrop');
-    if (backdrop) backdrop.classList.remove('open');
-    document.body.classList.remove('modal-open');
+    if (backdrop) {
+        backdrop.classList.remove('open');
+        document.body.classList.remove('modal-open');
+    }
 }
 
-function handleBackdropClick(event) {
-    if (event.target.id === 'ptModalBackdrop') {
+function handleBackdropClick(e) {
+    if (e.target.id === 'ptModalBackdrop') {
         closePeriodicTableModal();
     }
 }
 
-/**
- * Dynamic Suborbit Builder UI Controls
- */
+/* Dirac Core Integrator Functions */
+function getOrbitalLabel(n, l, j) {
+    const symbols = ['s', 'p', 'd', 'f', 'g', 'h', 'i', 'k', 'l', 'm', 'n', 'o'];
+    let name = (l < symbols.length) ? `${n}${symbols[l]}` : `${n}[${l + 1}]`;
+    
+    if (j === 0.5) name += '1/2';
+    else if (j === 1.5) name += '3/2';
+    else if (j === 2.5) name += '5/2';
+    else if (j === 3.5) name += '7/2';
+    else if (j === 4.5) name += '9/2';
+    else if (j === 5.5) name += '11/2';
+    else name += `${Math.round(j * 2)}/2`;
+
+    return name;
+}
+
+function getSuborbitCapacity(l, j) {
+    return Math.round(2 * j + 1);
+}
+
 function generateOrbitsBuilder() {
-    const maxNInput = document.getElementById('inputMaxN');
+    const maxN = parseInt(document.getElementById('inputMaxN').value) || 1;
     const container = document.getElementById('orbitsBuilderContainer');
-    if (!maxNInput || !container) return;
+    
+    const existingElec = {};
+    const existingEx = {};
+    document.querySelectorAll('.orbit-row').forEach(row => {
+        const key = row.dataset.key;
+        existingElec[key] = row.querySelector('.e-input').value;
+        existingEx[key] = row.querySelector('.ex-input').value;
+    });
 
-    const maxN = parseInt(maxNInput.value) || 1;
     container.innerHTML = '';
-
-    const labelMap = ['s', 'p', 'd', 'f', 'g', 'h'];
 
     for (let n = 1; n <= maxN; n++) {
         for (let l = 0; l < n; l++) {
-            if (l >= labelMap.length) continue;
-            const subName = `${n}${labelMap[l]}`;
+            const jValues = (l === 0) ? [0.5] : [l - 0.5, l + 0.5];
 
-            const row = document.createElement('div');
-            row.className = 'orbit-row';
-            row.innerHTML = `
-                <input type="text" class="ex-input" value="0" placeholder="ex">
-                <span class="orbit-label">${subName}</span>
-                <input type="number" class="e-input" value="${l === 0 ? 2 : l * 4}" min="0" max="14">
-            `;
-            container.appendChild(row);
+            jValues.forEach(j => {
+                const label = getOrbitalLabel(n, l, j);
+                const cap = getSuborbitCapacity(l, j);
+                const key = `${n}_${l}_${j}`;
+
+                const row = document.createElement('div');
+                row.className = 'orbit-row';
+                row.dataset.key = key;
+                row.dataset.n = n;
+                row.dataset.l = l;
+                row.dataset.j = j;
+
+                const exVal = existingEx[key] !== undefined ? existingEx[key] : '0';
+                const elecVal = existingElec[key] !== undefined ? existingElec[key] : '';
+
+                row.innerHTML = `
+                    <input type="number" class="ex-input" value="${exVal}" min="0" placeholder="0" title="Excited state shift Δn">
+                    <span class="orbit-label">${label}</span>
+                    <input type="number" class="e-input" value="${elecVal}" min="0" max="${cap}" placeholder="Max ${cap}" title="Max capacity: ${cap}">
+                `;
+                container.appendChild(row);
+            });
         }
     }
-    updateFiltersUI();
 }
 
-/**
- * Populate Dirac Filter Checklist Controls
- */
-function updateFiltersUI() {
+function solveDiracExactEnergy(n, l, j, zEff) {
+    const kappa = (j > l) ? -(l + 1) : l;
+    const absKappa = Math.abs(kappa);
+    const zAlpha = zEff * FINE_ALPHA;
+    
+    if (zAlpha >= absKappa) return -13.6057 * Math.pow(zEff / n, 2);
+
+    const gamma = Math.sqrt(absKappa * absKappa - zAlpha * zAlpha);
+    const nr = n - absKappa;
+    
+    const energyHartree = (1.0 / (FINE_ALPHA * FINE_ALPHA)) * (1.0 / Math.sqrt(1.0 + Math.pow(zAlpha / (nr + gamma), 2)) - 1.0);
+    return energyHartree * HARTREE_TO_EV;
+}
+
+function autoCalculateSuborbitEnergiesUI() {
+    const Z = parseInt(document.getElementById('inputZ').value) || 1;
+    const rows = document.querySelectorAll('.orbit-row');
+    const suborbitEnergies = [];
+
+    let cumElec = 0;
+    rows.forEach(row => {
+        const eCount = parseInt(row.querySelector('.e-input').value) || 0;
+        if (eCount > 0) {
+            const baseN = parseInt(row.dataset.n);
+            const exLevel = parseInt(row.querySelector('.ex-input').value) || 0;
+            const effectiveN = baseN + exLevel;
+            const l = parseInt(row.dataset.l);
+            const j = parseFloat(row.dataset.j);
+
+            let S = cumElec * 0.85;
+            let zEff = Math.max(0.1, Z - S);
+
+            let energy = solveDiracExactEnergy(effectiveN, l, j, zEff);
+            suborbitEnergies.push(`${row.querySelector('.orbit-label').innerText}: ${energy.toFixed(1)}eV`);
+            cumElec += eCount;
+        }
+    });
+
+    document.getElementById('inputEn').value = suborbitEnergies.join(', ');
+}
+
+function solveDiracRadialExpectationRK4(n, l, j, zEff) {
+    const kappa = (j > l) ? -(l + 1) : l;
+    const absKappa = Math.abs(kappa);
+    const zAlpha = Math.min(zEff * FINE_ALPHA, absKappa - 1e-5);
+
+    const gamma = (absKappa * absKappa > zAlpha * zAlpha) ? Math.sqrt(absKappa * absKappa - zAlpha * zAlpha) : absKappa;
+    const N = Math.sqrt(n * n - 2 * (n - absKappa) * (absKappa - gamma));
+
+    return (0.5291772109 / (2.0 * zEff)) * (3.0 * N * N - kappa * (kappa + 1.0));
+}
+
+function getOrbitalColor(l, j) {
+    const baseHues = [185, 280, 140, 35, 310, 50, 200];
+    let hue = (l < baseHues.length) ? baseHues[l] : (l * 137.5) % 360;
+    let sat = 0.85;
+    let val = (j > l) ? 0.95 : 0.60;
+    return BABYLON.Color3.FromHSV(hue, sat, val);
+}
+
+function rebuildQuantumModel() {
+    activeMeshes.forEach(item => {
+        if (item.mesh.material) item.mesh.material.dispose();
+        item.mesh.dispose();
+    });
+    activeMeshes = [];
+
+    const Z = parseInt(document.getElementById('inputZ').value) || 1;
+    const rows = document.querySelectorAll('.orbit-row');
+    let maxRadius = 0;
+    let cumElec = 0;
+
+    rows.forEach(row => {
+        const eCount = parseInt(row.querySelector('.e-input').value) || 0;
+        if (eCount > 0) {
+            const baseN = parseInt(row.dataset.n);
+            const exLevel = parseInt(row.querySelector('.ex-input').value) || 0;
+            const effectiveN = baseN + exLevel;
+            const l = parseInt(row.dataset.l);
+            const j = parseFloat(row.dataset.j);
+
+            let S = cumElec * 0.85;
+            let zEff = Math.max(0.1, Z - S);
+            let rDirac = solveDiracRadialExpectationRK4(effectiveN, l, j, zEff);
+
+            if (rDirac > maxRadius) maxRadius = rDirac;
+            const stateKey = getOrbitalLabel(effectiveN, l, j);
+
+            createOrbitalMesh(`orb_${stateKey}`, rDirac, effectiveN, l, j, stateKey);
+            cumElec += eCount;
+        }
+    });
+
+    refreshDynamicFilterUI();
+
+    if (!userHasCustomInit) {
+        initialTarget = BABYLON.Vector3.Zero();
+        if (maxRadius > 0) initialRadius = maxRadius * 3.2;
+    }
+
+    reloadInitialPosition();
+}
+
+function createOrbitalMesh(name, radius, n, l, j, stateKey) {
+    const sphere = BABYLON.MeshBuilder.CreateSphere(name, { diameter: radius * 2, segments: 48 }, scene);
+    const mat = new BABYLON.StandardMaterial(`${name}_mat`, scene);
+    const col = getOrbitalColor(l, j);
+
+    mat.diffuseColor = col;
+    mat.emissiveColor = col.scale(0.35);
+    mat.alpha = currentOpacity;
+    mat.backFaceCulling = false;
+    mat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
+
+    sphere.material = mat;
+    sphere.isVisible = visibilityState[stateKey] !== false;
+
+    activeMeshes.push({ mesh: sphere, stateKey: stateKey });
+}
+
+function refreshDynamicFilterUI() {
     const container = document.getElementById('dynamicFilterContainer');
     if (!container) return;
     container.innerHTML = '';
 
-    const rows = document.querySelectorAll('#orbitsBuilderContainer .orbit-row');
-    rows.forEach(row => {
-        const label = row.querySelector('.orbit-label').textContent.trim();
-        const splits = SUBSHELL_J_SPLIT[label] || [{ j: '1/2', cap: 2 }];
+    activeMeshes.forEach(item => {
+        if (visibilityState[item.stateKey] === undefined) {
+            visibilityState[item.stateKey] = true;
+        }
 
-        splits.forEach(s => {
-            const fullLabel = `${label}_${s.j}`;
-            if (visibilityState[fullLabel] === undefined) {
-                visibilityState[fullLabel] = true;
-            }
-
-            const item = document.createElement('div');
-            item.className = 'filter-item';
-            item.innerHTML = `
-                <span>${fullLabel}</span>
-                <input type="checkbox" ${visibilityState[fullLabel] ? 'checked' : ''} onchange="toggleSuborbitVisibility('${fullLabel}', this.checked)">
-            `;
-            container.appendChild(item);
-        });
+        const label = document.createElement('label');
+        label.className = 'filter-item';
+        label.innerHTML = `
+            <span><b>${item.stateKey}</b></span>
+            <input type="checkbox" ${visibilityState[item.stateKey] ? 'checked' : ''} onchange="toggleOrbitalVisibility('${item.stateKey}', this.checked)">
+        `;
+        container.appendChild(label);
     });
 }
 
-function toggleSuborbitVisibility(label, isVisible) {
-    visibilityState[label] = isVisible;
+function toggleOrbitalVisibility(stateKey, isChecked) {
+    visibilityState[stateKey] = isChecked;
     activeMeshes.forEach(item => {
-        if (item.label === label && item.mesh) {
-            item.mesh.setEnabled(isVisible);
+        if (item.stateKey === stateKey) {
+            item.mesh.isVisible = isChecked;
         }
     });
 }
@@ -328,26 +709,43 @@ function updateOpacity(val) {
     });
 }
 
-/**
- * Camera Movement and UI Position Synchronizer
- */
-function updateCameraUI() {
-    if (!camera) return;
-    const tpX = document.getElementById('tpX');
-    const tpY = document.getElementById('tpY');
-    const tpZ = document.getElementById('tpZ');
+function initBabylonEngine() {
+    canvas = document.getElementById("renderCanvas");
+    engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
+    
+    scene = new BABYLON.Scene(engine);
+    scene.clearColor = new BABYLON.Color4(0.01, 0.02, 0.04, 1.0);
 
-    if (tpX && document.activeElement !== tpX) tpX.value = camera.position.x.toFixed(2);
-    if (tpY && document.activeElement !== tpY) tpY.value = camera.position.y.toFixed(2);
-    if (tpZ && document.activeElement !== tpZ) tpZ.value = camera.position.z.toFixed(2);
+    camera = new BABYLON.ArcRotateCamera("Camera", initialAlpha, initialBeta, initialRadius, initialTarget.clone(), scene);
+    camera.attachControl(canvas, true);
+    camera.lowerRadiusLimit = 0.01;
+    camera.upperRadiusLimit = 10000;
+
+    const hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(1, 1, 0), scene);
+    hemiLight.intensity = 0.9;
+
+    engine.runRenderLoop(() => { scene.render(); });
+    window.addEventListener("resize", () => engine.resize());
+}
+
+function parseCoordinate(inputVal, currentVal) {
+    if (!inputVal) return currentVal;
+    let str = inputVal.trim();
+    if (str.startsWith('~')) {
+        const offset = parseFloat(str.slice(1));
+        return isNaN(offset) ? currentVal : currentVal + offset;
+    }
+    const val = parseFloat(str);
+    return isNaN(val) ? currentVal : val;
 }
 
 function teleportCamera() {
     if (!camera) return;
-    const x = parseFloat(document.getElementById('tpX').value) || 0;
-    const y = parseFloat(document.getElementById('tpY').value) || 0;
-    const z = parseFloat(document.getElementById('tpZ').value) || 0;
-    camera.setPosition(new BABYLON.Vector3(x, y, z));
+    const currentTarget = camera.target;
+    const newX = parseCoordinate(document.getElementById('tpX').value, currentTarget.x);
+    const newY = parseCoordinate(document.getElementById('tpY').value, currentTarget.y);
+    const newZ = parseCoordinate(document.getElementById('tpZ').value, currentTarget.z);
+    camera.setTarget(new BABYLON.Vector3(newX, newY, newZ));
 }
 
 function setInitialPosition() {
@@ -356,283 +754,23 @@ function setInitialPosition() {
     initialRadius = camera.radius;
     initialAlpha = camera.alpha;
     initialBeta = camera.beta;
+    userHasCustomInit = true;
 }
 
 function reloadInitialPosition() {
     if (!camera) return;
-    camera.setTarget(initialTarget);
+    camera.setTarget(initialTarget.clone());
     camera.radius = initialRadius;
     camera.alpha = initialAlpha;
     camera.beta = initialBeta;
 }
 
 function togglePanel(collapse) {
-    const panel = document.getElementById('uiOverlay');
-    const restoreBtn = document.getElementById('restoreBtn');
-    if (panel) panel.classList.toggle('collapsed', collapse);
-    if (restoreBtn) restoreBtn.style.display = collapse ? 'flex' : 'none';
+    document.getElementById('uiOverlay').classList.toggle('collapsed', collapse);
+    document.getElementById('restoreBtn').style.display = collapse ? 'flex' : 'none';
 }
 
 function toggleTpPanel(collapse) {
-    const panel = document.getElementById('tpOverlay');
-    const restoreBtn = document.getElementById('tpRestoreBtn');
-    if (panel) panel.classList.toggle('collapsed', collapse);
-    if (restoreBtn) restoreBtn.style.display = collapse ? 'flex' : 'none';
+    document.getElementById('tpOverlay').classList.toggle('collapsed', collapse);
+    document.getElementById('tpRestoreBtn').style.display = collapse ? 'flex' : 'none';
 }
-
-/**
- * Babylon.js 3D Engine Initialization
- */
-function initBabylonEngine() {
-    canvas = document.getElementById('renderCanvas');
-    if (!canvas) return;
-
-    engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
-    scene = new BABYLON.Scene(engine);
-    scene.clearColor = new BABYLON.Color4(0.01, 0.01, 0.02, 1.0);
-
-    camera = new BABYLON.ArcRotateCamera("Camera", initialAlpha, initialBeta, initialRadius, initialTarget, scene);
-    camera.attachControl(canvas, true);
-    camera.wheelPrecision = 15;
-    camera.minZ = 0.1;
-    camera.maxZ = 1000;
-
-    const hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
-    hemiLight.intensity = 0.85;
-
-    const dirLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(-1, -2, -1), scene);
-    dirLight.intensity = 0.5;
-
-    // Central Nucleus Representation
-    const nucleus = BABYLON.MeshBuilder.CreateSphere("nucleus", { diameter: 1.2, segments: 32 }, scene);
-    const nucMat = new BABYLON.StandardMaterial("nucMat", scene);
-    nucMat.emissiveColor = new BABYLON.Color3(0.9, 0.3, 0.2);
-    nucMat.diffuseColor = new BABYLON.Color3(1.0, 0.5, 0.2);
-    nucleus.material = nucMat;
-
-    // Continuous Precession Render Loop
-    scene.registerBeforeRender(() => {
-        const t = performance.now() * 0.0008;
-        activeMeshes.forEach(item => {
-            if (item.mesh && !item.mesh.isDisposed) {
-                item.mesh.rotation.y = t * item.speed;
-                item.mesh.rotation.z = Math.sin(t * 0.5 * item.speed) * 0.12;
-            }
-        });
-    });
-
-    engine.runRenderLoop(() => {
-        scene.render();
-        updateCameraUI();
-    });
-
-    window.addEventListener('resize', () => {
-        engine.resize();
-    });
-
-    renderPeriodicTableGrid();
-    generateOrbitsBuilder();
-    rebuildQuantumModel();
-}
-
-/**
- * Quantum Spectral Color Generator
- */
-function getOrbitalColor(n, l, j) {
-    if (l === 0) return new BABYLON.Color3(0.0, 0.95, 1.0); // Cyan s-orbital
-    if (l === 1) return j.includes('1/2') ? new BABYLON.Color3(0.38, 0.51, 0.96) : new BABYLON.Color3(0.65, 0.36, 0.96); // Indigo/Purple p-orbital
-    if (l === 2) return j.includes('3/2') ? new BABYLON.Color3(0.06, 0.72, 0.65) : new BABYLON.Color3(0.1, 0.8, 0.4); // Emerald d-orbital
-    return new BABYLON.Color3(0.96, 0.62, 0.04); // Amber f-orbital
-}
-
-/**
- * High-Precision 3D Dirac Quantum Orbital Geometry Synthesizer
- */
-function createOrbitalMesh(scene, n, l, jLabel, elecCount, Z, opacity) {
-    const parentNode = new BABYLON.TransformNode(`orbital_${n}_${l}_${jLabel}`, scene);
-    const color = getOrbitalColor(n, l, jLabel);
-    
-    // Radius scaling according to Principal Quantum Number and Atomic Charge Z
-    const baseRadius = (2.2 + (n * 2.8) / Math.pow(Z, 0.22));
-
-    const mat = new BABYLON.StandardMaterial(`mat_${n}_${l}_${jLabel}`, scene);
-    mat.emissiveColor = color;
-    mat.diffuseColor = color;
-    mat.alpha = opacity;
-    mat.backFaceCulling = false;
-    mat.wireframe = false;
-
-    // s-Orbital Geometry (Spherical Cloud & Equator Torus)
-    if (l === 0) {
-        const sphere = BABYLON.MeshBuilder.CreateSphere("s_cloud", { diameter: baseRadius * 2, segments: 32 }, scene);
-        sphere.material = mat;
-        sphere.parent = parentNode;
-
-        const ring = BABYLON.MeshBuilder.CreateTorus("s_ring", { diameter: baseRadius * 2.2, thickness: 0.08, tessellation: 64 }, scene);
-        ring.material = mat;
-        ring.parent = parentNode;
-    } 
-    // p-Orbital Geometry (3 Dumbbell Pairs & Relativistic Precession Splitting)
-    else if (l === 1) {
-        const angles = [0, Math.PI / 2, Math.PI];
-        angles.forEach((ang, idx) => {
-            const lobe = BABYLON.MeshBuilder.CreateSphere(`p_lobe_${idx}`, {
-                diameterX: baseRadius * 0.8,
-                diameterY: baseRadius * 2.4,
-                diameterZ: baseRadius * 0.8,
-                segments: 24
-            }, scene);
-            lobe.position.y = baseRadius * 0.8 * (idx % 2 === 0 ? 1 : -1);
-            lobe.rotation.z = ang;
-            lobe.rotation.x = idx * (Math.PI / 3);
-            lobe.material = mat;
-            lobe.parent = parentNode;
-        });
-
-        const torus = BABYLON.MeshBuilder.CreateTorus("p_torus", { diameter: baseRadius * 2.6, thickness: 0.1, tessellation: 64 }, scene);
-        torus.rotation.x = Math.PI / 2;
-        torus.material = mat;
-        torus.parent = parentNode;
-    }
-    // d-Orbital Geometry (Cloverleaf Lobes + Equatorial Torus Ring)
-    else if (l === 2) {
-        for (let i = 0; i < 4; i++) {
-            const rot = (i * Math.PI) / 2;
-            const lobe = BABYLON.MeshBuilder.CreateSphere(`d_lobe_${i}`, {
-                diameterX: baseRadius * 0.7,
-                diameterY: baseRadius * 2.2,
-                diameterZ: baseRadius * 0.7,
-                segments: 20
-            }, scene);
-            lobe.position.x = Math.cos(rot) * baseRadius * 0.9;
-            lobe.position.z = Math.sin(rot) * baseRadius * 0.9;
-            lobe.rotation.y = rot;
-            lobe.material = mat;
-            lobe.parent = parentNode;
-        }
-
-        const ring = BABYLON.MeshBuilder.CreateTorus("d_ring", { diameter: baseRadius * 1.8, thickness: 0.18, tessellation: 64 }, scene);
-        ring.material = mat;
-        ring.parent = parentNode;
-    }
-    // f-Orbital & Higher Angular Momentum Geometry
-    else {
-        for (let i = 0; i < 6; i++) {
-            const rot = (i * Math.PI) / 3;
-            const lobe = BABYLON.MeshBuilder.CreateSphere(`f_lobe_${i}`, {
-                diameterX: baseRadius * 0.6,
-                diameterY: baseRadius * 2.5,
-                diameterZ: baseRadius * 0.6,
-                segments: 16
-            }, scene);
-            lobe.position.x = Math.cos(rot) * baseRadius * 1.1;
-            lobe.position.y = Math.sin(rot) * baseRadius * 0.6;
-            lobe.position.z = Math.sin(rot * 2) * baseRadius * 0.8;
-            lobe.material = mat;
-            lobe.parent = parentNode;
-        }
-    }
-
-    return parentNode;
-}
-
-/**
- * Main Solver Entry Point: Rebuild Quantum System & Visualizer
- */
-function rebuildQuantumModel() {
-    if (!scene) return;
-
-    // Dispose existing 3D orbital meshes
-    activeMeshes.forEach(item => {
-        if (item.mesh) item.mesh.dispose();
-    });
-    activeMeshes = [];
-
-    const autoContainer = document.getElementById('autoModeContainer');
-    const isAutoMode = autoContainer && !autoContainer.classList.contains('hidden');
-
-    const zInput = isAutoMode ? document.getElementById('inputZ') : document.getElementById('inputZManual');
-    const Z = parseInt(zInput ? zInput.value : 6) || 6;
-
-    const labelMap = { 's': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4 };
-
-    if (isAutoMode) {
-        const rows = document.querySelectorAll('#orbitsBuilderContainer .orbit-row');
-        rows.forEach(row => {
-            const label = row.querySelector('.orbit-label').textContent.trim();
-            const elecCount = parseInt(row.querySelector('.e-input').value) || 0;
-            if (elecCount <= 0) return;
-
-            const n = parseInt(label.charAt(0)) || 1;
-            const lChar = label.charAt(1);
-            const l = labelMap[lChar] !== undefined ? labelMap[lChar] : 0;
-
-            const splits = SUBSHELL_J_SPLIT[label] || [{ j: '1/2', cap: 2 }];
-            let remainingElec = elecCount;
-
-            splits.forEach(s => {
-                if (remainingElec <= 0) return;
-                const countInSub = Math.min(remainingElec, s.cap);
-                remainingElec -= countInSub;
-
-                const fullLabel = `${label}_${s.j}`;
-                const mesh = createOrbitalMesh(scene, n, l, s.j, countInSub, Z, currentOpacity);
-
-                if (visibilityState[fullLabel] !== undefined) {
-                    mesh.setEnabled(visibilityState[fullLabel]);
-                }
-
-                activeMeshes.push({
-                    label: fullLabel,
-                    mesh: mesh,
-                    speed: 0.5 + (n * 0.2) + (l * 0.1)
-                });
-            });
-        });
-    } else {
-        const elecInput = document.getElementById('inputElec');
-        const nInput = document.getElementById('inputN');
-        const lInput = document.getElementById('inputL');
-
-        const elecs = elecInput ? elecInput.value.split(',').map(v => parseInt(v.trim()) || 0) : [2];
-        const ns = nInput ? nInput.value.split(',').map(v => parseInt(v.trim()) || 1) : [1];
-        const ls = lInput ? lInput.value.split(',').map(v => parseInt(v.trim()) || 0) : [0];
-
-        const charMap = ['s', 'p', 'd', 'f', 'g'];
-
-        ns.forEach((n, idx) => {
-            const l = ls[idx] !== undefined ? ls[idx] : 0;
-            const elecCount = elecs[idx] !== undefined ? elecs[idx] : 1;
-            if (elecCount <= 0) return;
-
-            const subName = `${n}${charMap[l] || 's'}`;
-            const splits = SUBSHELL_J_SPLIT[subName] || [{ j: '1/2', cap: 2 }];
-
-            splits.forEach(s => {
-                const fullLabel = `${subName}_${s.j}`;
-                const mesh = createOrbitalMesh(scene, n, l, s.j, elecCount, Z, currentOpacity);
-
-                if (visibilityState[fullLabel] !== undefined) {
-                    mesh.setEnabled(visibilityState[fullLabel]);
-                }
-
-                activeMeshes.push({
-                    label: fullLabel,
-                    mesh: mesh,
-                    speed: 0.5 + (n * 0.2)
-                });
-            });
-        });
-    }
-
-    updateFiltersUI();
-}
-
-/**
- * Manual Mode Parameter Handler
- */
-function applyCustomParameters() {
-    rebuildQuantumModel();
-}
-
-document.addEventListener('DOMContentLoaded', initBabylonEngine);
