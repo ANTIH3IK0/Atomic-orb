@@ -3,50 +3,46 @@
 :root {
     --bg-dark: #000204;
 
-    /* Darker obsidian liquid glass base */
+    /* Deep Liquid Metal & Glass Base */
     --panel-glass: rgba(2, 4, 8, 0.94);
     --card-glass: rgba(1, 2, 5, 0.75);
     --row-glass: rgba(1, 3, 7, 0.82);
     --input-bg: rgba(0, 0, 0, 0.78);
 
-    /* Deepened Quicksilver liquid metal scale */
+    /* Quicksilver Specular Palette */
     --quicksilver-bright: #c4dbe8;
     --quicksilver-silver: #6a829a;
     --quicksilver-dark: #05080e;
 
-    /* Actinium luminescence — soft ionized pale blue Ac-227 */
+    /* Actinium Ionized Luminescence */
     --actinium-core: rgba(198, 236, 252, 0.22);
     --actinium-glow: rgba(146, 208, 232, 0.10);
     --actinium-sheen: rgba(158, 214, 238, 0.06);
     --actinium-ember: rgba(110, 185, 214, 0.16);
 
-    /* Legacy hooks kept for compatibility */
-    --lead-sheen: var(--actinium-sheen);
-    --lead-glow: rgba(134, 190, 216, 0.10);
-
+    /* Text System */
     --text-main: #9cb1c4;
     --text-sub: #6f869e;
     --text-muted: #3c4c60;
     --text-accent: #78a8cb;
 
+    /* Controls */
     --chk-bg: rgba(0, 0, 0, 0.80);
     --chk-checked-bg: rgba(0, 0, 0, 0.95);
     --chk-tick-color: #c4dbe8;
 }
 
-/* Slow radioactive breathing — opacity only, smooth ambient motion */
+/* Ambient Pulsing Animations */
 @keyframes actiniumBreath {
     0%, 100% { opacity: 0.20; filter: drop-shadow(0 0 8px rgba(146, 208, 232, 0.08)); }
     50%      { opacity: 0.50; filter: drop-shadow(0 0 16px rgba(198, 236, 252, 0.20)); }
 }
 
-/* Luminescence bloom inside the melt layer */
 @keyframes actiniumBreathe {
     0%, 100% { opacity: 0.35; }
     50%      { opacity: 0.80; }
 }
 
-/* Actinium card pulse — soft liquid depth */
 @keyframes actiniumCardPulse {
     0%, 100% { box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.9), 0 0 6px rgba(146, 208, 232, 0.03); }
     50%      { box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.75), 0 0 14px rgba(198, 236, 252, 0.10); }
@@ -54,7 +50,7 @@
 
 * {
     box-sizing: border-box;
-    font-family: 'Inter', -apple-system, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
 }
@@ -78,7 +74,7 @@ body {
     transition: filter 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Modal Blur Targets */
+/* Modal Open Canvas Blur Target */
 body.modal-open #renderCanvas,
 body.modal-open .ui-overlay,
 body.modal-open .tp-overlay,
@@ -88,7 +84,7 @@ body.modal-open .tp-restore-btn {
     pointer-events: none;
 }
 
-/* ============ Layer 1 — actinium quicksilver melt ============ */
+/* Substrate Layer 1: Molten Quicksilver Melt */
 .actinium-liquid-layer {
     position: absolute;
     top: 0;
@@ -116,7 +112,6 @@ body.modal-open .tp-restore-btn {
     transition: opacity 0.5s ease;
 }
 
-/* Soft radial luminescence */
 .actinium-liquid-layer::before {
     content: '';
     position: absolute;
@@ -133,23 +128,18 @@ body.modal-open .tp-restore-btn {
     will-change: opacity;
 }
 
-/* Actinium color-grade + deep dark vignette */
 .actinium-liquid-layer::after {
     content: '';
     position: absolute;
     inset: 0;
     z-index: 2;
     background:
-        radial-gradient(140% 100% at 50% 0%,
-            rgba(198, 236, 252, 0.025),
-            transparent 60%),
-        radial-gradient(160% 120% at 50% 115%,
-            rgba(0, 0, 0, 0.65),
-            transparent 70%);
+        radial-gradient(140% 100% at 50% 0%, rgba(198, 236, 252, 0.025), transparent 60%),
+        radial-gradient(160% 120% at 50% 115%, rgba(0, 0, 0, 0.65), transparent 70%);
     pointer-events: none;
 }
 
-/* ============ Layer 2 — weak liquid glass film ============ */
+/* Substrate Layer 2: Quicksilver Glass Film */
 .actinium-glass-film {
     position: absolute;
     top: 0;
@@ -175,7 +165,7 @@ body.modal-open .tp-restore-btn {
     pointer-events: none;
 }
 
-/* ============ Edgeless Metallic Actinium Panels ============ */
+/* Liquid Metal UI Panels */
 .ui-overlay, .tp-overlay, .pt-modal-window {
     position: absolute;
     background: var(--panel-glass);
@@ -192,11 +182,10 @@ body.modal-open .tp-restore-btn {
     overflow: hidden;
 }
 
-/* Cursor-tracked actinium specular bloom */
 .ui-overlay::before, .tp-overlay::before, .pt-modal-window::before {
     content: '';
     position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
+    inset: 0;
     background: radial-gradient(
         1000px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
         rgba(198, 236, 252, 0.04),
@@ -208,7 +197,6 @@ body.modal-open .tp-restore-btn {
     z-index: 1;
 }
 
-/* Inner rim luminescence */
 .ui-overlay::after, .tp-overlay::after, .pt-modal-window::after {
     content: '';
     position: absolute;
@@ -279,7 +267,7 @@ body.modal-open .tp-restore-btn {
     background: rgba(255, 255, 255, 0.015);
 }
 .mode-btn.active {
-    background: #00000060;
+    background: rgba(0, 0, 0, 0.6);
     color: var(--quicksilver-bright);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(198, 236, 252, 0.08);
 }
@@ -291,7 +279,7 @@ body.modal-open .tp-restore-btn {
 }
 .mode-container.hidden { display: none !important; }
 
-/* Floating Periodic Table Glass Modal */
+/* Periodic Table Glass Modal Backdrop */
 .pt-modal-backdrop {
     position: fixed;
     top: 0; left: 0;
@@ -347,7 +335,7 @@ body.modal-open .tp-restore-btn {
 }
 
 .close-btn {
-    background: #00000060;
+    background: rgba(0, 0, 0, 0.6);
     border: none;
     color: var(--text-sub);
     width: 32px;
@@ -393,7 +381,7 @@ body.modal-open .tp-restore-btn {
     justify-content: center;
 }
 
-/* Borderless Actinium-Quicksilver Element Cards */
+/* Quicksilver Element Cards */
 .pt-element-card {
     position: relative;
     height: 58px;
@@ -488,7 +476,7 @@ body.modal-open .tp-restore-btn {
 .tp-field { display: flex; flex-direction: row; align-items: center; gap: 8px; }
 .tp-field label { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; width: 14px; }
 
-/* Edgeless Dark Input Elements */
+/* Inputs and Forms */
 input[type="text"], input[type="number"] {
     background: var(--input-bg);
     border: none;
@@ -592,12 +580,12 @@ header h1::before {
 .action-link { font-size: 9px; color: var(--text-accent); cursor: pointer; font-family: 'JetBrains Mono', monospace; opacity: 0.85; transition: opacity 0.2s; }
 .action-link:hover { opacity: 1; text-decoration: underline; }
 
-/* Semi-Transparent Dark Quicksilver Buttons */
+/* Dynamic Buttons */
 button.apply-btn {
     position: relative;
     padding: 10px 14px;
     border: none;
-    background: #00000060;
+    background: rgba(0, 0, 0, 0.6);
     color: var(--quicksilver-bright);
     border-radius: 10px;
     font-size: 10px;
@@ -619,7 +607,7 @@ button.apply-btn::before {
 }
 button.apply-btn:hover::before { left: 100%; }
 button.apply-btn:hover {
-    background: #00000080;
+    background: rgba(0, 0, 0, 0.8);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.95), 0 0 14px var(--actinium-glow);
     transform: translateY(-1px);
 }
@@ -628,7 +616,7 @@ button.secondary-btn {
     position: relative;
     padding: 9px;
     border: none;
-    background: #00000045;
+    background: rgba(0, 0, 0, 0.27);
     color: var(--quicksilver-silver);
     border-radius: 10px;
     font-size: 10px;
@@ -641,7 +629,7 @@ button.secondary-btn {
     box-shadow: inset 0 1px 0 rgba(198, 236, 252, 0.04);
 }
 button.secondary-btn:hover {
-    background: #00000065;
+    background: rgba(0, 0, 0, 0.4);
     color: var(--quicksilver-bright);
     transform: translateY(-1px);
 }
@@ -678,7 +666,7 @@ button.secondary-btn:hover {
 }
 .orbit-row .e-input { width: 100%; text-align: right; padding: 4px 6px; font-size: 10px; }
 
-/* Edgeless Dark Checkboxes */
+/* Checkboxes */
 input[type="checkbox"] {
     appearance: none;
     -webkit-appearance: none;
