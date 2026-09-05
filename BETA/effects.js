@@ -46,8 +46,8 @@ function initLiquidGLEffects() {
     glassPanels.forEach(panel => {
         new LiquidGL(panel, {
             refraction: 0.55,
-            reflection: 0.85,
-            liquidColor: '#020408',
+            reflection: 0.75,
+            liquidColor: '#1c1c2174',
             glassColor: 'rgba(6, 9, 14, 0.88)',
             dispersion: 0.05,
             interactive: true,
