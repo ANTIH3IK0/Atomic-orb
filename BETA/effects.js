@@ -7,11 +7,32 @@ document.addEventListener('DOMContentLoaded', () => {
     initGlassInteractivity();
     initGSAPAnimations();
 
-    // Delay liquidGL execution until 3D canvas is ready
+    // Injects a metallic gradient texture source for liquidGL sampling
+    // Resolves pitch-black rendering caused by unpreserved WebGL buffers
+    createSnapshotSource();
+
     setTimeout(() => {
         initLiquidGLEffects();
-    }, 400);
+        fixPointerEventsAndZIndex();
+    }, 300);
 });
+
+function createSnapshotSource() {
+    if (document.getElementById('liquidSnapshotSource')) return;
+    const source = document.createElement('div');
+    source.id = 'liquidSnapshotSource';
+    source.style.cssText = `
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        z-index: -9999;
+        pointer-events: none;
+        background: radial-gradient(circle at 30% 30%, #5a6e85 0%, #121822 45%, #030508 75%),
+                    linear-gradient(135deg, #2a3848 0%, #080d14 50%, #485c72 100%);
+        background-blend-mode: overlay;
+    `;
+    document.body.appendChild(source);
+}
 
 function applyGroupDataAttributes() {
     const cards = document.querySelectorAll('.pt-element-card');
@@ -41,8 +62,7 @@ function initGroupAttributesObserver() {
 }
 
 /**
- * Eliminates pitch-black rendering by targeting #renderCanvas directly 
- * and elevating panel content z-indices via JavaScript.
+ * Initializes liquidGL targeting a non-black gradient snapshot source
  */
 function initLiquidGLEffects() {
     if (typeof liquidGL !== 'function') return;
@@ -50,53 +70,68 @@ function initLiquidGLEffects() {
     const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
 
     panels.forEach((panel) => {
-        // Programmatically elevate all UI children above the WebGL background layer
-        Array.from(panel.children).forEach(child => {
-            if (!child.classList.contains('liquid-gl-bg-layer')) {
-                if (window.getComputedStyle(child).position === 'static') {
-                    child.style.position = 'relative';
-                }
-                child.style.zIndex = '2';
-            }
-        });
-
-        // Inject container layer for the liquid shader
         if (!panel.querySelector('.liquid-gl-bg-layer')) {
             const bgLayer = document.createElement('div');
             bgLayer.className = 'liquid-gl-bg-layer';
-            bgLayer.style.position = 'absolute';
-            bgLayer.style.top = '0';
-            bgLayer.style.left = '0';
-            bgLayer.style.width = '100%';
-            bgLayer.style.height = '100%';
-            bgLayer.style.zIndex = '0';
-            bgLayer.style.pointerEvents = 'none';
-            bgLayer.style.borderRadius = 'inherit';
-            bgLayer.style.overflow = 'hidden';
-
+            bgLayer.style.cssText = `
+                position: absolute;
+                top: 0; left: 0;
+                width: 100%; height: 100%;
+                z-index: 0;
+                pointer-events: none;
+                border-radius: inherit;
+                overflow: hidden;
+            `;
             panel.prepend(bgLayer);
         }
     });
 
     liquidGL({
-        snapshot: "#renderCanvas", // Refracts only the 3D scene, eliminating dark UI recursion
+        snapshot: "#liquidSnapshotSource", // Samples from custom non-black metallic source
         target: ".liquid-gl-bg-layer",
         resolution: 1.0,
-        refraction: 0.04,
-        aberration: 0.01,
-        bevelDepth: 0.85,
+        refraction: 0.08,      // Viscous fluid displacement
+        aberration: 0.02,      // Subtle chromatic dispersion
+        bevelDepth: 0.85,      // Crisp metallic border reflection
         bevelWidth: 0.20,
         frost: 0,
         shadow: false,
-        specular: true,
+        specular: true,        // High-gloss moving specular highlight
         reveal: "fade",
         tilt: false,
         magnify: 1.0,
         on: {
             init(instance) {
-                console.log("Quicksilver liquidGL active on 3D canvas snapshot:", instance);
+                console.log("Quicksilver liquidGL active with custom texture source:", instance);
+                fixPointerEventsAndZIndex();
             }
         }
+    });
+}
+
+/**
+ * Forces interactive elements above the WebGL overlay canvas layer
+ */
+function fixPointerEventsAndZIndex() {
+    const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
+
+    panels.forEach(panel => {
+        panel.style.pointerEvents = 'auto';
+
+        // Elevate all interactive UI elements
+        const uiElements = panel.querySelectorAll('button, input, select, label, header, .mode-switch-bar, .input-card, .orbit-row, .filter-item, .pt-modal-header, .pt-scroll-area');
+        uiElements.forEach(el => {
+            el.style.position = 'relative';
+            el.style.zIndex = '10';
+            el.style.pointerEvents = 'auto';
+        });
+
+        // Set shader canvases to pass through click events
+        const canvases = panel.querySelectorAll('canvas, .liquid-gl-bg-layer');
+        canvases.forEach(c => {
+            c.style.pointerEvents = 'none';
+            c.style.zIndex = '0';
+        });
     });
 }
 
