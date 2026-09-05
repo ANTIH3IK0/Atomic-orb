@@ -1,6 +1,6 @@
 /**
  * effects.js
- * Quicksilver Liquid Metal Physics & Refraction Optics
+ * Quicksilver Liquid Metal FX with Fixed Readability & Input Controls
  */
 document.addEventListener('DOMContentLoaded', () => {
     initGroupAttributesObserver();
@@ -37,37 +37,35 @@ function initGroupAttributesObserver() {
 }
 
 /**
- * Heavy Liquid Metal Refraction & High-Specular Optics via Official liquidGL API
+ * Liquid Metal Panel Specular FX (Targeting background bases only)
  */
 function initLiquidGLEffects() {
     if (typeof liquidGL !== 'function') return;
 
     liquidGL({
         snapshot: "body",
-        target: ".ui-overlay, .tp-overlay, .pt-modal-window, button.apply-btn, button.secondary-btn, .close-btn",
-        resolution: 2.0,
-        refraction: 0.88,      // Extreme refraction strength for deep distortion
-        aberration: 0.48,      // Strong chromatic light warping & prismatic split
-        bevelDepth: 0.85,      // Deep liquid edge bevel catching 1px borders
-        bevelWidth: 0.28,      // Broad metallic specular gradient along edges
-        frost: 0,              // Crystal clarity for raw mercury reflectivity
-        shadow: true,          // Obsidian drop shadows
-        specular: true,        // High-intensity animated specular reflections
+        target: ".ui-overlay, .tp-overlay, .pt-modal-window",
+        resolution: 1.5,
+        refraction: 0.02,     // Subdued refraction keeps 3D canvas visible and input stable
+        aberration: 0.0,      // Eliminates text blurriness
+        bevelDepth: 0.95,     // Extreme liquid edge bevel capturing light
+        bevelWidth: 0.22,     // Wide metallic edge reflection
+        frost: 0,             // Pure crystal sheen
+        shadow: true,         // Deep obsidian contrast
+        specular: true,       // Dynamic liquid specular highlights
         reveal: "fade",
-        tilt: true,            // Physics-based 3D surface tilt
-        tiltFactor: 8,         // Heavy liquid mass inertia
-        tiltEase: 450,         // Viscous fluid settle timing
-        magnify: 1.08,         // Heavy liquid lens distortion
+        tilt: false,          // Disables panel distortion on cursor movement
+        magnify: 1.0,         // Prevents zoom warping over controls
         on: {
             init(instance) {
-                console.log("Quicksilver liquidGL active:", instance);
+                console.log("Quicksilver panel background initialized:", instance);
             }
         }
     });
 }
 
 /**
- * Dynamic Dynamic Lighting & Cursor Tracking
+ * Dynamic Liquid Metal Specular Spotlight Following Cursor
  */
 function initGlassInteractivity() {
     const glassPanels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
@@ -85,7 +83,7 @@ function initGlassInteractivity() {
 }
 
 /**
- * Interface Motion Sequences
+ * Interface Entrance Sequences & Micro-Interactions
  */
 function initGSAPAnimations() {
     if (typeof gsap === 'undefined') return;
