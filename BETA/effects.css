@@ -636,6 +636,6 @@ input[type="range"] {
 
 
 .ui-overlay, .tp-overlay, .pt-modal-window {
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
 }
 
