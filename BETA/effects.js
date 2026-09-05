@@ -1,6 +1,6 @@
 /**
  * effects.js
- * Quicksilver Liquid Metal FX with Fixed Readability & Input Controls
+ * Quicksilver Liquid Metal Physics & High-Performance Specular Optics
  */
 document.addEventListener('DOMContentLoaded', () => {
     initGroupAttributesObserver();
@@ -37,35 +37,35 @@ function initGroupAttributesObserver() {
 }
 
 /**
- * Liquid Metal Panel Specular FX (Targeting background bases only)
+ * Quicksilver Liquid Shader setup tuned specifically for effects.css
  */
 function initLiquidGLEffects() {
     if (typeof liquidGL !== 'function') return;
 
     liquidGL({
         snapshot: "body",
-        target: ".ui-overlay, .tp-overlay, .pt-modal-window",
-        resolution: 1.5,
-        refraction: 0.02,     // Subdued refraction keeps 3D canvas visible and input stable
-        aberration: 0.0,      // Eliminates text blurriness
-        bevelDepth: 0.95,     // Extreme liquid edge bevel capturing light
-        bevelWidth: 0.22,     // Wide metallic edge reflection
-        frost: 0,             // Pure crystal sheen
-        shadow: true,         // Deep obsidian contrast
-        specular: true,       // Dynamic liquid specular highlights
+        target: ".ui-overlay, .tp-overlay, .pt-modal-window", // Main containers only (avoids blocking inputs/buttons)
+        resolution: 1.25,      // High visual fidelity without dropping FPS
+        refraction: 0.05,      // Deep liquid glass displacement while maintaining panel legibility
+        aberration: 0.03,      // Subtle chromatic dispersion around refraction contours
+        bevelDepth: 0.92,      // High depth to catch the white border highlight from effects.css
+        bevelWidth: 0.25,      // Metallic reflection along edge boundaries
+        frost: 0,              // Zero blur for mercury fluid clarity
+        shadow: true,          // Drop shadow depth behind panels
+        specular: true,        // Animated high-gloss specular reflections
         reveal: "fade",
-        tilt: false,          // Disables panel distortion on cursor movement
-        magnify: 1.0,         // Prevents zoom warping over controls
+        tilt: false,           // Disables heavy matrix transforms to eliminate hover lag
+        magnify: 1.0,          // Prevents zoom distortions over control inputs
         on: {
             init(instance) {
-                console.log("Quicksilver panel background initialized:", instance);
+                console.log("Quicksilver liquidGL initialized successfully:", instance);
             }
         }
     });
 }
 
 /**
- * Dynamic Liquid Metal Specular Spotlight Following Cursor
+ * Dynamic Cursor Specular Lighting
  */
 function initGlassInteractivity() {
     const glassPanels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
@@ -83,7 +83,7 @@ function initGlassInteractivity() {
 }
 
 /**
- * Interface Entrance Sequences & Micro-Interactions
+ * GSAP Interface Micro-Interactions
  */
 function initGSAPAnimations() {
     if (typeof gsap === 'undefined') return;
@@ -133,13 +133,15 @@ function initGSAPAnimations() {
 }
 
 /**
- * Control Mode Switcher Callback
+ * Control Panel Mode Switcher Callback
  */
 function switchControlMode(mode) {
     const autoContainer = document.getElementById('autoModeContainer');
     const manualContainer = document.getElementById('manualModeContainer');
     const btnAuto = document.getElementById('btnModeAuto');
     const btnManual = document.getElementById('btnModeManual');
+
+    if (!autoContainer || !manualContainer || !btnAuto || !btnManual) return;
 
     if (mode === 'auto') {
         autoContainer.classList.remove('hidden');
