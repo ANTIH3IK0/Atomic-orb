@@ -1,0 +1,120 @@
+/* Quicksilver & Actinium Glass Visual Theme */
+:root {
+    --bg-dark: #030508;
+    --panel-glass: rgba(10, 14, 23, 0.72);
+    --card-glass: rgba(255, 255, 255, 0.025);
+    
+    /* Actinium Blue Diffusion Glows */
+    --actinium-blue: rgba(56, 189, 248, 0.35);
+    --actinium-glow-soft: rgba(96, 165, 250, 0.12);
+    --actinium-glow-edge: 0 0 20px rgba(56, 189, 248, 0.15), 0 0 40px rgba(37, 99, 235, 0.08);
+
+    --input-bg: rgba(6, 9, 16, 0.85);
+    --btn-glass: rgba(255, 255, 255, 0.035);
+    --btn-glass-hover: rgba(96, 165, 250, 0.12);
+
+    --text-main: #e2e8f0;
+    --text-sub: #94a3b8;
+    --text-muted: #64748b;
+    --text-accent: #38bdf8;
+}
+
+/* Borderless Panels with Actinium Blue Glow */
+.ui-overlay, .tp-overlay, .pt-modal-window {
+    position: absolute;
+    background: var(--panel-glass) !important;
+    border: none !important;
+    border-radius: 20px !important;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.85), var(--actinium-glow-edge) !important;
+    backdrop-filter: blur(28px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+    overflow: hidden;
+}
+
+/* Dynamic Dark Quicksilver Texture Layer */
+.ui-overlay::before, .tp-overlay::before, .pt-modal-window::before {
+    content: '';
+    position: absolute;
+    inset: -50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 70% 70%, rgba(30, 41, 59, 0.5) 0%, transparent 60%),
+                linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(0, 0, 0, 0.4) 100%);
+    filter: blur(15px);
+    opacity: 0.7;
+    pointer-events: none;
+    animation: quicksilverShimmer 12s ease-in-out infinite alternate;
+    z-index: 0;
+}
+
+@keyframes quicksilverShimmer {
+    0% { transform: translate(-5%, -5%) rotate(0deg); }
+    50% { transform: translate(5%, 3%) rotate(3deg); }
+    100% { transform: translate(-3%, 5%) rotate(-2deg); }
+}
+
+/* Edge Softening Light Ring */
+.ui-overlay::after, .tp-overlay::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.3) 0%, rgba(255, 255, 255, 0.05) 40%, rgba(56, 189, 248, 0.15) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Seamless Buttons with Clean Actinium Glow */
+button.apply-btn, button.secondary-btn, .mode-btn, .close-btn, .restore-btn, .tp-restore-btn {
+    border: none !important;
+    border-radius: 10px !important;
+    position: relative;
+    z-index: 2;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+button.apply-btn {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(37, 99, 235, 0.25)) !important;
+    color: #f0f9ff !important;
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.25) !important;
+}
+
+button.apply-btn:hover {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.45), rgba(37, 99, 235, 0.45)) !important;
+    box-shadow: 0 0 25px rgba(56, 189, 248, 0.45) !important;
+    transform: translateY(-1px);
+}
+
+button.secondary-btn {
+    background: var(--btn-glass) !important;
+    color: var(--text-sub) !important;
+}
+
+button.secondary-btn:hover {
+    background: var(--btn-glass-hover) !important;
+    color: var(--text-main) !important;
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.2) !important;
+}
+
+/* Frameless Input Fields & Cards */
+.input-card, .orbit-row, .filter-item, .pt-element-card {
+    border: none !important;
+    border-radius: 10px !important;
+    background: var(--card-glass) !important;
+    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.03), 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+input[type="text"], input[type="number"] {
+    border: none !important;
+    border-radius: 8px !important;
+    background: var(--input-bg) !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+}
+
+input[type="text"]:focus, input[type="number"]:focus {
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5), 0 0 12px rgba(56, 189, 248, 0.3) !important;
+}
