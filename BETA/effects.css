@@ -32,21 +32,22 @@
     --chk-tick-color: #aec8dd;
 }
 
-/* Slow radioactive breathing (replaces leadFluidFlow) */
+/* Slow radioactive breathing — opacity only, never transforms */
 @keyframes actiniumBreath {
     0%, 100% { opacity: 0.30; filter: drop-shadow(0 0 10px rgba(146, 208, 232, 0.14)); }
     50%      { opacity: 0.70; filter: drop-shadow(0 0 22px rgba(198, 236, 252, 0.30)); }
 }
 
-/* Drifting molten caustic inside the liquid layer */
-@keyframes actiniumSwirl {
-    to { transform: rotate(360deg); }
+/* Luminescence bloom inside the liquid layer — opacity-only pulse */
+@keyframes actiniumBreathe {
+    0%, 100% { opacity: 0.5; }
+    50%      { opacity: 1.0; }
 }
 
-/* Actinium card pulse (the Ac element itself) */
+/* Actinium card pulse (the Ac element itself) — slow and soft */
 @keyframes actiniumCardPulse {
-    0%, 100% { box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.8), 0 0 8px rgba(146, 208, 232, 0.06); }
-    50%      { box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.65), 0 0 20px rgba(198, 236, 252, 0.18); }
+    0%, 100% { box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.8), 0 0 8px rgba(146, 208, 232, 0.05); }
+    50%      { box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.65), 0 0 18px rgba(198, 236, 252, 0.14); }
 }
 
 * {
@@ -85,9 +86,7 @@ body.modal-open .tp-restore-btn {
     pointer-events: none;
 }
 
-/* ================= Liquid substrate layer =================
-   Injected by effects.js as the FIRST child of each panel.
-   The liquidGL shader renders here, below every UI element. */
+/* ================= Liquid substrate layer ================= */
 .actinium-liquid-layer {
     position: absolute;
     top: 0;
@@ -113,36 +112,36 @@ body.modal-open .tp-restore-btn {
     opacity: 0.92; /* bleed the obsidian base through the melt */
 }
 
-/* Drifting ionized caustic over the refracted scene */
+/* Soft radial luminescence — breathes in opacity only.
+   Nothing here translates or rotates, so it can never read
+   as a spinning shape inside the panel. */
 .actinium-liquid-layer::before {
     content: '';
     position: absolute;
-    inset: -40%;
-    background: conic-gradient(from 0deg,
-        transparent 0deg,
-        rgba(198, 236, 252, 0.045) 40deg,
-        transparent 110deg,
-        transparent 200deg,
-        rgba(146, 208, 232, 0.035) 260deg,
-        transparent 320deg);
-    animation: actiniumSwirl 26s linear infinite;
-    mix-blend-mode: screen;
+    inset: 0;
+    background: radial-gradient(
+        120% 85% at 50% 30%,
+        rgba(198, 236, 252, 0.055),
+        rgba(146, 208, 232, 0.025) 45%,
+        transparent 75%
+    );
+    animation: actiniumBreathe 10s cubic-bezier(0.37, 0, 0.63, 1) infinite;
     pointer-events: none;
+    will-change: opacity;
 }
 
-/* Actinium color-grade + readability scrim over the melt */
+/* Actinium color-grade + vignette — pure soft radials, no hard lines */
 .actinium-liquid-layer::after {
     content: '';
     position: absolute;
     inset: 0;
     background:
-        linear-gradient(160deg,
-            rgba(198, 236, 252, 0.05) 0%,
-            transparent 38%,
-            rgba(0, 0, 0, 0.34) 88%),
-        radial-gradient(120% 90% at 50% 118%,
-            rgba(110, 185, 214, 0.10),
-            transparent 55%);
+        radial-gradient(140% 100% at 50% 0%,
+            rgba(198, 236, 252, 0.045),
+            transparent 55%),
+        radial-gradient(160% 120% at 50% 115%,
+            rgba(0, 0, 0, 0.36),
+            transparent 62%);
     pointer-events: none;
 }
 
@@ -155,7 +154,7 @@ body.modal-open .tp-restore-btn {
     box-shadow:
         0 40px 80px rgba(0, 0, 0, 0.95),
         0 0 48px rgba(0, 0, 0, 0.9),
-        0 0 34px rgba(110, 185, 214, 0.05),
+        0 0 34px rgba(110, 185, 214, 0.045),
         inset 0 1px 1px rgba(198, 236, 252, 0.10);
     backdrop-filter: blur(50px) saturate(150%);
     -webkit-backdrop-filter: blur(50px) saturate(150%);
@@ -170,10 +169,10 @@ body.modal-open .tp-restore-btn {
     top: 0; left: 0; right: 0; bottom: 0;
     background: radial-gradient(
         900px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        rgba(198, 236, 252, 0.07),
-        rgba(146, 208, 232, 0.03) 28%,
-        rgba(0, 0, 0, 0.42) 62%,
-        transparent 82%
+        rgba(198, 236, 252, 0.06),
+        rgba(146, 208, 232, 0.025) 30%,
+        rgba(0, 0, 0, 0.38) 64%,
+        transparent 85%
     );
     pointer-events: none;
     z-index: 1;
@@ -186,8 +185,8 @@ body.modal-open .tp-restore-btn {
     inset: 0;
     border-radius: inherit;
     box-shadow:
-        inset 0 0 46px rgba(110, 185, 214, 0.05),
-        inset 0 -18px 34px rgba(0, 0, 0, 0.55);
+        inset 0 0 46px rgba(110, 185, 214, 0.045),
+        inset 0 -18px 34px rgba(0, 0, 0, 0.5);
     pointer-events: none;
     z-index: 2;
 }
@@ -387,7 +386,7 @@ body.modal-open .tp-restore-btn {
     content: '';
     position: absolute;
     top: 0; left: -100%; width: 100%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(198, 236, 252, 0.09), transparent);
+    background: linear-gradient(90deg, transparent, rgba(198, 236, 252, 0.08), transparent);
     transition: left 0.6s ease;
     pointer-events: none;
 }
@@ -396,16 +395,16 @@ body.modal-open .tp-restore-btn {
 .pt-element-card:hover {
     background: rgba(11, 17, 26, 0.95);
     transform: translateY(-2px) scale(1.03);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.9), 0 0 18px var(--actinium-glow);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.9), 0 0 16px var(--actinium-glow);
     z-index: 10;
 }
 
 .pt-element-card.active {
     background: rgba(15, 23, 35, 0.95);
-    box-shadow: 0 0 22px var(--actinium-glow), inset 0 1px 0 rgba(198, 236, 252, 0.16);
+    box-shadow: 0 0 20px var(--actinium-glow), inset 0 1px 0 rgba(198, 236, 252, 0.16);
 }
 
-/* f-block luminescence (data-cat values carry trailing spaces in kernel data) */
+/* f-block luminescence (kernel data strings carry trailing spaces) */
 .pt-element-card[data-cat^="lanthanide"] {
     box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.78), inset 0 0 10px rgba(146, 208, 232, 0.04);
 }
@@ -414,7 +413,7 @@ body.modal-open .tp-restore-btn {
 }
 /* The actinium element itself stays faintly radioactive */
 [id^="pt-card_Ac"] {
-    animation: actiniumCardPulse 3.6s ease-in-out infinite;
+    animation: actiniumCardPulse 4.8s cubic-bezier(0.37, 0, 0.63, 1) infinite;
 }
 
 .pt-card-top {
@@ -586,7 +585,7 @@ button.apply-btn::before {
     content: '';
     position: absolute;
     top: 0; left: -100%; width: 100%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(198, 236, 252, 0.16), transparent);
+    background: linear-gradient(90deg, transparent, rgba(198, 236, 252, 0.14), transparent);
     transition: left 0.6s ease;
 }
 button.apply-btn:hover::before { left: 100%; }
@@ -704,9 +703,9 @@ input[type="range"] {
     z-index: 3;
 }
 
-/* Actinium rim edge */
+/* Actinium rim edge — extra subtle so the panel never reads as a box */
 .ui-overlay, .tp-overlay, .pt-modal-window {
-    border: 1px solid rgba(156, 214, 238, 0.16) !important;
+    border: 1px solid rgba(156, 214, 238, 0.12) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
