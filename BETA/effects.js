@@ -1,21 +1,21 @@
 /**
  * effects.js
- * Quicksilver Liquid Metal Physics & High-Performance Optics
+ * Quicksilver Liquid Optics & Fixed Interactivity Controls
  */
 document.addEventListener('DOMContentLoaded', () => {
     initGroupAttributesObserver();
     initModalVisibilityHandler();
-    initGlassInteractivity();
     initGSAPAnimations();
+    initGlassInteractivity();
 
-    // Delay initialization slightly to let renderCanvas paint first frame
+    // Delay liquidGL execution slightly to ensure renderCanvas has painted its initial frame
     setTimeout(() => {
         initLiquidGLEffects();
     }, 250);
 });
 
 /**
- * Destroys the invisible full-screen hit-shield caused by the periodic table modal when closed.
+ * Prevents the closed periodic table modal backdrop from forming an invisible hit-shield over the viewport.
  */
 function initModalVisibilityHandler() {
     const modalBackdrop = document.querySelector('.pt-modal-backdrop');
@@ -33,11 +33,13 @@ function initModalVisibilityHandler() {
 
     syncModalDisplay();
 
-    // Observe class changes (e.g. when opening/closing periodic table)
     const observer = new MutationObserver(syncModalDisplay);
     observer.observe(modalBackdrop, { attributes: true, attributeFilter: ['class'] });
 }
 
+/**
+ * Automatically attaches data-group attributes to elements created by kernel.js
+ */
 function applyGroupDataAttributes() {
     const cards = document.querySelectorAll('.pt-element-card');
     cards.forEach(card => {
@@ -66,63 +68,112 @@ function initGroupAttributesObserver() {
 }
 
 /**
- * Restores official liquidGL physics targeting active panels only.
+ * Initialize Quicksilver Refractive Metal Optics using the official liquidGL API
  */
 function initLiquidGLEffects() {
     if (typeof liquidGL !== 'function') return;
 
     liquidGL({
         snapshot: "body",
-        target: ".ui-overlay, .tp-overlay", // Exclude closed modal to prevent full-screen canvas locking
+        target: ".ui-overlay, .tp-overlay",
         resolution: 1.5,
-        refraction: 0.12,     // Viscous liquid metallic refraction
-        aberration: 0.04,     // Chromatic light splitting
-        bevelDepth: 0.85,     // Sharp metallic edge bevel catching CSS borders
-        bevelWidth: 0.20,
-        frost: 0,             // Pure quicksilver clarity
-        shadow: true,
-        specular: true,       // Moving light highlights
+        refraction: 0.08,      // Deep liquid metal refraction index
+        aberration: 0.02,      // Subtle chromatic dispersion around edges
+        bevelDepth: 0.88,      // Deep specular bevel to catch CSS borders
+        bevelWidth: 0.22,      // Wide metallic boundary reflection
+        frost: 0,              // Zero blur for raw quicksilver clarity
+        shadow: true,          // Drop-shadow contrast depth
+        specular: true,        // Dynamic light reflection highlights
         reveal: "fade",
-        tilt: false,          // Keep false to maintain fixed hitboxes for inputs
-        magnify: 1.0,
+        tilt: false,           // Set false to prevent input click-target misalignment
+        magnify: 1.0,          // Prevents zoom warping over control panels
         on: {
             init(instance) {
-                console.log("liquidGL Quicksilver active:", instance);
-                makeCanvasesPassThrough();
+                console.log("Quicksilver liquidGL active:", instance);
+                fixPointerEventsAndZIndex();
             }
         }
     });
 
-    makeCanvasesPassThrough();
+    fixPointerEventsAndZIndex();
 }
 
 /**
- * Ensures liquidGL canvases pass mouse clicks through to panel controls.
+ * Guarantees that liquidGL WebGL overlay canvases never block mouse clicks or input interactions.
  */
-function makeCanvasesPassThrough() {
-    // Force all generated overlay canvases to ignore pointer events
-    const canvases = document.querySelectorAll('canvas');
+function fixPointerEventsAndZIndex() {
+    // Pass pointer events through liquidGL shader canvases
+    const canvases = document.querySelectorAll('canvas:not(#renderCanvas)');
     canvases.forEach(cvs => {
-        if (cvs.id !== 'renderCanvas') {
-            cvs.style.pointerEvents = 'none';
-        }
+        cvs.style.pointerEvents = 'none';
+        cvs.style.zIndex = '0';
     });
 
-    // Elevate all interactive elements inside panels
+    // Elevate panel controls above background shader layers
     const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
     panels.forEach(panel => {
         panel.style.pointerEvents = 'auto';
-        const interactiveItems = panel.querySelectorAll('button, input, select, label, a, .mode-btn, .close-btn, .pt-element-card');
-        interactiveItems.forEach(el => {
-            el.style.pointerEvents = 'auto';
+        const interactiveElements = panel.querySelectorAll('button, input, select, label, a, .mode-btn, .close-btn, .pt-element-card, .action-link');
+        interactiveElements.forEach(el => {
             el.style.position = 'relative';
             el.style.zIndex = '10';
+            el.style.pointerEvents = 'auto';
         });
     });
 }
 
 /**
- * Dynamic Cursor Specular Light Tracking
+ * GSAP Micro-Interactions
+ */
+function initGSAPAnimations() {
+    if (typeof gsap === 'undefined') return;
+
+    gsap.from('#uiOverlay', {
+        x: -40,
+        opacity: 0,
+        duration: 0.6,
+        ease: 'power3.out',
+        delay: 0.15
+    });
+
+    gsap.from('#tpOverlay', {
+        x: 40,
+        opacity: 0,
+        duration: 0.6,
+        ease: 'power3.out',
+        delay: 0.25
+    });
+
+    const buttons = document.querySelectorAll('button');
+    buttons.forEach(btn => {
+        btn.addEventListener('mouseenter', () => {
+            gsap.to(btn, {
+                scale: 1.02,
+                duration: 0.18,
+                ease: 'power1.out'
+            });
+        });
+
+        btn.addEventListener('mouseleave', () => {
+            gsap.to(btn, {
+                scale: 1.0,
+                duration: 0.18,
+                ease: 'power1.out'
+            });
+        });
+
+        btn.addEventListener('mousedown', () => {
+            gsap.to(btn, {
+                scale: 0.97,
+                duration: 0.08,
+                ease: 'power1.inOut'
+            });
+        });
+    });
+}
+
+/**
+ * Cursor Tracking & Subtle Surface Tilt
  */
 function initGlassInteractivity() {
     const glassPanels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
@@ -135,56 +186,32 @@ function initGlassInteractivity() {
 
             panel.style.setProperty('--mouse-x', `${x}px`);
             panel.style.setProperty('--mouse-y', `${y}px`);
-        });
-    });
-}
 
-/**
- * Interface Entrance Sequences & Micro-Interactions
- */
-function initGSAPAnimations() {
-    if (typeof gsap === 'undefined') return;
+            if (typeof gsap !== 'undefined' && !panel.classList.contains('pt-modal-window')) {
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const rotateX = ((e.clientY - centerY) / (rect.height / 2)) * -2.0;
+                const rotateY = ((e.clientX - centerX) / (rect.width / 2)) * 2.0;
 
-    gsap.from('#uiOverlay', {
-        x: -60,
-        opacity: 0,
-        duration: 0.8,
-        ease: 'power3.out',
-        delay: 0.1
-    });
-
-    gsap.from('#tpOverlay', {
-        x: 60,
-        opacity: 0,
-        duration: 0.8,
-        ease: 'power3.out',
-        delay: 0.2
-    });
-
-    const buttons = document.querySelectorAll('button');
-    buttons.forEach(btn => {
-        btn.addEventListener('mouseenter', () => {
-            gsap.to(btn, {
-                scale: 1.02,
-                duration: 0.2,
-                ease: 'power1.out'
-            });
+                gsap.to(panel, {
+                    rotateX: rotateX,
+                    rotateY: rotateY,
+                    transformPerspective: 1000,
+                    duration: 0.3,
+                    ease: 'power1.out'
+                });
+            }
         });
 
-        btn.addEventListener('mouseleave', () => {
-            gsap.to(btn, {
-                scale: 1.0,
-                duration: 0.2,
-                ease: 'power1.out'
-            });
-        });
-
-        btn.addEventListener('mousedown', () => {
-            gsap.to(btn, {
-                scale: 0.97,
-                duration: 0.08,
-                ease: 'power1.inOut'
-            });
+        panel.addEventListener('mouseleave', () => {
+            if (typeof gsap !== 'undefined' && !panel.classList.contains('pt-modal-window')) {
+                gsap.to(panel, {
+                    rotateX: 0,
+                    rotateY: 0,
+                    duration: 0.5,
+                    ease: 'power2.out'
+                });
+            }
         });
     });
 }
