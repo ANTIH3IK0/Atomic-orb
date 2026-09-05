@@ -1,6 +1,6 @@
 /**
  * effects.js
- * Dark Quicksilver & Heavy Lead Refraction Optics
+ * Quicksilver Liquid Metal Physics & Refraction Optics
  */
 document.addEventListener('DOMContentLoaded', () => {
     initGroupAttributesObserver();
@@ -37,43 +37,37 @@ function initGroupAttributesObserver() {
 }
 
 /**
- * Heavy Viscous Lead Liquid Optics via LiquidGL
+ * Heavy Liquid Metal Refraction & High-Specular Optics via Official liquidGL API
  */
 function initLiquidGLEffects() {
-    if (typeof LiquidGL === 'undefined') return;
+    if (typeof liquidGL !== 'function') return;
 
-    const glassPanels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
-    glassPanels.forEach(panel => {
-        new liquidGL({
-            target: panel,
-            snapshot: "body",
-            resolution: 2.0,
-            refraction: 0.05,
-            aberration: 0.45,
-            bevelDepth: 0.98,
-            bevelWidth: 0.18,
-            frost: 0,
-            shadow: true,
-            specular: true,
-            reveal: "fade"
-        });
-    });
-
-    const liquidButtons = document.querySelectorAll('button.apply-btn, button.secondary-btn, .close-btn');
-    liquidButtons.forEach(btn => {
-        new LiquidGL(btn, {
-            refraction: 0.035,
-            reflection: 0.2,
-            liquidColor: '#000000',
-            dispersion: 0.0,
-            interactive: true,
-            intensity: 0.35
-        });
+    liquidGL({
+        snapshot: "body",
+        target: ".ui-overlay, .tp-overlay, .pt-modal-window, button.apply-btn, button.secondary-btn, .close-btn",
+        resolution: 2.0,
+        refraction: 0.88,      // Extreme refraction strength for deep distortion
+        aberration: 0.48,      // Strong chromatic light warping & prismatic split
+        bevelDepth: 0.85,      // Deep liquid edge bevel catching 1px borders
+        bevelWidth: 0.28,      // Broad metallic specular gradient along edges
+        frost: 0,              // Crystal clarity for raw mercury reflectivity
+        shadow: true,          // Obsidian drop shadows
+        specular: true,        // High-intensity animated specular reflections
+        reveal: "fade",
+        tilt: true,            // Physics-based 3D surface tilt
+        tiltFactor: 8,         // Heavy liquid mass inertia
+        tiltEase: 450,         // Viscous fluid settle timing
+        magnify: 1.08,         // Heavy liquid lens distortion
+        on: {
+            init(instance) {
+                console.log("Quicksilver liquidGL active:", instance);
+            }
+        }
     });
 }
 
 /**
- * Lighting & Micro-Tilt Interactivity
+ * Dynamic Dynamic Lighting & Cursor Tracking
  */
 function initGlassInteractivity() {
     const glassPanels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
@@ -86,38 +80,12 @@ function initGlassInteractivity() {
 
             panel.style.setProperty('--mouse-x', `${x}px`);
             panel.style.setProperty('--mouse-y', `${y}px`);
-
-            if (typeof gsap !== 'undefined' && !panel.classList.contains('pt-modal-window')) {
-                const centerX = rect.left + rect.width / 2;
-                const centerY = rect.top + rect.height / 2;
-                const rotateX = ((e.clientY - centerY) / (rect.height / 2)) * -1.8;
-                const rotateY = ((e.clientX - centerX) / (rect.width / 2)) * 1.8;
-
-                gsap.to(panel, {
-                    rotateX: rotateX,
-                    rotateY: rotateY,
-                    transformPerspective: 1200,
-                    duration: 0.4,
-                    ease: 'power1.out'
-                });
-            }
-        });
-
-        panel.addEventListener('mouseleave', () => {
-            if (typeof gsap !== 'undefined' && !panel.classList.contains('pt-modal-window')) {
-                gsap.to(panel, {
-                    rotateX: 0,
-                    rotateY: 0,
-                    duration: 0.6,
-                    ease: 'power2.out'
-                });
-            }
         });
     });
 }
 
 /**
- * Motion Sequences
+ * Interface Motion Sequences
  */
 function initGSAPAnimations() {
     if (typeof gsap === 'undefined') return;
@@ -167,7 +135,7 @@ function initGSAPAnimations() {
 }
 
 /**
- * Mode Switching Callback
+ * Control Mode Switcher Callback
  */
 function switchControlMode(mode) {
     const autoContainer = document.getElementById('autoModeContainer');
