@@ -1,120 +1,148 @@
-/* Quicksilver & Actinium Glass Visual Theme */
+/* Dark Obsidian & Actinium Liquid Glass Visual Theme */
 :root {
-    --bg-dark: #030508;
-    --panel-glass: rgba(10, 14, 23, 0.72);
-    --card-glass: rgba(255, 255, 255, 0.025);
+    --bg-dark: #020407;
+    --panel-glass: rgba(6, 9, 15, 0.82);
+    --card-glass: rgba(255, 255, 255, 0.035);
     
-    /* Actinium Blue Diffusion Glows */
-    --actinium-blue: rgba(56, 189, 248, 0.35);
-    --actinium-glow-soft: rgba(96, 165, 250, 0.12);
-    --actinium-glow-edge: 0 0 20px rgba(56, 189, 248, 0.15), 0 0 40px rgba(37, 99, 235, 0.08);
+    /* Deep Actinium Cyan/Blue Photonic Glows */
+    --actinium-blue: rgba(14, 165, 233, 0.45);
+    --actinium-glow-soft: rgba(56, 189, 248, 0.15);
+    --actinium-glow-edge: 0 0 25px rgba(14, 165, 233, 0.22), 0 0 50px rgba(15, 23, 42, 0.6);
 
-    --input-bg: rgba(6, 9, 16, 0.85);
-    --btn-glass: rgba(255, 255, 255, 0.035);
-    --btn-glass-hover: rgba(96, 165, 250, 0.12);
+    --input-bg: rgba(3, 6, 12, 0.92);
+    --btn-glass: rgba(255, 255, 255, 0.04);
+    --btn-glass-hover: rgba(14, 165, 233, 0.18);
 
-    --text-main: #e2e8f0;
-    --text-sub: #94a3b8;
-    --text-muted: #64748b;
+    /* Text Colors - Fixed High-Contrast Scale */
+    --text-main: #f8fafc;
+    --text-sub: #cbd5e1;
+    --text-muted: #94a3b8;
     --text-accent: #38bdf8;
+    --text-bright-accent: #38bdf8;
 }
 
-/* Borderless Panels with Actinium Blue Glow */
+/* Frameless Obsidian Glass Panels */
 .ui-overlay, .tp-overlay, .pt-modal-window {
     position: absolute;
     background: var(--panel-glass) !important;
     border: none !important;
-    border-radius: 20px !important;
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.85), var(--actinium-glow-edge) !important;
-    backdrop-filter: blur(28px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+    border-radius: 22px !important;
+    box-shadow: 0 35px 70px rgba(0, 0, 0, 0.95), var(--actinium-glow-edge) !important;
+    backdrop-filter: blur(36px) saturate(210%) !important;
+    -webkit-backdrop-filter: blur(36px) saturate(210%) !important;
     overflow: hidden;
 }
 
-/* Dynamic Dark Quicksilver Texture Layer */
+/* Interactive Liquid Specular Overlay */
 .ui-overlay::before, .tp-overlay::before, .pt-modal-window::before {
     content: '';
     position: absolute;
-    inset: -50%;
-    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.08) 0%, transparent 45%),
-                radial-gradient(circle at 70% 70%, rgba(30, 41, 59, 0.5) 0%, transparent 60%),
-                linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(0, 0, 0, 0.4) 100%);
-    filter: blur(15px);
-    opacity: 0.7;
+    inset: 0;
+    background: radial-gradient(
+        700px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(56, 189, 248, 0.12),
+        radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.06) 0%, transparent 60%),
+        transparent 70%
+    );
     pointer-events: none;
-    animation: quicksilverShimmer 12s ease-in-out infinite alternate;
-    z-index: 0;
+    z-index: 1;
+    transition: opacity 0.3s ease;
 }
 
-@keyframes quicksilverShimmer {
-    0% { transform: translate(-5%, -5%) rotate(0deg); }
-    50% { transform: translate(5%, 3%) rotate(3deg); }
-    100% { transform: translate(-3%, 5%) rotate(-2deg); }
-}
-
-/* Edge Softening Light Ring */
+/* Chrome Quicksilver Ambient Animation */
 .ui-overlay::after, .tp-overlay::after {
     content: '';
     position: absolute;
-    inset: 0;
-    border-radius: 20px;
-    padding: 1px;
-    background: linear-gradient(135deg, rgba(56, 189, 248, 0.3) 0%, rgba(255, 255, 255, 0.05) 40%, rgba(56, 189, 248, 0.15) 100%);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
+    inset: -60%;
+    background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(14, 165, 233, 0.08) 0%, transparent 50%);
+    filter: blur(20px);
+    opacity: 0.6;
     pointer-events: none;
-    z-index: 1;
+    animation: liquidChrome 14s ease-in-out infinite alternate;
+    z-index: 0;
 }
 
-/* Seamless Buttons with Clean Actinium Glow */
+@keyframes liquidChrome {
+    0% { transform: translate(-3%, -3%) rotate(0deg) scale(1); }
+    50% { transform: translate(3%, 4%) rotate(4deg) scale(1.05); }
+    100% { transform: translate(-2%, 2%) rotate(-2deg) scale(0.98); }
+}
+
+/* Explicit Contrast Controls for All Inputs & Labels (Bug Fix) */
+input[type="text"], input[type="number"], select {
+    color: var(--text-main) !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    border: none !important;
+    border-radius: 8px !important;
+    background: var(--input-bg) !important;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
+    position: relative;
+    z-index: 3;
+}
+
+input[type="text"]::placeholder, input[type="number"]::placeholder {
+    color: var(--text-muted) !important;
+    opacity: 0.6;
+}
+
+input[type="text"]:focus, input[type="number"]:focus {
+    color: #ffffff !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 15px rgba(56, 189, 248, 0.4) !important;
+    outline: none !important;
+}
+
+/* Buttons with Tactile Liquid Glow */
 button.apply-btn, button.secondary-btn, .mode-btn, .close-btn, .restore-btn, .tp-restore-btn {
     border: none !important;
     border-radius: 10px !important;
     position: relative;
-    z-index: 2;
+    z-index: 3;
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 button.apply-btn {
-    background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(37, 99, 235, 0.25)) !important;
-    color: #f0f9ff !important;
-    box-shadow: 0 0 15px rgba(56, 189, 248, 0.25) !important;
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.35), rgba(30, 58, 138, 0.45)) !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    box-shadow: 0 4px 18px rgba(14, 165, 233, 0.3) !important;
 }
 
 button.apply-btn:hover {
-    background: linear-gradient(135deg, rgba(56, 189, 248, 0.45), rgba(37, 99, 235, 0.45)) !important;
-    box-shadow: 0 0 25px rgba(56, 189, 248, 0.45) !important;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.55), rgba(37, 99, 235, 0.65)) !important;
+    box-shadow: 0 0 28px rgba(56, 189, 248, 0.55) !important;
     transform: translateY(-1px);
 }
 
 button.secondary-btn {
     background: var(--btn-glass) !important;
     color: var(--text-sub) !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
 }
 
 button.secondary-btn:hover {
     background: var(--btn-glass-hover) !important;
     color: var(--text-main) !important;
-    box-shadow: 0 0 15px rgba(56, 189, 248, 0.2) !important;
+    box-shadow: 0 0 18px rgba(56, 189, 248, 0.25), inset 0 0 0 1px rgba(56, 189, 248, 0.3) !important;
 }
 
-/* Frameless Input Fields & Cards */
+/* Orbit Rows & Cards Contrast Fixes */
 .input-card, .orbit-row, .filter-item, .pt-element-card {
     border: none !important;
-    border-radius: 10px !important;
+    border-radius: 12px !important;
     background: var(--card-glass) !important;
-    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.03), 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 6px 16px rgba(0, 0, 0, 0.35) !important;
+    position: relative;
+    z-index: 3;
 }
 
-input[type="text"], input[type="number"] {
-    border: none !important;
-    border-radius: 8px !important;
-    background: var(--input-bg) !important;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+.orbit-row .orbit-label {
+    color: var(--text-accent) !important;
+    font-weight: 600 !important;
 }
 
-input[type="text"]:focus, input[type="number"]:focus {
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5), 0 0 12px rgba(56, 189, 248, 0.3) !important;
+.filter-item {
+    color: var(--text-sub) !important;
 }
