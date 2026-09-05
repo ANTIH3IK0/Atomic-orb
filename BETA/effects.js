@@ -1,6 +1,6 @@
 /**
  * effects.js
- * Dark Actinium Quicksilver Liquid Optics & Micro-Interactivity
+ * Dark Obsidian Quicksilver Optics & Refraction Interactivity
  */
 document.addEventListener('DOMContentLoaded', () => {
     initGroupAttributesObserver();
@@ -37,7 +37,7 @@ function initGroupAttributesObserver() {
 }
 
 /**
- * Dark Actinium-Quicksilver Refractive Optics via LiquidGL
+ * Obsidian Deep Fluid Optics via LiquidGL
  */
 function initLiquidGLEffects() {
     if (typeof LiquidGL === 'undefined') return;
@@ -45,32 +45,32 @@ function initLiquidGLEffects() {
     const glassPanels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
     glassPanels.forEach(panel => {
         new LiquidGL(panel, {
-            refraction: 0.05,
-            reflection: 0.22,
-            liquidColor: '#050a14',
-            glassColor: 'rgba(7, 11, 19, 0.78)',
+            refraction: 0.07,
+            reflection: 0.28,
+            liquidColor: '#010308',
+            glassColor: 'rgba(2, 4, 8, 0.88)',
             dispersion: 0.0,
             interactive: true,
-            intensity: 0.4,
-            viscosity: 0.85
+            intensity: 0.5,
+            viscosity: 0.92
         });
     });
 
     const liquidButtons = document.querySelectorAll('button.apply-btn, button.secondary-btn, .close-btn');
     liquidButtons.forEach(btn => {
         new LiquidGL(btn, {
-            refraction: 0.025,
-            reflection: 0.15,
-            liquidColor: '#091020',
+            refraction: 0.03,
+            reflection: 0.18,
+            liquidColor: '#030712',
             dispersion: 0.0,
             interactive: true,
-            intensity: 0.25
+            intensity: 0.3
         });
     });
 }
 
 /**
- * Dynamic Light Tracking & Glass Tilt Micro-Interactions
+ * Lighting & Micro-Tilt Interactivity
  */
 function initGlassInteractivity() {
     const glassPanels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
@@ -87,14 +87,14 @@ function initGlassInteractivity() {
             if (typeof gsap !== 'undefined' && !panel.classList.contains('pt-modal-window')) {
                 const centerX = rect.left + rect.width / 2;
                 const centerY = rect.top + rect.height / 2;
-                const rotateX = ((e.clientY - centerY) / (rect.height / 2)) * -2.5;
-                const rotateY = ((e.clientX - centerX) / (rect.width / 2)) * 2.5;
+                const rotateX = ((e.clientY - centerY) / (rect.height / 2)) * -2.0;
+                const rotateY = ((e.clientX - centerX) / (rect.width / 2)) * 2.0;
 
                 gsap.to(panel, {
                     rotateX: rotateX,
                     rotateY: rotateY,
                     transformPerspective: 1200,
-                    duration: 0.3,
+                    duration: 0.4,
                     ease: 'power1.out'
                 });
             }
@@ -105,7 +105,7 @@ function initGlassInteractivity() {
                 gsap.to(panel, {
                     rotateX: 0,
                     rotateY: 0,
-                    duration: 0.5,
+                    duration: 0.6,
                     ease: 'power2.out'
                 });
             }
@@ -114,23 +114,23 @@ function initGlassInteractivity() {
 }
 
 /**
- * GSAP Motion Sequences
+ * Smooth GSAP Motion Sequences
  */
 function initGSAPAnimations() {
     if (typeof gsap === 'undefined') return;
 
     gsap.from('#uiOverlay', {
-        x: -50,
+        x: -60,
         opacity: 0,
-        duration: 0.7,
+        duration: 0.8,
         ease: 'power3.out',
         delay: 0.1
     });
 
     gsap.from('#tpOverlay', {
-        x: 50,
+        x: 60,
         opacity: 0,
-        duration: 0.7,
+        duration: 0.8,
         ease: 'power3.out',
         delay: 0.2
     });
@@ -139,7 +139,7 @@ function initGSAPAnimations() {
     buttons.forEach(btn => {
         btn.addEventListener('mouseenter', () => {
             gsap.to(btn, {
-                scale: 1.025,
+                scale: 1.02,
                 duration: 0.2,
                 ease: 'power1.out'
             });
@@ -155,7 +155,7 @@ function initGSAPAnimations() {
 
         btn.addEventListener('mousedown', () => {
             gsap.to(btn, {
-                scale: 0.96,
+                scale: 0.97,
                 duration: 0.08,
                 ease: 'power1.inOut'
             });
@@ -186,6 +186,6 @@ function switchControlMode(mode) {
 
     if (typeof gsap !== 'undefined') {
         const activeContainer = mode === 'auto' ? autoContainer : manualContainer;
-        gsap.fromTo(activeContainer, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' });
+        gsap.fromTo(activeContainer, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' });
     }
 }
