@@ -1,6 +1,6 @@
 /**
  * effects.js
- * Quicksilver Liquid Optics & Fixed Interactivity Controls
+ * Dynamic Dark Aero Quicksilver Physics & Optics
  */
 document.addEventListener('DOMContentLoaded', () => {
     initGroupAttributesObserver();
@@ -8,14 +8,13 @@ document.addEventListener('DOMContentLoaded', () => {
     initGSAPAnimations();
     initGlassInteractivity();
 
-    // Delay liquidGL execution slightly to ensure renderCanvas has painted its initial frame
     setTimeout(() => {
         initLiquidGLEffects();
     }, 250);
 });
 
 /**
- * Prevents the closed periodic table modal backdrop from forming an invisible hit-shield over the viewport.
+ * Prevents the closed modal backdrop from blocking viewport clicks.
  */
 function initModalVisibilityHandler() {
     const modalBackdrop = document.querySelector('.pt-modal-backdrop');
@@ -37,9 +36,6 @@ function initModalVisibilityHandler() {
     observer.observe(modalBackdrop, { attributes: true, attributeFilter: ['class'] });
 }
 
-/**
- * Automatically attaches data-group attributes to elements created by kernel.js
- */
 function applyGroupDataAttributes() {
     const cards = document.querySelectorAll('.pt-element-card');
     cards.forEach(card => {
@@ -68,28 +64,28 @@ function initGroupAttributesObserver() {
 }
 
 /**
- * Initialize Quicksilver Refractive Metal Optics using the official liquidGL API
+ * Dark Aero Quicksilver Optics Engine
  */
 function initLiquidGLEffects() {
     if (typeof liquidGL !== 'function') return;
 
     liquidGL({
         snapshot: "body",
-        target: ".ui-overlay, .tp-overlay",
+        target: ".ui-overlay, .tp-overlay, .pt-modal-window",
         resolution: 1.5,
-        refraction: 0.08,      // Deep liquid metal refraction index
-        aberration: 0.02,      // Subtle chromatic dispersion around edges
-        bevelDepth: 0.88,      // Deep specular bevel to catch CSS borders
-        bevelWidth: 0.22,      // Wide metallic boundary reflection
-        frost: 0,              // Zero blur for raw quicksilver clarity
-        shadow: true,          // Drop-shadow contrast depth
-        specular: true,        // Dynamic light reflection highlights
+        refraction: 0.28,      // High refractive index for liquid mercury lens distortion
+        aberration: 0.08,      // Metallic chromatic edge splitting
+        bevelDepth: 0.95,      // Deep specular bevel to catch CSS border highlights
+        bevelWidth: 0.26,      // Wide liquid metal edge curvature
+        frost: 0,              // Raw quicksilver surface clarity
+        shadow: true,          // Obsidian drop shadow contrast
+        specular: true,        // Active animated light reflection
         reveal: "fade",
-        tilt: false,           // Set false to prevent input click-target misalignment
-        magnify: 1.0,          // Prevents zoom warping over control panels
+        tilt: false,           // Prevents click misalignment on interactive elements
+        magnify: 1.04,         // Lens magnification for deep liquid perception
         on: {
             init(instance) {
-                console.log("Quicksilver liquidGL active:", instance);
+                console.log("Dark Aero Quicksilver active:", instance);
                 fixPointerEventsAndZIndex();
             }
         }
@@ -99,17 +95,15 @@ function initLiquidGLEffects() {
 }
 
 /**
- * Guarantees that liquidGL WebGL overlay canvases never block mouse clicks or input interactions.
+ * Passes click interactions directly through shader overlay canvases.
  */
 function fixPointerEventsAndZIndex() {
-    // Pass pointer events through liquidGL shader canvases
     const canvases = document.querySelectorAll('canvas:not(#renderCanvas)');
     canvases.forEach(cvs => {
         cvs.style.pointerEvents = 'none';
         cvs.style.zIndex = '0';
     });
 
-    // Elevate panel controls above background shader layers
     const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
     panels.forEach(panel => {
         panel.style.pointerEvents = 'auto';
@@ -118,6 +112,36 @@ function fixPointerEventsAndZIndex() {
             el.style.position = 'relative';
             el.style.zIndex = '10';
             el.style.pointerEvents = 'auto';
+        });
+    });
+}
+
+/**
+ * Dynamic Liquid Specular Light Tracking
+ */
+function initGlassInteractivity() {
+    const glassPanels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
+
+    glassPanels.forEach(panel => {
+        panel.addEventListener('mousemove', (e) => {
+            const rect = panel.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Dynamically update light source position for CSS specular gradients
+            panel.style.setProperty('--mouse-x', `${x}px`);
+            panel.style.setProperty('--mouse-y', `${y}px`);
+
+            // Dynamic fluid shimmer calculation based on cursor proximity to center
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const distFromCenter = Math.hypot(x - centerX, y - centerY) / Math.hypot(centerX, centerY);
+
+            panel.style.setProperty('--fluid-intensity', `${0.2 + (1 - distFromCenter) * 0.4}`);
+        });
+
+        panel.addEventListener('mouseleave', () => {
+            panel.style.setProperty('--fluid-intensity', '0.2');
         });
     });
 }
@@ -168,50 +192,6 @@ function initGSAPAnimations() {
                 duration: 0.08,
                 ease: 'power1.inOut'
             });
-        });
-    });
-}
-
-/**
- * Cursor Tracking & Subtle Surface Tilt
- */
-function initGlassInteractivity() {
-    const glassPanels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
-
-    glassPanels.forEach(panel => {
-        panel.addEventListener('mousemove', (e) => {
-            const rect = panel.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            panel.style.setProperty('--mouse-x', `${x}px`);
-            panel.style.setProperty('--mouse-y', `${y}px`);
-
-            if (typeof gsap !== 'undefined' && !panel.classList.contains('pt-modal-window')) {
-                const centerX = rect.left + rect.width / 2;
-                const centerY = rect.top + rect.height / 2;
-                const rotateX = ((e.clientY - centerY) / (rect.height / 2)) * -2.0;
-                const rotateY = ((e.clientX - centerX) / (rect.width / 2)) * 2.0;
-
-                gsap.to(panel, {
-                    rotateX: rotateX,
-                    rotateY: rotateY,
-                    transformPerspective: 1000,
-                    duration: 0.3,
-                    ease: 'power1.out'
-                });
-            }
-        });
-
-        panel.addEventListener('mouseleave', () => {
-            if (typeof gsap !== 'undefined' && !panel.classList.contains('pt-modal-window')) {
-                gsap.to(panel, {
-                    rotateX: 0,
-                    rotateY: 0,
-                    duration: 0.5,
-                    ease: 'power2.out'
-                });
-            }
         });
     });
 }
