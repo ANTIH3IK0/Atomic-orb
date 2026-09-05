@@ -45,13 +45,13 @@ function initLiquidGLEffects() {
     const glassPanels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
     glassPanels.forEach(panel => {
         new LiquidGL(panel, {
-            refraction: 0.08,
-            reflection: 0.32,
+            refraction: 0.24,
+            reflection: 0.85,
             liquidColor: '#020408',
             glassColor: 'rgba(6, 9, 14, 0.88)',
-            dispersion: 0.0,
+            dispersion: 0.05,
             interactive: true,
-            intensity: 0.55,
+            intensity: 0.75,
             viscosity: 0.95
         });
     });
