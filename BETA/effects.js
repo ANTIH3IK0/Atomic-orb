@@ -1,23 +1,23 @@
 // effects.js
 
-/* Layer 1 — actinium quicksilver melt (bottom) */
+/* Layer 1 — ultra-smooth actinium quicksilver melt (bottom) */
 const ACTINIUM = {
     layerClass: 'actinium-liquid-layer',
-    refraction: 0.03,    // gentle viscous pull — no blocky warping
-    aberration: 0.004,   // whisper of fringe
-    bevelDepth: 0.55,    // deep but rounded meniscus
-    bevelWidth: 0.24,    // wide soft transition — the "liquid" feel
+    refraction: 0.022,   // extra soft, silky fluid motion — zero distortion jitter
+    aberration: 0.002,   // crisp, smooth metallic sheen without harsh color dispersion
+    bevelDepth: 0.65,    // deep, curved liquid meniscus
+    bevelWidth: 0.32,    // ultra-wide, seamless transition for molten quicksilver effect
     frost:      0
 };
 
 /* Layer 2 — weak liquid glass film (above melt, below content) */
 const LIQUID_GLASS_FILM = {
     layerClass: 'actinium-glass-film',
-    refraction: 0.012,   // WEAK glass pull
-    aberration: 0.0015,  // near-zero fringe
-    bevelDepth: 0.16,    // thin glass meniscus
-    bevelWidth: 0.10,
-    frost:      0.14     // faint frosted-glass grain
+    refraction: 0.008,   // subtle liquid glaze
+    aberration: 0.001,   // ultra-clean fringe
+    bevelDepth: 0.20,    // smooth glass lip
+    bevelWidth: 0.18,    // wide soft sheen
+    frost:      0.08     // micro-smooth satin grain
 };
 
 const PANEL_SELECTOR    = '.ui-overlay, .tp-overlay, .pt-modal-window';
