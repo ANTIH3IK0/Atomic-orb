@@ -3,30 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Atomic-orb WE r1.1</title>
+    <title>Atomic-orb pre1.2</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
+    <!-- External UI & Effect APIs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/naughtyduk/liquidGL/scripts/liquidGL.js"></script>
+
+    <!-- 3D Engine & Application Core -->
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="effects.js" defer></script>
     <script src="kernel.js" defer></script>
 
     <style>
         :root {
-            --bg-gradient: linear-gradient(165deg, #050608 0%, #0a0c10 100%);
-            --panel-gradient: linear-gradient(180deg, #101216 0%, #0a0c0f 100%);
-            --border-subtle: rgba(255, 255, 255, 0.08);
-            --border-hover: rgba(200, 155, 82, 0.4);
+            --bg-dark: #020305;
             
-            --input-bg: #060709;
-            --btn-gradient: linear-gradient(180deg, #151820 0%, #0e1015 100%);
-            --btn-hover: linear-gradient(180deg, #1f232e 0%, #151820 100%);
+            /* Seamless Dark Glass Palette */
+            --panel-glass: rgba(8, 11, 18, 0.85);
+            --card-glass: rgba(255, 255, 255, 0.02);
+            --border-glass: rgba(255, 255, 255, 0.06);
+            --border-glass-active: rgba(147, 197, 253, 0.3);
+            
+            --input-bg: rgba(4, 6, 10, 0.9);
+            --btn-glass: rgba(255, 255, 255, 0.03);
+            --btn-glass-hover: rgba(255, 255, 255, 0.08);
 
-            --text-warm-white: #e5e2da;
-            --text-muted: #6e6c64;
-            --accent-gold: #f7c99e;
-            --accent-gold-soft: rgba(200, 155, 82, 0.1);
+            /* Typography & Accents */
+            --text-main: #d1d5db;
+            --text-sub: #9ca3af;
+            --text-muted: #4b5563;
+            --text-accent: #60a5fa;
+            --accent-glow: rgba(96, 165, 250, 0.1);
+
+            --chk-bg: rgba(6, 8, 12, 0.95);
+            --chk-border: rgba(255, 255, 255, 0.08);
+            --chk-checked-bg: rgba(17, 24, 39, 0.95);
+            --chk-tick-color: #9ca3af;
         }
 
         * {
@@ -41,8 +59,8 @@
             padding: 0;
             width: 100vw;
             height: 100vh;
-            background: var(--bg-gradient);
-            color: var(--text-warm-white);
+            background: var(--bg-dark);
+            color: var(--text-main);
             overflow: hidden;
             display: flex;
         }
@@ -52,262 +70,363 @@
             height: 100%;
             touch-action: none;
             outline: none;
+            transition: filter 0.3s ease;
         }
 
-        .ui-overlay {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 340px;
-            max-height: calc(100vh - 40px);
-            background: var(--panel-gradient);
-            border: 1px solid var(--border-subtle);
-            border-radius: 12px;
-            padding: 18px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(16px);
-            z-index: 10;
-            overflow-y: auto;
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
-        }
-
-        .ui-overlay.collapsed {
-            transform: translateX(-380px);
-            opacity: 0;
+        /* Blur target when modal is active */
+        body.modal-open #renderCanvas,
+        body.modal-open .ui-overlay,
+        body.modal-open .tp-overlay,
+        body.modal-open .restore-btn,
+        body.modal-open .tp-restore-btn {
+            filter: blur(12px);
             pointer-events: none;
         }
 
-        .template-overlay {
+        /* Clean Smoked Glass Panels */
+        .ui-overlay, .tp-overlay, .pt-modal-window {
             position: absolute;
-            top: 20px;
-            left: 375px;
-            width: 300px;
-            max-height: calc(100vh - 40px);
-            background: var(--panel-gradient);
-            border: 1px solid var(--border-subtle);
-            border-radius: 12px;
+            background: var(--panel-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 14px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(32px) saturate(160%);
+            -webkit-backdrop-filter: blur(32px) saturate(160%);
+            will-change: transform, opacity;
+            overflow: hidden;
+        }
+
+        .ui-overlay {
+            top: 16px;
+            left: 16px;
+            width: 380px;
+            max-height: calc(100vh - 32px);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 10;
+            overflow-y: auto;
+        }
+
+        .ui-overlay.collapsed { display: none; }
+
+        .tp-overlay {
+            top: 16px;
+            right: 16px;
+            width: 240px;
             padding: 16px;
             display: flex;
             flex-direction: column;
             gap: 12px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(16px);
-            z-index: 11;
-            opacity: 0;
-            pointer-events: none;
-            transform: translateX(-15px);
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .template-overlay.open {
-            opacity: 1;
-            pointer-events: auto;
-            transform: translateX(0);
-        }
-
-        .template-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .template-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            overflow-y: auto;
-            max-height: 480px;
-            padding-right: 2px;
-        }
-
-        .template-card-btn {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px;
-            background: var(--btn-gradient);
-            border: 1px solid var(--border-subtle);
-            border-radius: 8px;
-            color: var(--text-warm-white);
-            cursor: pointer;
-            text-align: left;
-            transition: all 0.2s ease;
-        }
-
-        .template-card-btn:hover {
-            border-color: var(--border-hover);
-            background: var(--btn-hover);
-        }
-
-        .template-card-btn.active {
-            border-color: var(--accent-gold);
-            background: var(--accent-gold-soft);
-        }
-
-        .template-card-btn .symbol {
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 600;
-            font-size: 14px;
-            color: var(--accent-gold);
-            width: 28px;
-        }
-
-        .template-card-btn .details {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .template-card-btn .name {
-            font-size: 11px;
-            font-weight: 500;
-        }
-
-        .template-card-btn .z-num {
-            font-size: 9px;
-            color: var(--text-muted);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .tp-overlay {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 250px;
-            background: var(--panel-gradient);
-            border: 1px solid var(--border-subtle);
-            border-radius: 12px;
-            padding: 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(16px);
             z-index: 10;
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
         }
 
-        .tp-overlay.collapsed {
-            transform: translateX(310px);
-            opacity: 0;
-            pointer-events: none;
-        }
+        .tp-overlay.collapsed { display: none; }
 
-        .tp-title {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            color: var(--accent-gold);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .tp-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .tp-field {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .tp-field label {
-            font-size: 10px;
-            color: var(--text-muted);
-            font-family: 'JetBrains Mono', monospace;
-            width: 14px;
-            text-align: center;
-        }
-
-        .tp-field input {
-            flex: 1;
-            background: var(--input-bg);
-            border: 1px solid var(--border-subtle);
-            color: var(--text-warm-white);
-            padding: 6px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .tp-field input:focus {
-            outline: none;
-            border-color: var(--accent-gold);
-        }
-
-        .btn-group {
+        /* Mode Selector Toggle Switch */
+        .mode-switch-bar {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 6px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-glass);
+            border-radius: 8px;
+            padding: 2px;
+            gap: 2px;
+            position: relative;
+            z-index: 3;
         }
 
-        .tp-coords-display {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 9px;
+        .mode-btn {
+            background: transparent;
+            border: none;
             color: var(--text-muted);
-            background: rgba(0, 0, 0, 0.4);
-            padding: 6px;
-            border-radius: 4px;
+            padding: 6px 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .mode-btn:hover {
+            color: var(--text-main);
+        }
+
+        .mode-btn.active {
+            background: var(--btn-glass-hover);
+            color: var(--text-accent);
+            border: 1px solid var(--border-glass-active);
+        }
+
+        /* Container Sections for Mode Toggle */
+        .mode-container {
             display: flex;
             flex-direction: column;
-            gap: 2px;
+            gap: 14px;
         }
 
-        .restore-btn, .tp-restore-btn {
-            position: absolute;
-            top: 20px;
-            z-index: 9;
-            background: var(--panel-gradient);
-            border: 1px solid var(--border-subtle);
-            color: var(--accent-gold);
-            width: 38px;
-            height: 38px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 18px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(12px);
+        .mode-container.hidden {
+            display: none !important;
+        }
+
+        /* Floating Periodic Table Modal Overlay */
+        .pt-modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(2, 3, 5, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 1000;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s ease;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
         }
 
-        .restore-btn { left: 20px; }
-        .tp-restore-btn { right: 20px; }
-
-        .restore-btn:hover, .tp-restore-btn:hover {
-            border-color: var(--border-hover);
-            color: var(--text-warm-white);
+        .pt-modal-backdrop.open {
+            opacity: 1;
+            pointer-events: auto;
         }
 
-        .ui-overlay::-webkit-scrollbar, .template-grid::-webkit-scrollbar { width: 4px; }
-        .ui-overlay::-webkit-scrollbar-thumb, .template-grid::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 2px; }
+        .pt-modal-window {
+            position: relative;
+            width: 95vw;
+            max-width: 1340px;
+            max-height: 92vh;
+            border-radius: 16px;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            overflow: hidden;
+        }
 
-        header {
+        .pt-modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-glass);
+            position: relative;
+            z-index: 3;
         }
+
+        .pt-modal-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .close-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-glass);
+            color: var(--text-sub);
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s ease, border-color 0.15s ease;
+            position: relative;
+            z-index: 3;
+        }
+
+        .close-btn:hover {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #f87171;
+        }
+
+        /* Periodic Table Grid Layout */
+        .pt-scroll-area {
+            overflow: auto;
+            max-height: calc(92vh - 80px);
+            padding: 4px;
+            position: relative;
+            z-index: 3;
+        }
+
+        .pt-grid-container {
+            display: grid;
+            grid-template-columns: 28px repeat(18, minmax(58px, 1fr));
+            grid-gap: 4px;
+            min-width: 1100px;
+        }
+
+        .pt-header-cell, .pt-period-cell {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Periodic Table Element Cards & Dark Matte Group Colors */
+        .pt-element-card {
+            position: relative;
+            height: 56px;
+            padding: 4px 6px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            background: rgba(12, 16, 24, 0.85);
+            border: 1px solid var(--group-border, rgba(255, 255, 255, 0.08));
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+            overflow: hidden;
+        }
+
+        .pt-element-card:hover {
+            background: rgba(20, 26, 38, 0.95);
+            border-color: var(--text-sub);
+            transform: translateY(-2px);
+            z-index: 10;
+        }
+
+        .pt-element-card.active {
+            border-color: var(--text-accent) !important;
+            background: rgba(15, 23, 42, 0.95);
+        }
+
+        /* Group-Specific Color Accents */
+        .pt-element-card[data-group="1"]  { --group-border: rgba(180, 83, 9, 0.4); }
+        .pt-element-card[data-group="2"]  { --group-border: rgba(161, 98, 7, 0.4); }
+        .pt-element-card[data-group="3"]  { --group-border: rgba(133, 77, 14, 0.4); }
+        .pt-element-card[data-group="4"]  { --group-border: rgba(113, 63, 18, 0.4); }
+        .pt-element-card[data-group="5"]  { --group-border: rgba(101, 163, 13, 0.4); }
+        .pt-element-card[data-group="6"]  { --group-border: rgba(22, 101, 52, 0.4); }
+        .pt-element-card[data-group="7"]  { --group-border: rgba(13, 148, 136, 0.4); }
+        .pt-element-card[data-group="8"]  { --group-border: rgba(3, 105, 161, 0.4); }
+        .pt-element-card[data-group="9"]  { --group-border: rgba(29, 78, 216, 0.4); }
+        .pt-element-card[data-group="10"] { --group-border: rgba(67, 56, 202, 0.4); }
+        .pt-element-card[data-group="11"] { --group-border: rgba(109, 40, 217, 0.4); }
+        .pt-element-card[data-group="12"] { --group-border: rgba(126, 34, 206, 0.4); }
+        .pt-element-card[data-group="13"] { --group-border: rgba(162, 28, 175, 0.4); }
+        .pt-element-card[data-group="14"] { --group-border: rgba(190, 24, 93, 0.4); }
+        .pt-element-card[data-group="15"] { --group-border: rgba(190, 18, 60, 0.4); }
+        .pt-element-card[data-group="16"] { --group-border: rgba(159, 18, 57, 0.4); }
+        .pt-element-card[data-group="17"] { --group-border: rgba(71, 85, 105, 0.4); }
+        .pt-element-card[data-group="18"] { --group-border: rgba(51, 65, 85, 0.3); }
+
+        .pt-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 8px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+        }
+
+        .pt-card-symbol {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-main);
+            text-align: center;
+            margin-top: 1px;
+        }
+
+        .pt-card-name {
+            font-size: 8px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: center;
+        }
+
+        .tp-title, .section-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 3;
+        }
+
+        .tp-grid { display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 3; }
+        .tp-field { display: flex; flex-direction: row; align-items: center; gap: 8px; }
+        .tp-field label { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; width: 14px; }
+        
+        input[type="text"], input[type="number"] {
+            background: var(--input-bg);
+            border: 1px solid var(--border-glass);
+            color: var(--text-main);
+            padding: 7px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            transition: border-color 0.15s ease;
+            width: 100%;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: var(--border-glass-active);
+        }
+
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; position: relative; z-index: 3; }
+
+        .restore-btn, .tp-restore-btn {
+            position: absolute;
+            top: 16px;
+            z-index: 9;
+            background: var(--panel-glass);
+            border: 1px solid var(--border-glass);
+            color: var(--text-sub);
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            backdrop-filter: blur(16px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .restore-btn { left: 16px; }
+        .tp-restore-btn { right: 16px; }
+
+        .ui-overlay::-webkit-scrollbar, .pt-scroll-area::-webkit-scrollbar, .orbits-scroll-area::-webkit-scrollbar { width: 4px; height: 4px; }
+        .ui-overlay::-webkit-scrollbar-thumb, .pt-scroll-area::-webkit-scrollbar-thumb, .orbits-scroll-area::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 2px; }
+
+        header { position: relative; z-index: 3; }
 
         header h1 {
             margin: 0;
             font-family: 'JetBrains Mono', monospace;
             font-size: 11px;
-            font-weight: 500;
+            font-weight: 600;
             letter-spacing: 1.5px;
-            color: var(--text-warm-white);
+            color: var(--text-sub);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -317,7 +436,7 @@
             content: '';
             width: 6px;
             height: 6px;
-            background: var(--accent-gold);
+            background: var(--text-accent);
             border-radius: 50%;
         }
 
@@ -326,151 +445,169 @@
             border: none;
             color: var(--text-muted);
             cursor: pointer;
-            font-size: 16px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            transition: color 0.2s;
+            font-size: 14px;
+            transition: color 0.15s ease;
         }
 
-        .minimize-btn:hover { color: var(--text-warm-white); }
-
-        .section-title {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-        }
+        .minimize-btn:hover { color: var(--text-main); }
 
         .input-card {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            background: rgba(0, 0, 0, 0.3);
+            gap: 10px;
+            background: var(--card-glass);
             padding: 12px;
             border-radius: 8px;
-            border: 1px solid var(--border-subtle);
+            border: 1px solid var(--border-glass);
+            position: relative;
+            z-index: 3;
         }
 
-        .input-field {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .input-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .input-field label {
-            font-size: 10px;
-            color: var(--text-muted);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .action-link {
-            font-size: 9px;
-            color: var(--accent-gold);
-            cursor: pointer;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .action-link:hover { text-decoration: underline; }
-
-        .input-field input {
-            background: var(--input-bg);
-            border: 1px solid var(--border-subtle);
-            color: var(--text-warm-white);
-            padding: 6px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .input-field input:focus {
-            outline: none;
-            border-color: var(--accent-gold);
-        }
+        .input-field { display: flex; flex-direction: column; gap: 4px; }
+        .input-header { display: flex; justify-content: space-between; align-items: center; }
+        .input-field label { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        .action-link { font-size: 9px; color: var(--text-accent); cursor: pointer; font-family: 'JetBrains Mono', monospace; opacity: 0.8; }
+        .action-link:hover { opacity: 1; text-decoration: underline; }
 
         button.apply-btn {
-            padding: 8px;
-            border: 1px solid var(--accent-gold);
-            background: var(--accent-gold-soft);
-            color: var(--accent-gold);
+            padding: 8px 12px;
+            border: 1px solid var(--border-glass-active);
+            background: var(--accent-glow);
+            color: var(--text-accent);
             border-radius: 6px;
             font-size: 10px;
             font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: border-color 0.15s ease, background 0.15s ease;
+            position: relative;
+            z-index: 3;
+            width: 100%;
         }
 
         button.apply-btn:hover {
-            background: var(--accent-gold);
-            color: #060709;
+            background: rgba(96, 165, 250, 0.2);
+            color: #ffffff;
         }
 
         button.secondary-btn {
             padding: 8px;
-            border: 1px solid var(--border-subtle);
-            background: var(--btn-gradient);
-            color: var(--text-warm-white);
+            border: 1px solid var(--border-glass);
+            background: var(--btn-glass);
+            color: var(--text-sub);
             border-radius: 6px;
             font-size: 10px;
             font-family: 'JetBrains Mono', monospace;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: border-color 0.15s ease, background 0.15s ease;
             width: 100%;
+            position: relative;
+            z-index: 3;
         }
 
         button.secondary-btn:hover {
-            border-color: var(--border-hover);
-            background: var(--btn-hover);
+            border-color: rgba(255, 255, 255, 0.15);
+            background: var(--btn-glass-hover);
+            color: var(--text-main);
         }
 
-        .slider-box {
+        /* Suborbit Builder Grid Styling */
+        .orbits-scroll-area {
+            max-height: 200px;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
             gap: 6px;
+            padding-right: 4px;
+            position: relative;
+            z-index: 3;
         }
 
-        .slider-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            color: var(--text-muted);
+        .orbit-row {
+            display: grid;
+            grid-template-columns: 36px 70px 1fr;
+            align-items: center;
+            gap: 8px;
+            background: var(--card-glass);
+            padding: 5px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border-glass);
         }
 
-        input[type="range"] {
+        .orbit-row .ex-input {
             width: 100%;
-            accent-color: var(--accent-gold);
+            text-align: center;
+            padding: 4px;
+            font-size: 10px;
+        }
+
+        .orbit-row .orbit-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-sub);
+            text-align: center;
+        }
+
+        .orbit-row .e-input {
+            width: 100%;
+            text-align: right;
+            padding: 4px 6px;
+            font-size: 10px;
+        }
+
+        /* Custom Dark Theme Checkboxes */
+        input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--chk-bg);
+            border: 1px solid var(--chk-border);
+            border-radius: 3px;
             cursor: pointer;
+            position: relative;
+            outline: none;
+            transition: background 0.15s ease, border-color 0.15s ease;
+            margin: 0;
+            display: inline-block;
+            vertical-align: middle;
         }
 
-        .filter-list {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
+        input[type="checkbox"]:checked {
+            background: var(--chk-checked-bg);
+            border-color: var(--chk-tick-color);
         }
 
+        input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute;
+            top: -3px;
+            left: 2px;
+            font-size: 10px;
+            font-weight: bold;
+            color: var(--chk-tick-color);
+        }
+
+        .filter-list { display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 3; }
         .filter-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
             font-size: 11px;
-            color: var(--text-warm-white);
-            cursor: pointer;
+            color: var(--text-sub);
+            background: var(--card-glass);
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-glass);
         }
 
-        .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--text-sub);
+            cursor: pointer;
+            position: relative;
+            z-index: 3;
         }
     </style>
 </head>
@@ -479,102 +616,356 @@
     <button class="restore-btn" id="restoreBtn" style="display:none;" onclick="togglePanel(false)">☰</button>
     <button class="tp-restore-btn" id="tpRestoreBtn" style="display:none;" onclick="toggleTpPanel(false)">⧇</button>
 
+    <!-- Camera / Teleport Overlay -->
     <div class="tp-overlay" id="tpOverlay">
         <div class="tp-title">
             <span>CAMERA POS & GOTO</span>
             <button class="minimize-btn" onclick="toggleTpPanel(true)">✕</button>
         </div>
-
         <div class="tp-grid">
             <div class="tp-field"><label>X</label><input type="text" id="tpX" placeholder="~"></div>
             <div class="tp-field"><label>Y</label><input type="text" id="tpY" placeholder="~"></div>
             <div class="tp-field"><label>Z</label><input type="text" id="tpZ" placeholder="~"></div>
         </div>
-        
         <button class="apply-btn" onclick="teleportCamera()">GOTO POSITION</button>
-
         <div class="btn-group">
-            <button class="secondary-btn" onclick="setInitialPosition()">SET INIT POS</button>
-            <button class="secondary-btn" onclick="reloadInitialPosition()">RELOAD INIT</button>
-        </div>
-
-        <div class="tp-coords-display">
-            <div id="cameraCoordsDisplay">CUR: X: 0.00 | Y: 0.00 | Z: 0.00</div>
-            <div id="initCoordsDisplay" style="color:var(--accent-gold);">INIT: X: 0.00 | Y: 0.00 | Z: 0.00</div>
+            <button class="secondary-btn" onclick="setInitialPosition()">SET INIT</button>
+            <button class="secondary-btn" onclick="reloadInitialPosition()">RESET</button>
         </div>
     </div>
 
     <!-- Main UI Panel -->
     <div class="ui-overlay" id="uiOverlay">
-        <header>
-            <h1>DIRAC RELATIVISTIC 3D</h1>
+        <header style="display:flex; justify-content:space-between; align-items:center;">
+            <h1>DIRAC QUANTUM 3D</h1>
             <button class="minimize-btn" onclick="togglePanel(true)">✕</button>
         </header>
 
+        <!-- Element Selector via Periodic Table Modal -->
         <div>
-            <div class="section-title">Element Presets</div>
-            <button class="secondary-btn" onclick="toggleTemplatePanel()">SELECT ELEMENT TEMPLATE ⊞</button>
+            <div class="section-title">Element Selector</div>
+            <button class="secondary-btn" style="margin-top:6px;" onclick="openPeriodicTableModal()">PERIODIC TABLE ⊞</button>
         </div>
 
-        <div>
-            <div class="section-title">Quantum Parameters</div>
-            <div class="input-card">
-                <div class="input-field">
-                    <label>Atomic Number (Z)</label>
-                    <input type="number" id="inputZ" value="6">
-                </div>
-                <div class="input-field">
-                    <label>Elec Config (e.g., 1s2 2s2 2p2)</label>
-                    <input type="text" id="inputConfig" value="1s2 2s2 2p2" oninput="onConfigInputChanged()">
-                </div>
-                <div class="input-field">
-                    <label>Electrons Array (elec)</label>
-                    <input type="text" id="inputElec" value="2, 2, 2">
-                </div>
-                <div class="input-field">
-                    <label>Principal Quantum (n)</label>
-                    <input type="text" id="inputN" value="1, 2, 2">
-                </div>
-                <div class="input-field">
-                    <label>Azimuthal Quantum (l)</label>
-                    <input type="text" id="inputL" value="0, 0, 1">
-                </div>
-                <div class="input-field">
-                    <div class="input-header">
-                        <label>Binding Energy En (eV)</label>
-                        <span class="action-link" onclick="autoCalculateEnUI()">[DIRAC CALC]</span>
+        <!-- Mode Switcher -->
+        <div class="mode-switch-bar">
+            <button class="mode-btn active" id="btnModeAuto" onclick="switchControlMode('auto')">AUTO BUILDER</button>
+            <button class="mode-btn" id="btnModeManual" onclick="switchControlMode('manual')">MANUAL (r1.1)</button>
+        </div>
+
+        <!-- AUTO BUILDER MODE SECTION -->
+        <div id="autoModeContainer" class="mode-container">
+            <div>
+                <div class="section-title">Quantum System Setup</div>
+                <div class="input-card" style="margin-top:6px;">
+                    <div class="input-field">
+                        <label>Atomic Number (Z)</label>
+                        <input type="number" id="inputZ" value="6" onchange="rebuildQuantumModel()">
                     </div>
-                    <input type="text" id="inputEn" value="" placeholder="Auto-calculated if empty">
+
+                    <div class="input-field">
+                        <label>Max Principal Quantum Number (n)</label>
+                        <input type="number" id="inputMaxN" value="2" min="1" max="12" onchange="generateOrbitsBuilder()">
+                    </div>
                 </div>
-                <button class="apply-btn" onclick="applyCustomParameters()">RUN DIRAC SOLVER</button>
+            </div>
+
+            <div>
+                <div class="section-title">
+                    <span>Suborbit Configuration</span>
+                    <span style="font-size:8px; color:var(--text-muted);">EX | ORBIT | ELEC</span>
+                </div>
+                
+                <div class="orbits-scroll-area" id="orbitsBuilderContainer" style="margin-top:6px;"></div>
+            </div>
+
+            <div>
+                <div class="input-card">
+                    <div class="input-header">
+                        <label style="font-size:10px; color:var(--text-muted); font-family:'JetBrains Mono';">Binding Energy En (eV)</label>
+                        <span class="action-link" onclick="autoCalculateSuborbitEnergiesUI()">[CALC EN]</span>
+                    </div>
+                    <input type="text" id="inputEn" value="" placeholder="Calculated per split suborbit">
+                    <button class="apply-btn" style="margin-top:4px;" onclick="rebuildQuantumModel()">SOLVE DIRAC MODEL</button>
+                </div>
             </div>
         </div>
 
-        <div class="slider-box">
-            <div class="section-title">Density Control</div>
-            <div class="slider-header">
-                <span>Fill Opacity</span>
-                <span id="opacityVal" style="color:var(--accent-gold);">35%</span>
+        <!-- MANUAL MODE SECTION (r1.1 Parameters) -->
+        <div id="manualModeContainer" class="mode-container hidden">
+            <div>
+                <div class="section-title">Manual Quantum Parameters</div>
+                <div class="input-card" style="margin-top:6px;">
+                    <div class="input-field">
+                        <label>Atomic Number (Z)</label>
+                        <input type="number" id="inputZManual" value="6">
+                    </div>
+                    <div class="input-field">
+                        <label>Elec Config (e.g., 1s2 2s2 2p2)</label>
+                        <input type="text" id="inputConfig" value="1s2 2s2 2p2" oninput="if(typeof onConfigInputChanged === 'function') onConfigInputChanged();">
+                    </div>
+                    <div class="input-field">
+                        <label>Electrons Array (elec)</label>
+                        <input type="text" id="inputElec" value="2, 2, 2">
+                    </div>
+                    <div class="input-field">
+                        <label>Principal Quantum (n)</label>
+                        <input type="text" id="inputN" value="1, 2, 2">
+                    </div>
+                    <div class="input-field">
+                        <label>Azimuthal Quantum (l)</label>
+                        <input type="text" id="inputL" value="0, 0, 1">
+                    </div>
+                    <div class="input-field">
+                        <div class="input-header">
+                            <label>Binding Energy En (eV)</label>
+                            <span class="action-link" onclick="autoCalculateEnUI()">[DIRAC CALC]</span>
+                        </div>
+                        <input type="text" id="inputEnManual" value="" placeholder="Auto-calculated if empty">
+                    </div>
+                    <button class="apply-btn" style="margin-top:4px;" onclick="if(typeof applyCustomParameters === 'function') applyCustomParameters(); else rebuildQuantumModel();">RUN DIRAC SOLVER</button>
+                </div>
             </div>
-            <input type="range" id="opacitySlider" min="0.05" max="0.9" step="0.01" value="0.35" oninput="updateOpacity(this.value)">
         </div>
 
+        <!-- Shared Opacity Slider -->
         <div>
-            <div class="section-title">Dirac j-Splitting Filter (j = l ± 1/2)</div>
-            <div id="dynamicFilterContainer" class="filter-list"></div>
+            <div class="section-title">Orbital Opacity</div>
+            <input type="range" id="opacitySlider" min="0.05" max="0.9" step="0.01" value="0.35" style="margin-top:6px;" oninput="updateOpacity(this.value)">
+        </div>
+
+        <!-- Shared Dirac Filters -->
+        <div>
+            <div class="section-title">Dirac j-Suborbit Filters</div>
+            <div id="dynamicFilterContainer" class="filter-list" style="margin-top:6px;"></div>
         </div>
     </div>
 
-    <!-- Secondary Template Panel -->
-    <div class="template-overlay" id="templateOverlay">
-        <div class="template-header">
-            <span class="section-title" style="margin:0;">ELEMENT TEMPLATES</span>
-            <button class="minimize-btn" onclick="toggleTemplatePanel(false)">✕</button>
+    <!-- Floating Periodic Table Window -->
+    <div class="pt-modal-backdrop" id="ptModalBackdrop" onclick="handleBackdropClick(event)">
+        <div class="pt-modal-window" id="ptModalWindow">
+            <div class="pt-modal-header">
+                <div class="pt-modal-title">
+                    <span>PERIODIC TABLE</span>
+                    <span id="selectedElementTag" style="font-size:10px; color:var(--text-accent); font-weight:normal;">[118 Elements]</span>
+                </div>
+                <button class="close-btn" onclick="closePeriodicTableModal()">✕</button>
+            </div>
+            <div class="pt-scroll-area">
+                <div class="pt-grid-container" id="ptGridContainer"></div>
+            </div>
         </div>
-        <div class="template-grid" id="templateGridContainer"></div>
     </div>
 
     <canvas id="renderCanvas"></canvas>
 
+    <script>
+        // Relativistic Dirac binding energy calculator helper (eV)
+        function calculateDiracEnergy(Z, n, j) {
+            const alpha = 1 / 137.035999;
+            const mc2 = 510998.94; // Electron rest energy in eV
+            
+            if (!j || j <= 0) j = n - 0.5;
+            
+            const gamma = Math.sqrt(Math.pow(j + 0.5, 2) - Math.pow(alpha * Z, 2));
+            const denom = Math.sqrt(1 + Math.pow((alpha * Z) / (n - (j + 0.5) + gamma), 2));
+            const bindingEnergy = mc2 * (1 - (1 / denom));
+            
+            if (isNaN(bindingEnergy) || bindingEnergy <= 0) {
+                return (13.6057 * Math.pow(Z, 2) / Math.pow(n, 2));
+            }
+            return bindingEnergy;
+        }
+
+        // Generate Electron Configuration & Quantum parameters dynamically for any Atomic Number Z
+        function getElectronConfiguration(Z) {
+            const subshells = [
+                { n: 1, l: 0, label: '1s', capacity: 2 },
+                { n: 2, l: 0, label: '2s', capacity: 2 },
+                { n: 2, l: 1, label: '2p', capacity: 6 },
+                { n: 3, l: 0, label: '3s', capacity: 2 },
+                { n: 3, l: 1, label: '3p', capacity: 6 },
+                { n: 4, l: 0, label: '4s', capacity: 2 },
+                { n: 3, l: 2, label: '3d', capacity: 10 },
+                { n: 4, l: 1, label: '4p', capacity: 6 },
+                { n: 5, l: 0, label: '5s', capacity: 2 },
+                { n: 4, l: 2, label: '4d', capacity: 10 },
+                { n: 5, l: 1, label: '5p', capacity: 6 },
+                { n: 6, l: 0, label: '6s', capacity: 2 },
+                { n: 4, l: 3, label: '4f', capacity: 14 },
+                { n: 5, l: 2, label: '5d', capacity: 10 },
+                { n: 6, l: 1, label: '6p', capacity: 6 },
+                { n: 7, l: 0, label: '7s', capacity: 2 },
+                { n: 5, l: 3, label: '5f', capacity: 14 },
+                { n: 6, l: 2, label: '6d', capacity: 10 },
+                { n: 7, l: 1, label: '7p', capacity: 6 }
+            ];
+
+            let remaining = Z;
+            let configParts = [];
+            let elecs = [];
+            let ns = [];
+            let ls = [];
+
+            for (let sub of subshells) {
+                if (remaining <= 0) break;
+                let count = Math.min(remaining, sub.capacity);
+                configParts.push(`${sub.label}${count}`);
+                elecs.push(count);
+                ns.push(sub.n);
+                ls.push(sub.l);
+                remaining -= count;
+            }
+
+            return {
+                config: configParts.join(' '),
+                elec: elecs.join(', '),
+                n: ns.join(', '),
+                l: ls.join(', '),
+                maxN: ns.length > 0 ? Math.max(...ns) : 1
+            };
+        }
+
+        // Synchronize Manual Input fields based on Atomic Number Z
+        function syncManualFieldsFromZ(Z) {
+            const parsedZ = parseInt(Z) || 1;
+            const data = getElectronConfiguration(parsedZ);
+            
+            const configInput = document.getElementById('inputConfig');
+            const elecInput = document.getElementById('inputElec');
+            const nInput = document.getElementById('inputN');
+            const lInput = document.getElementById('inputL');
+            const maxNInput = document.getElementById('inputMaxN');
+
+            if (configInput) configInput.value = data.config;
+            if (elecInput) elecInput.value = data.elec;
+            if (nInput) nInput.value = data.n;
+            if (lInput) lInput.value = data.l;
+            if (maxNInput) maxNInput.value = data.maxN;
+
+            autoCalculateEnUI();
+            if (typeof generateOrbitsBuilder === 'function') generateOrbitsBuilder();
+            if (typeof autoCalculateSuborbitEnergiesUI === 'function') autoCalculateSuborbitEnergiesUI();
+        }
+
+        // Dirac calculation handler for Manual Mode ([DIRAC CALC])
+        function autoCalculateEnUI() {
+            const zInput = document.getElementById('inputZManual') || document.getElementById('inputZ');
+            const nInput = document.getElementById('inputN');
+            const lInput = document.getElementById('inputL');
+            const enInput = document.getElementById('inputEnManual');
+            
+            if (!zInput || !enInput) return;
+
+            const Z = parseFloat(zInput.value) || 1;
+            let nArray = [1];
+            let lArray = [0];
+
+            if (nInput && nInput.value.trim() !== "") {
+                nArray = nInput.value.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
+            }
+            if (lInput && lInput.value.trim() !== "") {
+                lArray = lInput.value.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
+            }
+
+            const computedEnergies = nArray.map((n, idx) => {
+                const l = lArray[idx] !== undefined ? lArray[idx] : 0;
+                const j = l + 0.5;
+                return calculateDiracEnergy(Z, n, j).toFixed(2);
+            });
+
+            enInput.value = computedEnergies.join(', ');
+        }
+
+        // Dirac calculation handler for Auto Builder Mode ([CALC EN])
+        function autoCalculateSuborbitEnergiesUI() {
+            const zInput = document.getElementById('inputZ');
+            const maxNInput = document.getElementById('inputMaxN');
+            const enInput = document.getElementById('inputEn');
+
+            if (!zInput || !enInput) return;
+
+            const Z = parseFloat(zInput.value) || 1;
+            const maxN = parseInt(maxNInput ? maxNInput.value : 1) || 1;
+            
+            let energies = [];
+            for (let n = 1; n <= maxN; n++) {
+                energies.push(calculateDiracEnergy(Z, n, n - 0.5).toFixed(2));
+            }
+
+            enInput.value = energies.join(', ');
+        }
+
+        // Control Mode Switching logic
+        function switchControlMode(mode) {
+            const autoContainer = document.getElementById('autoModeContainer');
+            const manualContainer = document.getElementById('manualModeContainer');
+            const btnAuto = document.getElementById('btnModeAuto');
+            const btnManual = document.getElementById('btnModeManual');
+            const zAuto = document.getElementById('inputZ');
+            const zManual = document.getElementById('inputZManual');
+
+            if (mode === 'manual') {
+                autoContainer.classList.add('hidden');
+                manualContainer.classList.remove('hidden');
+                btnManual.classList.add('active');
+                btnAuto.classList.remove('active');
+                if (zAuto && zManual) {
+                    zManual.value = zAuto.value;
+                    syncManualFieldsFromZ(zManual.value);
+                }
+            } else {
+                manualContainer.classList.add('hidden');
+                autoContainer.classList.remove('hidden');
+                btnAuto.classList.add('active');
+                btnManual.classList.remove('active');
+                if (zAuto && zManual) zAuto.value = zManual.value;
+            }
+        }
+
+        // Automatic Full Bi-Directional Synchronizer for Z and Manual Quantum Parameters
+        function initZSynchronization() {
+            const zAuto = document.getElementById('inputZ');
+            const zManual = document.getElementById('inputZManual');
+            if (!zAuto || !zManual) return;
+
+            const syncFromAuto = () => { 
+                if (zManual.value !== zAuto.value) zManual.value = zAuto.value; 
+                syncManualFieldsFromZ(zAuto.value);
+            };
+            const syncFromManual = () => { 
+                if (zAuto.value !== zManual.value) zAuto.value = zManual.value; 
+                syncManualFieldsFromZ(zManual.value);
+            };
+
+            zAuto.addEventListener('input', syncFromAuto);
+            zAuto.addEventListener('change', syncFromAuto);
+            zManual.addEventListener('input', syncFromManual);
+            zManual.addEventListener('change', syncFromManual);
+
+            // Property setter interceptor for programmatic updates (e.g., Periodic Table modal selection)
+            [zAuto, zManual].forEach(inputEl => {
+                const nativeValueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+                Object.defineProperty(inputEl, 'value', {
+                    get: function() {
+                        return nativeValueDescriptor.get.call(this);
+                    },
+                    set: function(val) {
+                        nativeValueDescriptor.set.call(this, val);
+                        const other = (this === zAuto) ? zManual : zAuto;
+                        if (other && nativeValueDescriptor.get.call(other) !== String(val)) {
+                            nativeValueDescriptor.set.call(other, val);
+                        }
+                        syncManualFieldsFromZ(val);
+                    }
+                });
+            });
+
+            // Initial alignment run
+            syncManualFieldsFromZ(zAuto.value);
+        }
+
+        document.addEventListener('DOMContentLoaded', initZSynchronization);
+    </script>
 </body>
 </html>
