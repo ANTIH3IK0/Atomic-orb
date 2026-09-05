@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Atomic-orb r1.2-critical-bug-fixed</title>
+    <title>Atomic-orb r1.2.1</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -943,7 +943,7 @@
             zManual.addEventListener('input', syncFromManual);
             zManual.addEventListener('change', syncFromManual);
 
-            // Property setter interceptor for programmatic updates
+            // Property setter interceptor for programmatic updates (e.g., Periodic Table modal selection)
             [zAuto, zManual].forEach(inputEl => {
                 const nativeValueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
                 Object.defineProperty(inputEl, 'value', {
