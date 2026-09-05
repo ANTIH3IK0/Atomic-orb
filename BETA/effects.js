@@ -4,9 +4,13 @@
  */
 document.addEventListener('DOMContentLoaded', () => {
     initGroupAttributesObserver();
-    initLiquidGLEffects();
-    initGSAPAnimations();
     initGlassInteractivity();
+    initGSAPAnimations();
+    
+    // Delay liquidGL initialization to allow 3D canvas rendering before snapshot
+    setTimeout(() => {
+        initLiquidGLEffects();
+    }, 350);
 });
 
 function applyGroupDataAttributes() {
@@ -37,28 +41,48 @@ function initGroupAttributesObserver() {
 }
 
 /**
- * Quicksilver Liquid Shader setup tuned specifically for effects.css
+ * Dynamically injects a background layer into panels and applies liquidGL
+ * strictly to that background layer, keeping UI elements fully visible.
  */
 function initLiquidGLEffects() {
     if (typeof liquidGL !== 'function') return;
 
+    const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
+    
+    panels.forEach((panel) => {
+        if (!panel.querySelector('.liquid-gl-bg-layer')) {
+            const bgLayer = document.createElement('div');
+            bgLayer.className = 'liquid-gl-bg-layer';
+            bgLayer.style.position = 'absolute';
+            bgLayer.style.top = '0';
+            bgLayer.style.left = '0';
+            bgLayer.style.width = '100%';
+            bgLayer.style.height = '100%';
+            bgLayer.style.zIndex = '0';
+            bgLayer.style.pointerEvents = 'none';
+            bgLayer.style.borderRadius = window.getComputedStyle(panel).borderRadius || '20px';
+            
+            panel.prepend(bgLayer);
+        }
+    });
+
     liquidGL({
         snapshot: "body",
-        target: ".ui-overlay, .tp-overlay, .pt-modal-window", // Main containers only (avoids blocking inputs/buttons)
-        resolution: 1.25,      // High visual fidelity without dropping FPS
-        refraction: 0.05,      // Deep liquid glass displacement while maintaining panel legibility
-        aberration: 0.03,      // Subtle chromatic dispersion around refraction contours
-        bevelDepth: 0.92,      // High depth to catch the white border highlight from effects.css
-        bevelWidth: 0.25,      // Metallic reflection along edge boundaries
-        frost: 0,              // Zero blur for mercury fluid clarity
-        shadow: true,          // Drop shadow depth behind panels
-        specular: true,        // Animated high-gloss specular reflections
+        target: ".liquid-gl-bg-layer",
+        resolution: 1.0,
+        refraction: 0.04,
+        aberration: 0.02,
+        bevelDepth: 0.85,
+        bevelWidth: 0.20,
+        frost: 0,
+        shadow: true,
+        specular: true,
         reveal: "fade",
-        tilt: false,           // Disables heavy matrix transforms to eliminate hover lag
-        magnify: 1.0,          // Prevents zoom distortions over control inputs
+        tilt: false,
+        magnify: 1.0,
         on: {
             init(instance) {
-                console.log("Quicksilver liquidGL initialized successfully:", instance);
+                console.log("Quicksilver liquidGL background layer ready:", instance);
             }
         }
     });
