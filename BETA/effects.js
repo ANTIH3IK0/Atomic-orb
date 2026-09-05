@@ -1,23 +1,25 @@
 /**
- * Dynamic Aero Quicksilver & Actinium Light Engine
+ * Advanced Obsidian Liquid Engine & Photonic Diffusion
  */
 document.addEventListener('DOMContentLoaded', () => {
-    initQuicksilverCanvas();
-    initInteractiveEdgeGlow();
+    initLiquidCanvas();
+    initSpecularLighting();
 });
 
-function initQuicksilverCanvas() {
+function initLiquidCanvas() {
     const bgCanvas = document.createElement('canvas');
     bgCanvas.id = 'quicksilverBgCanvas';
-    bgCanvas.style.position = 'fixed';
-    bgCanvas.style.top = '0';
-    bgCanvas.style.left = '0';
-    bgCanvas.style.width = '100vw';
-    bgCanvas.style.height = '100vh';
-    bgCanvas.style.pointerEvents = 'none';
-    bgCanvas.style.zIndex = '1';
-    bgCanvas.style.opacity = '0.45';
-    bgCanvas.style.mixBlendMode = 'screen';
+    Object.assign(bgCanvas.style, {
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        width: '100vw',
+        height: '100vh',
+        pointerEvents: 'none',
+        zIndex: '1',
+        opacity: '0.6',
+        mixBlendMode: 'screen'
+    });
     document.body.appendChild(bgCanvas);
 
     const ctx = bgCanvas.getContext('2d');
@@ -32,18 +34,21 @@ function initQuicksilverCanvas() {
 
     function renderFrame() {
         ctx.clearRect(0, 0, width, height);
-        t += 0.008;
+        t += 0.006;
 
-        // Dynamic Aero Liquid Waves
-        const grad = ctx.createLinearGradient(0, 0, width, height);
-        const offsetA = Math.sin(t) * 0.2 + 0.3;
-        const offsetB = Math.cos(t * 0.8) * 0.2 + 0.7;
+        // Dynamic Quicksilver Fluid Waves
+        const grad = ctx.createRadialGradient(
+            width * 0.5 + Math.sin(t) * 150,
+            height * 0.4 + Math.cos(t * 0.8) * 100,
+            50,
+            width * 0.5,
+            height * 0.5,
+            Math.max(width, height) * 0.75
+        );
 
-        grad.addColorStop(0, 'rgba(10, 15, 26, 0)');
-        grad.addColorStop(Math.max(0, offsetA - 0.2), 'rgba(56, 189, 248, 0.03)');
-        grad.addColorStop(offsetA, 'rgba(148, 163, 184, 0.08)');
-        grad.addColorStop(Math.min(1, offsetB), 'rgba(30, 58, 138, 0.05)');
-        grad.addColorStop(1, 'rgba(5, 8, 15, 0)');
+        grad.addColorStop(0, 'rgba(56, 189, 248, 0.08)');
+        grad.addColorStop(0.35, 'rgba(14, 165, 233, 0.04)');
+        grad.addColorStop(0.7, 'rgba(3, 7, 18, 0)');
 
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, width, height);
@@ -53,15 +58,16 @@ function initQuicksilverCanvas() {
     renderFrame();
 }
 
-function initInteractiveEdgeGlow() {
-    const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
-    panels.forEach(panel => {
-        panel.addEventListener('mousemove', (e) => {
-            const rect = panel.getBoundingClientRect();
+function initSpecularLighting() {
+    const targets = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
+    
+    document.addEventListener('mousemove', (e) => {
+        targets.forEach(el => {
+            const rect = el.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
-            panel.style.setProperty('--mouse-x', `${x}px`);
-            panel.style.setProperty('--mouse-y', `${y}px`);
+            el.style.setProperty('--mouse-x', `${x}px`);
+            el.style.setProperty('--mouse-y', `${y}px`);
         });
     });
 }
