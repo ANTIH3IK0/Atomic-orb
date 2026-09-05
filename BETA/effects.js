@@ -6,11 +6,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initGroupAttributesObserver();
     initGlassInteractivity();
     initGSAPAnimations();
-    
-    // Delay liquidGL initialization to allow 3D canvas rendering before snapshot
+
+    // Delay liquidGL execution until 3D canvas is ready
     setTimeout(() => {
         initLiquidGLEffects();
-    }, 350);
+    }, 400);
 });
 
 function applyGroupDataAttributes() {
@@ -41,15 +41,26 @@ function initGroupAttributesObserver() {
 }
 
 /**
- * Dynamically injects a background layer into panels and applies liquidGL
- * strictly to that background layer, keeping UI elements fully visible.
+ * Eliminates pitch-black rendering by targeting #renderCanvas directly 
+ * and elevating panel content z-indices via JavaScript.
  */
 function initLiquidGLEffects() {
     if (typeof liquidGL !== 'function') return;
 
     const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
-    
+
     panels.forEach((panel) => {
+        // Programmatically elevate all UI children above the WebGL background layer
+        Array.from(panel.children).forEach(child => {
+            if (!child.classList.contains('liquid-gl-bg-layer')) {
+                if (window.getComputedStyle(child).position === 'static') {
+                    child.style.position = 'relative';
+                }
+                child.style.zIndex = '2';
+            }
+        });
+
+        // Inject container layer for the liquid shader
         if (!panel.querySelector('.liquid-gl-bg-layer')) {
             const bgLayer = document.createElement('div');
             bgLayer.className = 'liquid-gl-bg-layer';
@@ -60,29 +71,30 @@ function initLiquidGLEffects() {
             bgLayer.style.height = '100%';
             bgLayer.style.zIndex = '0';
             bgLayer.style.pointerEvents = 'none';
-            bgLayer.style.borderRadius = window.getComputedStyle(panel).borderRadius || '20px';
-            
+            bgLayer.style.borderRadius = 'inherit';
+            bgLayer.style.overflow = 'hidden';
+
             panel.prepend(bgLayer);
         }
     });
 
     liquidGL({
-        snapshot: "body",
+        snapshot: "#renderCanvas", // Refracts only the 3D scene, eliminating dark UI recursion
         target: ".liquid-gl-bg-layer",
         resolution: 1.0,
         refraction: 0.04,
-        aberration: 0.02,
+        aberration: 0.01,
         bevelDepth: 0.85,
         bevelWidth: 0.20,
         frost: 0,
-        shadow: true,
+        shadow: false,
         specular: true,
         reveal: "fade",
         tilt: false,
         magnify: 1.0,
         on: {
             init(instance) {
-                console.log("Quicksilver liquidGL background layer ready:", instance);
+                console.log("Quicksilver liquidGL active on 3D canvas snapshot:", instance);
             }
         }
     });
