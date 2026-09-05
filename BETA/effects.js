@@ -1,37 +1,41 @@
 /**
  * effects.js
- * Quicksilver Liquid Metal Physics & High-Performance Specular Optics
+ * Quicksilver Liquid Metal Physics & High-Performance Optics
  */
 document.addEventListener('DOMContentLoaded', () => {
     initGroupAttributesObserver();
+    initModalVisibilityHandler();
     initGlassInteractivity();
     initGSAPAnimations();
 
-    // Injects a metallic gradient texture source for liquidGL sampling
-    // Resolves pitch-black rendering caused by unpreserved WebGL buffers
-    createSnapshotSource();
-
+    // Delay initialization slightly to let renderCanvas paint first frame
     setTimeout(() => {
         initLiquidGLEffects();
-        fixPointerEventsAndZIndex();
-    }, 300);
+    }, 250);
 });
 
-function createSnapshotSource() {
-    if (document.getElementById('liquidSnapshotSource')) return;
-    const source = document.createElement('div');
-    source.id = 'liquidSnapshotSource';
-    source.style.cssText = `
-        position: fixed;
-        top: 0; left: 0;
-        width: 100vw; height: 100vh;
-        z-index: -9999;
-        pointer-events: none;
-        background: radial-gradient(circle at 30% 30%, #5a6e85 0%, #121822 45%, #030508 75%),
-                    linear-gradient(135deg, #2a3848 0%, #080d14 50%, #485c72 100%);
-        background-blend-mode: overlay;
-    `;
-    document.body.appendChild(source);
+/**
+ * Destroys the invisible full-screen hit-shield caused by the periodic table modal when closed.
+ */
+function initModalVisibilityHandler() {
+    const modalBackdrop = document.querySelector('.pt-modal-backdrop');
+    if (!modalBackdrop) return;
+
+    const syncModalDisplay = () => {
+        if (modalBackdrop.classList.contains('open')) {
+            modalBackdrop.style.display = 'flex';
+            modalBackdrop.style.pointerEvents = 'auto';
+        } else {
+            modalBackdrop.style.display = 'none';
+            modalBackdrop.style.pointerEvents = 'none';
+        }
+    };
+
+    syncModalDisplay();
+
+    // Observe class changes (e.g. when opening/closing periodic table)
+    const observer = new MutationObserver(syncModalDisplay);
+    observer.observe(modalBackdrop, { attributes: true, attributeFilter: ['class'] });
 }
 
 function applyGroupDataAttributes() {
@@ -62,81 +66,63 @@ function initGroupAttributesObserver() {
 }
 
 /**
- * Initializes liquidGL targeting a non-black gradient snapshot source
+ * Restores official liquidGL physics targeting active panels only.
  */
 function initLiquidGLEffects() {
     if (typeof liquidGL !== 'function') return;
 
-    const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
-
-    panels.forEach((panel) => {
-        if (!panel.querySelector('.liquid-gl-bg-layer')) {
-            const bgLayer = document.createElement('div');
-            bgLayer.className = 'liquid-gl-bg-layer';
-            bgLayer.style.cssText = `
-                position: absolute;
-                top: 0; left: 0;
-                width: 100%; height: 100%;
-                z-index: 0;
-                pointer-events: none;
-                border-radius: inherit;
-                overflow: hidden;
-            `;
-            panel.prepend(bgLayer);
-        }
-    });
-
     liquidGL({
-        snapshot: "#liquidSnapshotSource", // Samples from custom non-black metallic source
-        target: ".liquid-gl-bg-layer",
-        resolution: 1.0,
-        refraction: 0.08,      // Viscous fluid displacement
-        aberration: 0.02,      // Subtle chromatic dispersion
-        bevelDepth: 0.85,      // Crisp metallic border reflection
+        snapshot: "body",
+        target: ".ui-overlay, .tp-overlay", // Exclude closed modal to prevent full-screen canvas locking
+        resolution: 1.5,
+        refraction: 0.12,     // Viscous liquid metallic refraction
+        aberration: 0.04,     // Chromatic light splitting
+        bevelDepth: 0.85,     // Sharp metallic edge bevel catching CSS borders
         bevelWidth: 0.20,
-        frost: 0,
-        shadow: false,
-        specular: true,        // High-gloss moving specular highlight
+        frost: 0,             // Pure quicksilver clarity
+        shadow: true,
+        specular: true,       // Moving light highlights
         reveal: "fade",
-        tilt: false,
+        tilt: false,          // Keep false to maintain fixed hitboxes for inputs
         magnify: 1.0,
         on: {
             init(instance) {
-                console.log("Quicksilver liquidGL active with custom texture source:", instance);
-                fixPointerEventsAndZIndex();
+                console.log("liquidGL Quicksilver active:", instance);
+                makeCanvasesPassThrough();
             }
         }
     });
+
+    makeCanvasesPassThrough();
 }
 
 /**
- * Forces interactive elements above the WebGL overlay canvas layer
+ * Ensures liquidGL canvases pass mouse clicks through to panel controls.
  */
-function fixPointerEventsAndZIndex() {
-    const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
+function makeCanvasesPassThrough() {
+    // Force all generated overlay canvases to ignore pointer events
+    const canvases = document.querySelectorAll('canvas');
+    canvases.forEach(cvs => {
+        if (cvs.id !== 'renderCanvas') {
+            cvs.style.pointerEvents = 'none';
+        }
+    });
 
+    // Elevate all interactive elements inside panels
+    const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
     panels.forEach(panel => {
         panel.style.pointerEvents = 'auto';
-
-        // Elevate all interactive UI elements
-        const uiElements = panel.querySelectorAll('button, input, select, label, header, .mode-switch-bar, .input-card, .orbit-row, .filter-item, .pt-modal-header, .pt-scroll-area');
-        uiElements.forEach(el => {
+        const interactiveItems = panel.querySelectorAll('button, input, select, label, a, .mode-btn, .close-btn, .pt-element-card');
+        interactiveItems.forEach(el => {
+            el.style.pointerEvents = 'auto';
             el.style.position = 'relative';
             el.style.zIndex = '10';
-            el.style.pointerEvents = 'auto';
-        });
-
-        // Set shader canvases to pass through click events
-        const canvases = panel.querySelectorAll('canvas, .liquid-gl-bg-layer');
-        canvases.forEach(c => {
-            c.style.pointerEvents = 'none';
-            c.style.zIndex = '0';
         });
     });
 }
 
 /**
- * Dynamic Cursor Specular Lighting
+ * Dynamic Cursor Specular Light Tracking
  */
 function initGlassInteractivity() {
     const glassPanels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
@@ -154,7 +140,7 @@ function initGlassInteractivity() {
 }
 
 /**
- * GSAP Interface Micro-Interactions
+ * Interface Entrance Sequences & Micro-Interactions
  */
 function initGSAPAnimations() {
     if (typeof gsap === 'undefined') return;
