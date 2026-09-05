@@ -123,13 +123,13 @@ function startDynamicLoop(instance) {
 }
 
 /**
- * Pass mouse input through WebGL shader overlays to active controls.
+ * Pass mouse input through WebGL shader overlays to active controls while keeping canvas visible.
  */
 function fixPointerEventsAndZIndex() {
     const canvases = document.querySelectorAll('canvas:not(#renderCanvas)');
     canvases.forEach(cvs => {
         cvs.style.pointerEvents = 'none';
-        cvs.style.zIndex = '0';
+        cvs.style.zIndex = '2'; // Position overlay canvas above panel background
     });
 
     const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
