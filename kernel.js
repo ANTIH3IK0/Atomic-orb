@@ -127,7 +127,7 @@ const ELEMENTS_DATA = [
     { Z: 97, sym: "Bk", name: "Berkelium", period: 7, group: 3, cat: "actinide" },
     { Z: 98, sym: "Cf", name: "Californium", period: 7, group: 3, cat: "actinide" },
     { Z: 99, sym: "Es", name: "Einsteinium", period: 7, group: 3, cat: "actinide" },
-    { Z: 100,{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 12, "6s": 2, "6p": 6, "7s": 2 },
+    { Z: 100, sym: "Fm", name: "Fermium", period: 7, group: 3, cat: "actinide" },
     { Z: 101, sym: "Md", name: "Mendelevium", period: 7, group: 3, cat: "actinide" },
     { Z: 102, sym: "No", name: "Nobelium", period: 7, group: 3, cat: "actinide" },
     { Z: 103, sym: "Lr", name: "Lawrencium", period: 7, group: 3, cat: "actinide" },
@@ -441,10 +441,8 @@ function selectElementBySymbol(symbol) {
     document.getElementById('inputZ').value = elem.Z;
     document.getElementById('inputMaxN').value = configData.maxN;
 
-    // Pass false to rebuild clean rows without copying stale DOM inputs from previous elements
     generateOrbitsBuilder(false);
 
-    // Apply exact subshell electron counts and reset excitations
     document.querySelectorAll('.orbit-row').forEach(row => {
         const label = row.querySelector('.orbit-label').innerText;
         const eInput = row.querySelector('.e-input');
@@ -461,9 +459,7 @@ function selectElementBySymbol(symbol) {
     const tag = document.getElementById('selectedElementTag');
     if (tag) tag.innerText = `[Z = ${elem.Z} ${elem.name}]`;
 
-    // Clear visibility overrides for removed orbitals
     visibilityState = {};
-
     rebuildQuantumModel();
 }
 
@@ -515,248 +511,114 @@ function getSuborbitCapacity(l, j) {
 function generateOrbitsBuilder(preserveExisting = true) {
     const maxN = parseInt(document.getElementById('inputMaxN').value) || 1;
     const container = document.getElementById('orbitsBuilderContainer');
-    
-    const existingElec = {};
-    const existingEx = {};
+    if (!container) return;
 
+    const existingValues = {};
     if (preserveExisting) {
-        document.querySelectorAll('.orbit-row').forEach(row => {
-            const key = row.dataset.key;
-            existingElec[key] = row.querySelector('.e-input').value;
-            existingEx[key] = row.querySelector('.ex-input').value;
+        container.querySelectorAll('.orbit-row').forEach(row => {
+            const label = row.querySelector('.orbit-label')?.innerText;
+            const exVal = row.querySelector('.ex-input')?.value;
+            const eVal = row.querySelector('.e-input')?.value;
+            if (label) {
+                existingValues[label] = { ex: exVal, e: eVal };
+            }
         });
     }
 
     container.innerHTML = '';
+    const suborbitList = [];
 
     for (let n = 1; n <= maxN; n++) {
         for (let l = 0; l < n; l++) {
             const jValues = (l === 0) ? [0.5] : [l - 0.5, l + 0.5];
-
             jValues.forEach(j => {
                 const label = getOrbitalLabel(n, l, j);
-                const cap = getSuborbitCapacity(l, j);
-                const key = `${n}_${l}_${j}`;
+                suborbitList.push({ n, l, j, label, capacity: getSuborbitCapacity(l, j) });
 
                 const row = document.createElement('div');
                 row.className = 'orbit-row';
-                row.dataset.key = key;
-                row.dataset.n = n;
-                row.dataset.l = l;
-                row.dataset.j = j;
 
-                const exVal = (preserveExisting && existingEx[key] !== undefined) ? existingEx[key] : '0';
-                const elecVal = (preserveExisting && existingElec[key] !== undefined) ? existingElec[key] : '';
+                const exSaved = existingValues[label]?.ex !== undefined ? existingValues[label].ex : '0';
+                const eSaved = existingValues[label]?.e !== undefined ? existingValues[label].e : '';
 
                 row.innerHTML = `
-                    <input type="number" class="ex-input" value="${exVal}" min="0" placeholder="0" title="Excited state shift Δn">
+                    <input type="text" class="ex-input" value="${exSaved}" placeholder="0" onchange="rebuildQuantumModel()">
                     <span class="orbit-label">${label}</span>
-                    <input type="number" class="e-input" value="${elecVal}" min="0" max="${cap}" placeholder="Max ${cap}" title="Max capacity: ${cap}">
+                    <input type="number" class="e-input" min="0" max="${getSuborbitCapacity(l, j)}" value="${eSaved}" placeholder="max ${getSuborbitCapacity(l, j)}" onchange="rebuildQuantumModel()">
                 `;
                 container.appendChild(row);
             });
         }
     }
+
+    updateFiltersUI(suborbitList);
 }
 
-function solveDiracExactEnergy(n, l, j, zEff) {
-    const kappa = (j > l) ? -(l + 1) : l;
-    const absKappa = Math.abs(kappa);
-    const zAlpha = zEff * FINE_ALPHA;
-    
-    if (zAlpha >= absKappa) return -13.6057 * Math.pow(zEff / n, 2);
+function updateFiltersUI(suborbitList) {
+    const filterContainer = document.getElementById('dynamicFilterContainer');
+    if (!filterContainer) return;
 
-    const gamma = Math.sqrt(absKappa * absKappa - zAlpha * zAlpha);
-    const nr = n - absKappa;
-    
-    const energyHartree = (1.0 / (FINE_ALPHA * FINE_ALPHA)) * (1.0 / Math.sqrt(1.0 + Math.pow(zAlpha / (nr + gamma), 2)) - 1.0);
-    return energyHartree * HARTREE_TO_EV;
-}
+    filterContainer.innerHTML = '';
+    suborbitList.forEach(item => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'filter-item';
 
-function autoCalculateSuborbitEnergiesUI() {
-    const Z = parseInt(document.getElementById('inputZ').value) || 1;
-    const rows = document.querySelectorAll('.orbit-row');
-    const suborbitEnergies = [];
+        const isChecked = visibilityState[item.label] !== false;
 
-    let cumElec = 0;
-    rows.forEach(row => {
-        const eCount = parseInt(row.querySelector('.e-input').value) || 0;
-        if (eCount > 0) {
-            const baseN = parseInt(row.dataset.n);
-            const exLevel = parseInt(row.querySelector('.ex-input').value) || 0;
-            const effectiveN = baseN + exLevel;
-            const l = parseInt(row.dataset.l);
-            const j = parseFloat(row.dataset.j);
-
-            let S = cumElec * 0.85;
-            // Ensure Z_eff never drops below 1.0 for physical atomic orbits
-            let zEff = Math.max(1.0, Z - S);
-
-            let energy = solveDiracExactEnergy(effectiveN, l, j, zEff);
-            suborbitEnergies.push(`${row.querySelector('.orbit-label').innerText}: ${energy.toFixed(1)}eV`);
-            cumElec += eCount;
-        }
-    });
-
-    document.getElementById('inputEn').value = suborbitEnergies.join(', ');
-}
-
-function solveDiracRadialExpectationRK4(n, l, j, zEff) {
-    const kappa = (j > l) ? -(l + 1) : l;
-    const absKappa = Math.abs(kappa);
-    const zAlpha = Math.min(zEff * FINE_ALPHA, absKappa - 1e-5);
-
-    const gamma = (absKappa * absKappa > zAlpha * zAlpha) ? Math.sqrt(absKappa * absKappa - zAlpha * zAlpha) : absKappa;
-    const N = Math.sqrt(n * n - 2 * (n - absKappa) * (absKappa - gamma));
-
-    return (0.5291772109 / (2.0 * zEff)) * (3.0 * N * N - kappa * (kappa + 1.0));
-}
-
-function getOrbitalColor(l, j) {
-    const baseHues = [185, 280, 140, 35, 310, 50, 200];
-    let hue = (l < baseHues.length) ? baseHues[l] : (l * 137.5) % 360;
-    let sat = 0.85;
-    let val = (j > l) ? 0.95 : 0.60;
-    return BABYLON.Color3.FromHSV(hue, sat, val);
-}
-
-function rebuildQuantumModel() {
-    activeMeshes.forEach(item => {
-        if (item.mesh.material) item.mesh.material.dispose();
-        item.mesh.dispose();
-    });
-    activeMeshes = [];
-
-    const Z = parseInt(document.getElementById('inputZ').value) || 1;
-    const rows = document.querySelectorAll('.orbit-row');
-    let maxRadius = 0;
-    let cumElec = 0;
-
-    rows.forEach(row => {
-        const eCount = parseInt(row.querySelector('.e-input').value) || 0;
-        if (eCount > 0) {
-            const baseN = parseInt(row.dataset.n);
-            const exLevel = parseInt(row.querySelector('.ex-input').value) || 0;
-            const effectiveN = baseN + exLevel;
-            const l = parseInt(row.dataset.l);
-            const j = parseFloat(row.dataset.j);
-
-            // Realistic Slater shielding lower-bound constraint
-            let S = cumElec * 0.85;
-            let zEff = Math.max(1.0, Z - S);
-
-            let rDirac = solveDiracRadialExpectationRK4(effectiveN, l, j, zEff);
-
-            if (rDirac > maxRadius) maxRadius = rDirac;
-            const stateKey = getOrbitalLabel(effectiveN, l, j);
-
-            createOrbitalMesh(`orb_${stateKey}`, rDirac, effectiveN, l, j, stateKey);
-            cumElec += eCount;
-        }
-    });
-
-    refreshDynamicFilterUI();
-
-    if (!userHasCustomInit) {
-        initialTarget = BABYLON.Vector3.Zero();
-        if (maxRadius > 0) initialRadius = maxRadius * 3.2;
-    }
-
-    reloadInitialPosition();
-}
-
-function createOrbitalMesh(name, radius, n, l, j, stateKey) {
-    const sphere = BABYLON.MeshBuilder.CreateSphere(name, { diameter: radius * 2, segments: 48 }, scene);
-    const mat = new BABYLON.StandardMaterial(`${name}_mat`, scene);
-    const col = getOrbitalColor(l, j);
-
-    mat.diffuseColor = col;
-    mat.emissiveColor = col.scale(0.35);
-    mat.alpha = currentOpacity;
-    mat.backFaceCulling = false;
-    mat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
-
-    sphere.material = mat;
-    sphere.isVisible = visibilityState[stateKey] !== false;
-
-    activeMeshes.push({ mesh: sphere, stateKey: stateKey });
-}
-
-function refreshDynamicFilterUI() {
-    const container = document.getElementById('dynamicFilterContainer');
-    if (!container) return;
-    container.innerHTML = '';
-
-    activeMeshes.forEach(item => {
-        if (visibilityState[item.stateKey] === undefined) {
-            visibilityState[item.stateKey] = true;
-        }
-
-        const label = document.createElement('label');
-        label.className = 'filter-item';
-        label.innerHTML = `
-            <span><b>${item.stateKey}</b></span>
-            <input type="checkbox" ${visibilityState[item.stateKey] ? 'checked' : ''} onchange="toggleOrbitalVisibility('${item.stateKey}', this.checked)">
+        itemDiv.innerHTML = `
+            <span>${item.label} (max ${item.capacity}e⁻)</span>
+            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleSuborbitVisibility('${item.label}', this.checked)">
         `;
-        container.appendChild(label);
+        filterContainer.appendChild(itemDiv);
     });
 }
 
-function toggleOrbitalVisibility(stateKey, isChecked) {
-    visibilityState[stateKey] = isChecked;
+function toggleSuborbitVisibility(label, isVisible) {
+    visibilityState[label] = isVisible;
     activeMeshes.forEach(item => {
-        if (item.stateKey === stateKey) {
-            item.mesh.isVisible = isChecked;
+        if (item.label === label) {
+            item.mesh.isVisible = isVisible;
         }
     });
 }
 
-function updateOpacity(val) {
-    currentOpacity = parseFloat(val);
-    activeMeshes.forEach(item => {
-        if (item.mesh && item.mesh.material) {
-            item.mesh.material.alpha = currentOpacity;
+function togglePanel(collapse) {
+    const uiOverlay = document.getElementById('uiOverlay');
+    const restoreBtn = document.getElementById('restoreBtn');
+    if (uiOverlay && restoreBtn) {
+        if (collapse) {
+            uiOverlay.classList.add('collapsed');
+            restoreBtn.style.display = 'flex';
+        } else {
+            uiOverlay.classList.remove('collapsed');
+            restoreBtn.style.display = 'none';
         }
-    });
-}
-
-function initBabylonEngine() {
-    canvas = document.getElementById("renderCanvas");
-    engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
-    
-    scene = new BABYLON.Scene(engine);
-    scene.clearColor = new BABYLON.Color4(0.01, 0.02, 0.04, 1.0);
-
-    camera = new BABYLON.ArcRotateCamera("Camera", initialAlpha, initialBeta, initialRadius, initialTarget.clone(), scene);
-    camera.attachControl(canvas, true);
-    camera.lowerRadiusLimit = 0.01;
-    camera.upperRadiusLimit = 10000;
-
-    const hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(1, 1, 0), scene);
-    hemiLight.intensity = 0.9;
-
-    engine.runRenderLoop(() => { scene.render(); });
-    window.addEventListener("resize", () => engine.resize());
-}
-
-function parseCoordinate(inputVal, currentVal) {
-    if (!inputVal) return currentVal;
-    let str = inputVal.trim();
-    if (str.startsWith('~')) {
-        const offset = parseFloat(str.slice(1));
-        return isNaN(offset) ? currentVal : currentVal + offset;
     }
-    const val = parseFloat(str);
-    return isNaN(val) ? currentVal : val;
+}
+
+function toggleTpPanel(collapse) {
+    const tpOverlay = document.getElementById('tpOverlay');
+    const tpRestoreBtn = document.getElementById('tpRestoreBtn');
+    if (tpOverlay && tpRestoreBtn) {
+        if (collapse) {
+            tpOverlay.classList.add('collapsed');
+            tpRestoreBtn.style.display = 'flex';
+        } else {
+            tpOverlay.classList.remove('collapsed');
+            tpRestoreBtn.style.display = 'none';
+        }
+    }
 }
 
 function teleportCamera() {
     if (!camera) return;
-    const currentTarget = camera.target;
-    const newX = parseCoordinate(document.getElementById('tpX').value, currentTarget.x);
-    const newY = parseCoordinate(document.getElementById('tpY').value, currentTarget.y);
-    const newZ = parseCoordinate(document.getElementById('tpZ').value, currentTarget.z);
-    camera.setTarget(new BABYLON.Vector3(newX, newY, newZ));
+    const x = parseFloat(document.getElementById('tpX').value);
+    const y = parseFloat(document.getElementById('tpY').value);
+    const z = parseFloat(document.getElementById('tpZ').value);
+
+    if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
+        camera.setTarget(new BABYLON.Vector3(x, y, z));
+    }
 }
 
 function setInitialPosition() {
@@ -770,18 +632,221 @@ function setInitialPosition() {
 
 function reloadInitialPosition() {
     if (!camera) return;
-    camera.setTarget(initialTarget.clone());
+    camera.target = initialTarget.clone();
     camera.radius = initialRadius;
     camera.alpha = initialAlpha;
     camera.beta = initialBeta;
 }
 
-function togglePanel(collapse) {
-    document.getElementById('uiOverlay').classList.toggle('collapsed', collapse);
-    document.getElementById('restoreBtn').style.display = collapse ? 'flex' : 'none';
+function updateOpacity(val) {
+    currentOpacity = parseFloat(val);
+    activeMeshes.forEach(item => {
+        if (item.mesh) {
+            item.mesh.getChildMeshes().forEach(child => {
+                if (child.material) child.material.alpha = currentOpacity;
+            });
+            if (item.mesh.material) item.mesh.material.alpha = currentOpacity;
+        }
+    });
 }
 
-function toggleTpPanel(collapse) {
-    document.getElementById('tpOverlay').classList.toggle('collapsed', collapse);
-    document.getElementById('tpRestoreBtn').style.display = collapse ? 'flex' : 'none';
+function initBabylonEngine() {
+    canvas = document.getElementById('renderCanvas');
+    if (!canvas) return;
+
+    engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
+    scene = new BABYLON.Scene(engine);
+    scene.clearColor = new BABYLON.Color4(0.01, 0.01, 0.02, 1.0);
+
+    camera = new BABYLON.ArcRotateCamera("Camera", initialAlpha, initialBeta, initialRadius, initialTarget, scene);
+    camera.attachControl(canvas, true);
+    camera.wheelPrecision = 15;
+    camera.minZ = 0.1;
+    camera.maxZ = 1000;
+
+    const hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
+    hemiLight.intensity = 0.8;
+
+    const pointLight = new BABYLON.PointLight("pointLight", new BABYLON.Vector3(10, 20, 10), scene);
+    pointLight.intensity = 0.5;
+
+    const nucleus = BABYLON.MeshBuilder.CreateSphere("nucleus", { diameter: 0.8, segments: 16 }, scene);
+    const nucMat = new BABYLON.StandardMaterial("nucMat", scene);
+    nucMat.emissiveColor = new BABYLON.Color3(0.9, 0.3, 0.2);
+    nucMat.diffuseColor = new BABYLON.Color3(1.0, 0.4, 0.3);
+    nucleus.material = nucMat;
+
+    engine.runRenderLoop(() => {
+        scene.render();
+        if (camera) {
+            const tpX = document.getElementById('tpX');
+            const tpY = document.getElementById('tpY');
+            const tpZ = document.getElementById('tpZ');
+            if (tpX && document.activeElement !== tpX) tpX.value = camera.target.x.toFixed(2);
+            if (tpY && document.activeElement !== tpY) tpY.value = camera.target.y.toFixed(2);
+            if (tpZ && document.activeElement !== tpZ) tpZ.value = camera.target.z.toFixed(2);
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        engine.resize();
+    });
 }
+
+function rebuildQuantumModel() {
+    if (!scene) return;
+
+    activeMeshes.forEach(item => {
+        if (item.mesh) item.mesh.dispose();
+    });
+    activeMeshes = [];
+
+    const isAutoMode = !document.getElementById('autoModeContainer').classList.contains('hidden');
+    const orbitalsToRender = [];
+
+    if (isAutoMode) {
+        const rows = document.querySelectorAll('#orbitsBuilderContainer .orbit-row');
+        rows.forEach(row => {
+            const label = row.querySelector('.orbit-label')?.innerText;
+            const eVal = parseInt(row.querySelector('.e-input')?.value) || 0;
+            const exVal = parseInt(row.querySelector('.ex-input')?.value) || 0;
+
+            if (label && eVal > 0) {
+                const match = label.match(/^(\d+)([spdfghiklmno])(\d+\/2)$/);
+                if (match) {
+                    const n = parseInt(match[1]);
+                    const lChar = match[2];
+                    const jStr = match[3];
+                    const lMap = { s: 0, p: 1, d: 2, f: 3, g: 4, h: 5, i: 6 };
+                    const l = lMap[lChar] !== undefined ? lMap[lChar] : 0;
+                    const j = parseFloat(jStr.split('/')[0]) / 2.0;
+
+                    orbitalsToRender.push({ label, n, l, j, electrons: eVal, excitation: exVal });
+                }
+            }
+        });
+    } else {
+        const nArr = (document.getElementById('inputN').value || "1").split(',').map(v => parseInt(v.trim()) || 1);
+        const lArr = (document.getElementById('inputL').value || "0").split(',').map(v => parseInt(v.trim()) || 0);
+        const eArr = (document.getElementById('inputElec').value || "1").split(',').map(v => parseInt(v.trim()) || 1);
+
+        for (let i = 0; i < nArr.length; i++) {
+            const n = nArr[i];
+            const l = lArr[i] !== undefined ? lArr[i] : 0;
+            const j = l + 0.5;
+            const electrons = eArr[i] !== undefined ? eArr[i] : 1;
+            const label = getOrbitalLabel(n, l, j);
+
+            if (electrons > 0) {
+                orbitalsToRender.push({ label, n, l, j, electrons, excitation: 0 });
+            }
+        }
+    }
+
+    const ORBITAL_COLORS = [
+        new BABYLON.Color3(0.2, 0.7, 1.0),
+        new BABYLON.Color3(0.9, 0.2, 0.6),
+        new BABYLON.Color3(1.0, 0.7, 0.1),
+        new BABYLON.Color3(0.2, 0.9, 0.4),
+        new BABYLON.Color3(0.7, 0.3, 0.9),
+        new BABYLON.Color3(0.9, 0.5, 0.2)
+    ];
+
+    orbitalsToRender.forEach(orb => {
+        const mesh = createOrbitalMesh(orb, ORBITAL_COLORS[orb.l % ORBITAL_COLORS.length]);
+        if (mesh) {
+            const isVisible = visibilityState[orb.label] !== false;
+            mesh.isVisible = isVisible;
+            activeMeshes.push({ label: orb.label, mesh });
+        }
+    });
+}
+
+function createOrbitalMesh(orb, color) {
+    const scale = orb.n * 2.2 + orb.excitation * 0.8;
+    const material = new BABYLON.StandardMaterial(`mat_${orb.label}_${Math.random()}`, scene);
+    material.diffuseColor = color;
+    material.emissiveColor = color.scale(0.4);
+    material.alpha = currentOpacity;
+    material.backFaceCulling = false;
+
+    const parentMesh = new BABYLON.TransformNode(`parent_${orb.label}`, scene);
+
+    if (orb.l === 0) {
+        const sphere = BABYLON.MeshBuilder.CreateSphere(`sphere_${orb.label}`, {
+            diameter: scale * 1.8,
+            segments: 32
+        }, scene);
+        sphere.material = material;
+        sphere.parent = parentMesh;
+    } else if (orb.l === 1) {
+        const numLobes = (orb.j > 1.0) ? 3 : 2;
+        const angles = [0, Math.PI / 2, Math.PI];
+
+        for (let i = 0; i < numLobes; i++) {
+            const lobe = BABYLON.MeshBuilder.CreateSphere(`p_lobe_${i}`, {
+                diameterX: scale * 1.2,
+                diameterY: scale * 2.4,
+                diameterZ: scale * 1.2,
+                segments: 24
+            }, scene);
+            lobe.material = material;
+            lobe.position.y = (i % 2 === 0 ? 1 : -1) * (scale * 0.9);
+            lobe.rotation.z = angles[i % angles.length];
+            lobe.parent = parentMesh;
+        }
+    } else if (orb.l === 2) {
+        for (let i = 0; i < 4; i++) {
+            const lobe = BABYLON.MeshBuilder.CreateSphere(`d_lobe_${i}`, {
+                diameterX: scale * 0.9,
+                diameterY: scale * 2.2,
+                diameterZ: scale * 0.9,
+                segments: 20
+            }, scene);
+            lobe.material = material;
+            lobe.rotation.z = (Math.PI / 2) * i;
+            lobe.position.x = Math.cos((Math.PI / 2) * i) * (scale * 0.8);
+            lobe.position.y = Math.sin((Math.PI / 2) * i) * (scale * 0.8);
+            lobe.parent = parentMesh;
+        }
+        const torus = BABYLON.MeshBuilder.CreateTorus(`d_torus`, {
+            diameter: scale * 1.6,
+            thickness: scale * 0.35,
+            tessellation: 32
+        }, scene);
+        torus.material = material;
+        torus.parent = parentMesh;
+    } else {
+        const count = orb.l * 2;
+        for (let i = 0; i < count; i++) {
+            const angle = (Math.PI * 2 / count) * i;
+            const lobe = BABYLON.MeshBuilder.CreateSphere(`f_lobe_${i}`, {
+                diameterX: scale * 0.7,
+                diameterY: scale * 2.0,
+                diameterZ: scale * 0.7,
+                segments: 16
+            }, scene);
+            lobe.material = material;
+            lobe.position.x = Math.cos(angle) * (scale * 1.1);
+            lobe.position.z = Math.sin(angle) * (scale * 1.1);
+            lobe.rotation.y = angle;
+            lobe.parent = parentMesh;
+        }
+    }
+
+    return parentMesh;
+}
+
+window.rebuildQuantumModel = rebuildQuantumModel;
+window.generateOrbitsBuilder = generateOrbitsBuilder;
+window.togglePanel = togglePanel;
+window.toggleTpPanel = toggleTpPanel;
+window.teleportCamera = teleportCamera;
+window.setInitialPosition = setInitialPosition;
+window.reloadInitialPosition = reloadInitialPosition;
+window.updateOpacity = updateOpacity;
+window.openPeriodicTableModal = openPeriodicTableModal;
+window.closePeriodicTableModal = closePeriodicTableModal;
+window.handleBackdropClick = handleBackdropClick;
+window.toggleSuborbitVisibility = toggleSuborbitVisibility;
+window.selectElementBySymbol = selectElementBySymbol;
