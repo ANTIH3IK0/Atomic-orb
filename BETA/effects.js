@@ -1,39 +1,12 @@
 // effects.js
 
-/* Molten Quicksilver Primary Layer Configuration */
-const ACTINIUM_MELT_CONFIG = {
-    layerClass: 'actinium-liquid-layer',
-    refraction: 0.022,
-    aberration: 0.002,
-    bevelDepth: 0.65,
-    bevelWidth: 0.32,
-    frost:      0
-};
-
-/* Quicksilver Specular Film Configuration */
-const GLASS_FILM_CONFIG = {
-    layerClass: 'actinium-glass-film',
-    refraction: 0.008,
-    aberration: 0.001,
-    bevelDepth: 0.20,
-    bevelWidth: 0.18,
-    frost:      0.08
-};
-
 const TARGET_PANEL_SELECTOR = '.ui-overlay, .tp-overlay, .pt-modal-window';
-const CANVAS_SNAPSHOT_ID    = '#renderCanvas';
-
-let activeLiquidInstances = [];
-let isRenderLoopActive    = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     initGroupAttributesObserver();
     initModalVisibilityHandler();
     initGSAPAnimations();
     initGlassInteractivity();
-    
-    // Defer liquidGL instantiation until 3D viewport canvas finishes mounting
-    setTimeout(initLiquidEffects, 300);
 });
 
 /* Periodic Table Dynamic Data Attributes Observer */
@@ -68,147 +41,11 @@ function initModalVisibilityHandler() {
         const isOpen = modalBackdrop.classList.contains('open');
         modalBackdrop.style.display = isOpen ? 'flex' : 'none';
         modalBackdrop.style.pointerEvents = isOpen ? 'auto' : 'none';
-        if (isOpen) {
-            requestAnimationFrame(() => refreshAllLiquid());
-        }
     };
 
     syncModalDisplay();
     const observer = new MutationObserver(syncModalDisplay);
     observer.observe(modalBackdrop, { attributes: true, attributeFilter: ['class'] });
-}
-
-/* Dynamic Z-Index Elevation & Substrate Injection */
-function elevateAboveLiquid(el) {
-    const computed = window.getComputedStyle(el);
-    if (computed.position === 'static') {
-        el.style.position = 'relative';
-    }
-    const currentZ = parseInt(computed.zIndex, 10);
-    if (isNaN(currentZ) || currentZ < 2) {
-        el.style.zIndex = '2';
-    }
-}
-
-function prepareLiquidLayers() {
-    const panels = document.querySelectorAll(TARGET_PANEL_SELECTOR);
-
-    panels.forEach(panel => {
-        // Inject Layer 1: Quicksilver Melt
-        let meltLayer = panel.querySelector(`:scope > .${ACTINIUM_MELT_CONFIG.layerClass}`);
-        if (!meltLayer) {
-            meltLayer = document.createElement('div');
-            meltLayer.className = ACTINIUM_MELT_CONFIG.layerClass;
-            meltLayer.setAttribute('aria-hidden', 'true');
-            panel.prepend(meltLayer);
-        }
-
-        // Inject Layer 2: Glass Film
-        let filmLayer = panel.querySelector(`:scope > .${GLASS_FILM_CONFIG.layerClass}`);
-        if (!filmLayer) {
-            filmLayer = document.createElement('div');
-            filmLayer.className = GLASS_FILM_CONFIG.layerClass;
-            filmLayer.setAttribute('aria-hidden', 'true');
-            meltLayer.insertAdjacentElement('afterend', filmLayer);
-        }
-
-        // Safeguard existing UI elements above shader canvases
-        Array.from(panel.children).forEach(child => {
-            if (child === meltLayer || child === filmLayer) return;
-            elevateAboveLiquid(child);
-        });
-
-        // Watch for dynamically inserted content (e.g., dynamic orbit rows)
-        const childObserver = new MutationObserver(mutations => {
-            mutations.forEach(m => m.addedNodes.forEach(node => {
-                if (node.nodeType === 1 &&
-                    !node.classList.contains(ACTINIUM_MELT_CONFIG.layerClass) &&
-                    !node.classList.contains(GLASS_FILM_CONFIG.layerClass)) {
-                    elevateAboveLiquid(node);
-                }
-            }));
-        });
-        childObserver.observe(panel, { childList: true });
-    });
-}
-
-function neutralizeLiquidCanvases() {
-    document.querySelectorAll('canvas').forEach(canvas => {
-        if (canvas.id === 'renderCanvas') return;
-        canvas.style.pointerEvents = 'none';
-        canvas.style.zIndex = '0';
-    });
-}
-
-/* liquidGL Boot Sequences */
-function bootLiquidLayer(config) {
-    try {
-        liquidGL({
-            snapshot:   CANVAS_SNAPSHOT_ID,
-            target:     '.' + config.layerClass,
-            resolution: 1.0,
-            refraction: config.refraction,
-            aberration: config.aberration,
-            bevelDepth: config.bevelDepth,
-            bevelWidth: config.bevelWidth,
-            frost:      config.frost,
-            shadow:     false,
-            specular:   true,
-            reveal:     'fade',
-            tilt:       false,
-            magnify:    1.0,
-            on: {
-                init(instance) {
-                    if (instance) activeLiquidInstances.push(instance);
-                    neutralizeLiquidCanvases();
-                    startDynamicRenderLoop();
-                }
-            }
-        });
-    } catch (err) {
-        console.warn('liquidGL substrate execution deferred:', config.layerClass, err);
-        // Fallback: start render loop regardless of liquidGL initialization state
-        startDynamicRenderLoop();
-    }
-}
-
-function initLiquidEffects() {
-    prepareLiquidLayers();
-
-    if (typeof liquidGL === 'function') {
-        bootLiquidLayer(ACTINIUM_MELT_CONFIG);
-        bootLiquidLayer(GLASS_FILM_CONFIG);
-    } else {
-        startDynamicRenderLoop();
-    }
-
-    neutralizeLiquidCanvases();
-    setTimeout(neutralizeLiquidCanvases, 900);
-}
-
-/* Continuous Render Loop to Prevent Frozen Background Snapshots */
-function refreshAllLiquid() {
-    activeLiquidInstances.forEach(instance => {
-        if (!instance) return;
-        if (typeof instance.updateSource === 'function') instance.updateSource();
-        else if (typeof instance.update === 'function') instance.update();
-        else if (typeof instance.refresh === 'function') instance.refresh();
-        else if (typeof instance.render === 'function') instance.render();
-    });
-}
-
-function startDynamicRenderLoop() {
-    if (isRenderLoopActive) return;
-    isRenderLoopActive = true;
-
-    function renderFrame() {
-        if (!document.hidden) {
-            refreshAllLiquid();
-        }
-        requestAnimationFrame(renderFrame);
-    }
-    
-    requestAnimationFrame(renderFrame);
 }
 
 /* Interactive Cursor Radial Lighting */
