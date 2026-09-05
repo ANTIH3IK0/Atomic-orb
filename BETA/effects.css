@@ -38,7 +38,7 @@
     50%      { opacity: 0.70; filter: drop-shadow(0 0 22px rgba(198, 236, 252, 0.30)); }
 }
 
-/* Luminescence bloom inside the liquid layer — opacity-only pulse */
+/* Luminescence bloom inside the melt layer — opacity-only pulse */
 @keyframes actiniumBreathe {
     0%, 100% { opacity: 0.5; }
     50%      { opacity: 1.0; }
@@ -86,7 +86,7 @@ body.modal-open .tp-restore-btn {
     pointer-events: none;
 }
 
-/* ================= Liquid substrate layer ================= */
+/* ============ Layer 1 — actinium quicksilver melt ============ */
 .actinium-liquid-layer {
     position: absolute;
     top: 0;
@@ -119,6 +119,7 @@ body.modal-open .tp-restore-btn {
     content: '';
     position: absolute;
     inset: 0;
+    z-index: 1;
     background: radial-gradient(
         120% 85% at 50% 30%,
         rgba(198, 236, 252, 0.055),
@@ -135,6 +136,7 @@ body.modal-open .tp-restore-btn {
     content: '';
     position: absolute;
     inset: 0;
+    z-index: 2;
     background:
         radial-gradient(140% 100% at 50% 0%,
             rgba(198, 236, 252, 0.045),
@@ -142,6 +144,34 @@ body.modal-open .tp-restore-btn {
         radial-gradient(160% 120% at 50% 115%,
             rgba(0, 0, 0, 0.36),
             transparent 62%);
+    pointer-events: none;
+}
+
+/* ============ Layer 2 — weak liquid glass film ============
+   A second liquidGL render above the melt. Kept deliberately
+   faint: low opacity + gentle refraction + a hint of frost. */
+.actinium-glass-film {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    border-radius: inherit;
+    overflow: hidden;
+    opacity: 0.35; /* WEAK — a faint glass skin over the metal */
+}
+
+.actinium-glass-film canvas,
+.actinium-glass-film svg,
+.actinium-glass-film img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
     pointer-events: none;
 }
 
@@ -178,7 +208,7 @@ body.modal-open .tp-restore-btn {
     z-index: 1;
 }
 
-/* Inner rim luminescence — sits above liquid, below content */
+/* Inner rim luminescence — sits above both liquid layers */
 .ui-overlay::after, .tp-overlay::after, .pt-modal-window::after {
     content: '';
     position: absolute;
