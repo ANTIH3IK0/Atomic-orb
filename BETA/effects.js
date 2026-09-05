@@ -1,6 +1,6 @@
 /**
  * effects.js
- * Dark Obsidian Quicksilver Optics & Refraction Interactivity
+ * Dark Quicksilver & Heavy Lead Refraction Optics
  */
 document.addEventListener('DOMContentLoaded', () => {
     initGroupAttributesObserver();
@@ -37,7 +37,7 @@ function initGroupAttributesObserver() {
 }
 
 /**
- * Obsidian Deep Fluid Optics via LiquidGL
+ * Heavy Viscous Lead Liquid Optics via LiquidGL
  */
 function initLiquidGLEffects() {
     if (typeof LiquidGL === 'undefined') return;
@@ -45,26 +45,26 @@ function initLiquidGLEffects() {
     const glassPanels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
     glassPanels.forEach(panel => {
         new LiquidGL(panel, {
-            refraction: 0.07,
-            reflection: 0.28,
-            liquidColor: '#010308',
-            glassColor: 'rgba(2, 4, 8, 0.88)',
+            refraction: 0.08,
+            reflection: 0.32,
+            liquidColor: '#020408',
+            glassColor: 'rgba(6, 9, 14, 0.88)',
             dispersion: 0.0,
             interactive: true,
-            intensity: 0.5,
-            viscosity: 0.92
+            intensity: 0.55,
+            viscosity: 0.95
         });
     });
 
     const liquidButtons = document.querySelectorAll('button.apply-btn, button.secondary-btn, .close-btn');
     liquidButtons.forEach(btn => {
         new LiquidGL(btn, {
-            refraction: 0.03,
-            reflection: 0.18,
-            liquidColor: '#030712',
+            refraction: 0.035,
+            reflection: 0.2,
+            liquidColor: '#000000',
             dispersion: 0.0,
             interactive: true,
-            intensity: 0.3
+            intensity: 0.35
         });
     });
 }
@@ -87,8 +87,8 @@ function initGlassInteractivity() {
             if (typeof gsap !== 'undefined' && !panel.classList.contains('pt-modal-window')) {
                 const centerX = rect.left + rect.width / 2;
                 const centerY = rect.top + rect.height / 2;
-                const rotateX = ((e.clientY - centerY) / (rect.height / 2)) * -2.0;
-                const rotateY = ((e.clientX - centerX) / (rect.width / 2)) * 2.0;
+                const rotateX = ((e.clientY - centerY) / (rect.height / 2)) * -1.8;
+                const rotateY = ((e.clientX - centerX) / (rect.width / 2)) * 1.8;
 
                 gsap.to(panel, {
                     rotateX: rotateX,
@@ -114,7 +114,7 @@ function initGlassInteractivity() {
 }
 
 /**
- * Smooth GSAP Motion Sequences
+ * Motion Sequences
  */
 function initGSAPAnimations() {
     if (typeof gsap === 'undefined') return;
@@ -164,7 +164,7 @@ function initGSAPAnimations() {
 }
 
 /**
- * Mode Switching Animation Callback
+ * Mode Switching Callback
  */
 function switchControlMode(mode) {
     const autoContainer = document.getElementById('autoModeContainer');
