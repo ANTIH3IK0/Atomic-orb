@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Atomic-orb Beta b1.25-3</title>
+    <title>Atomic-orb Beta b1.25-4-semifinal</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,6 +11,13 @@
 
     <!-- Stylesheets -->
     <link rel="stylesheet" href="effects.css">
+
+    <!-- Embedded CSS for folding functionality -->
+    <style>
+        .collapsible-content.collapsed {
+            display: none !important;
+        }
+    </style>
 
     <!-- External UI & Effect APIs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -67,13 +74,13 @@
 
         <!-- AUTO BUILDER MODE SECTION -->
         <div id="autoModeContainer" class="mode-container">
-            <!-- 1. Collapsible: QUANTUM SYSTEM SETUP -->
+            <!-- 1. Collapsible: QUANTUM SYSTEM SETUP (Default: Collapsed) -->
             <div class="collapsible-section">
                 <div class="section-title" style="cursor:pointer;" onclick="toggleSection('quantumSetupContent', this.querySelector('.collapse-btn'))">
                     <span>Quantum System Setup</span>
-                    <button class="minimize-btn collapse-btn" type="button" onclick="event.stopPropagation(); toggleSection('quantumSetupContent', this)">−</button>
+                    <button class="minimize-btn collapse-btn" type="button" onclick="event.stopPropagation(); toggleSection('quantumSetupContent', this)">+</button>
                 </div>
-                <div id="quantumSetupContent" class="collapsible-content">
+                <div id="quantumSetupContent" class="collapsible-content collapsed">
                     <div class="input-card" style="margin-top:6px;">
                         <div class="input-field">
                             <label>Atomic Number (Z)</label>
@@ -88,17 +95,17 @@
                 </div>
             </div>
 
-            <!-- 2. Collapsible: SUBORBIT CONFIGURATION -->
+            <!-- 2. Collapsible: SUBORBIT CONFIGURATION (Default: Collapsed) -->
             <div class="collapsible-section" style="margin-top:10px;">
                 <div class="section-title" style="cursor:pointer;" onclick="toggleSection('suborbitConfigContent', this.querySelector('.collapse-btn'))">
                     <div style="display:flex; align-items:center; gap:8px;">
                         <span>Suborbit Configuration</span>
                         <span style="font-size:8px; color:var(--text-muted);">EX | ORBIT | ELEC</span>
                     </div>
-                    <button class="minimize-btn collapse-btn" type="button" onclick="event.stopPropagation(); toggleSection('suborbitConfigContent', this)">−</button>
+                    <button class="minimize-btn collapse-btn" type="button" onclick="event.stopPropagation(); toggleSection('suborbitConfigContent', this)">+</button>
                 </div>
                 
-                <div id="suborbitConfigContent" class="collapsible-content">
+                <div id="suborbitConfigContent" class="collapsible-content collapsed">
                     <div class="orbits-scroll-area" id="orbitsBuilderContainer" style="margin-top:6px;"></div>
 
                     <div style="margin-top:6px;">
@@ -112,13 +119,13 @@
                         </div>
                     </div>
 
-                    <!-- 3. Nested Collapsible: ORBITAL VISIBILITY FILTERS -->
+                    <!-- 3. Nested Collapsible: ORBITAL VISIBILITY FILTERS (Default: Collapsed) -->
                     <div class="collapsible-section" style="margin-top:10px;">
                         <div class="section-title" style="cursor:pointer;" onclick="toggleSection('visibilityFiltersContent', this.querySelector('.collapse-btn'))">
                             <span>Orbital Visibility Filters</span>
-                            <button class="minimize-btn collapse-btn" type="button" onclick="event.stopPropagation(); toggleSection('visibilityFiltersContent', this)">−</button>
+                            <button class="minimize-btn collapse-btn" type="button" onclick="event.stopPropagation(); toggleSection('visibilityFiltersContent', this)">+</button>
                         </div>
-                        <div id="visibilityFiltersContent" class="collapsible-content">
+                        <div id="visibilityFiltersContent" class="collapsible-content collapsed">
                             <div class="filter-list" id="dynamicFilterContainer" style="margin-top:6px;"></div>
                         </div>
                     </div>
