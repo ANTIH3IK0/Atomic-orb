@@ -1,16 +1,14 @@
-/**
- * effects.js
- * Dynamic Low-Key Dark Quicksilver Engine (Non-Blocking Event Loop)
- */
-/* Actinium optical constants — heavy viscous metal, ionized sheen */
+// effects.js
+
+/* Actinium optical constants — smooth molten metal, no facet edges */
 const ACTINIUM = {
     snapshot:   '#renderCanvas',
     layerClass: 'actinium-liquid-layer',
     panels:     '.ui-overlay, .tp-overlay, .pt-modal-window',
-    refraction: 0.045,   // viscous pull of molten metal
-    aberration: 0.008,   // faint ionized fringe
-    bevelDepth: 0.78,    // deep quicksilver edge
-    bevelWidth: 0.18,
+    refraction: 0.03,    // gentler viscous pull — no blocky warping
+    aberration: 0.004,   // whisper of fringe, no rainbow facets
+    bevelDepth: 0.55,    // deep but rounded meniscus, not a hard edge
+    bevelWidth: 0.24,    // wide soft transition — the key to "liquid"
     resolution: 1.0
 };
 
