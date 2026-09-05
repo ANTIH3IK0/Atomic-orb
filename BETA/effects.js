@@ -1,6 +1,6 @@
 /**
  * effects.js
- * Dynamic Dark Aero Quicksilver Physics & Optics
+ * Dark Low-Key Quicksilver & Dynamic Liquid Optics Engine
  */
 document.addEventListener('DOMContentLoaded', () => {
     initGroupAttributesObserver();
@@ -64,29 +64,32 @@ function initGroupAttributesObserver() {
 }
 
 /**
- * Dark Aero Quicksilver Optics Engine
+ * Low-Key Smoked Quicksilver Physics Configuration
  */
+let liquidInstance = null;
+
 function initLiquidGLEffects() {
     if (typeof liquidGL !== 'function') return;
 
-    liquidGL({
+    liquidInstance = liquidGL({
         snapshot: "body",
         target: ".ui-overlay, .tp-overlay, .pt-modal-window",
-        resolution: 1.5,
-        refraction: 0.28,      // High refractive index for liquid mercury lens distortion
-        aberration: 0.08,      // Metallic chromatic edge splitting
-        bevelDepth: 0.95,      // Deep specular bevel to catch CSS border highlights
-        bevelWidth: 0.26,      // Wide liquid metal edge curvature
-        frost: 0,              // Raw quicksilver surface clarity
-        shadow: true,          // Obsidian drop shadow contrast
-        specular: true,        // Active animated light reflection
+        resolution: 1.0,
+        refraction: 0.025,     // Low distortion (低調) - eliminates wild purple warping
+        aberration: 0.002,     // Minimal chromatic dispersion - removes pink/purple fringe
+        bevelDepth: 0.35,      // Soft, sleek dark bevel
+        bevelWidth: 0.10,      // Subtle edge light reflection
+        frost: 0,
+        shadow: true,          // Dark obsidian drop depth
+        specular: true,        // Muted metallic light response
         reveal: "fade",
-        tilt: false,           // Prevents click misalignment on interactive elements
-        magnify: 1.04,         // Lens magnification for deep liquid perception
+        tilt: false,
+        magnify: 1.00,         // Exact 1:1 scale (no zoom distortion)
         on: {
             init(instance) {
-                console.log("Dark Aero Quicksilver active:", instance);
+                console.log("Dark Low-Key Quicksilver active:", instance);
                 fixPointerEventsAndZIndex();
+                startDynamicRenderLoop(instance);
             }
         }
     });
@@ -95,7 +98,25 @@ function initLiquidGLEffects() {
 }
 
 /**
- * Passes click interactions directly through shader overlay canvases.
+ * Continuous RequestAnimationFrame Loop to keep liquidGL dynamic with moving 3D scene
+ */
+function startDynamicRenderLoop(instance) {
+    let frameCount = 0;
+
+    function renderStep() {
+        // Force refresh every 3 frames to dynamically mirror moving 3D particles behind panels
+        if (frameCount % 3 === 0 && instance && typeof instance.update === 'function') {
+            instance.update();
+        }
+        frameCount++;
+        requestAnimationFrame(renderStep);
+    }
+
+    requestAnimationFrame(renderStep);
+}
+
+/**
+ * Ensures liquidGL WebGL canvases pass clicks directly to panel controls.
  */
 function fixPointerEventsAndZIndex() {
     const canvases = document.querySelectorAll('canvas:not(#renderCanvas)');
@@ -117,7 +138,7 @@ function fixPointerEventsAndZIndex() {
 }
 
 /**
- * Dynamic Liquid Specular Light Tracking
+ * Dynamic Cursor Fluid Ripple Interactivity
  */
 function initGlassInteractivity() {
     const glassPanels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
@@ -128,20 +149,13 @@ function initGlassInteractivity() {
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
 
-            // Dynamically update light source position for CSS specular gradients
             panel.style.setProperty('--mouse-x', `${x}px`);
             panel.style.setProperty('--mouse-y', `${y}px`);
 
-            // Dynamic fluid shimmer calculation based on cursor proximity to center
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-            const distFromCenter = Math.hypot(x - centerX, y - centerY) / Math.hypot(centerX, centerY);
-
-            panel.style.setProperty('--fluid-intensity', `${0.2 + (1 - distFromCenter) * 0.4}`);
-        });
-
-        panel.addEventListener('mouseleave', () => {
-            panel.style.setProperty('--fluid-intensity', '0.2');
+            // Dynamically trigger liquid update on mouse movement for active liquid flow
+            if (liquidInstance && typeof liquidInstance.update === 'function') {
+                liquidInstance.update();
+            }
         });
     });
 }
