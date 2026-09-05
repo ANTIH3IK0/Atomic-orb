@@ -1,171 +1,67 @@
 /**
- * effects.js
- * Dark Refractive Liquid Optics & Interactivity Controls
+ * Dynamic Aero Quicksilver & Actinium Light Engine
  */
 document.addEventListener('DOMContentLoaded', () => {
-    initGroupAttributesObserver();
-    initLiquidGLEffects();
-    initGSAPAnimations();
-    initGlassInteractivity();
+    initQuicksilverCanvas();
+    initInteractiveEdgeGlow();
 });
 
-/**
- * Automatically attaches data-group attributes to elements created by kernel.js
- */
-function applyGroupDataAttributes() {
-    const cards = document.querySelectorAll('.pt-element-card');
-    cards.forEach(card => {
-        if (card.dataset.group) return;
-        const groupSpan = card.querySelector('.pt-card-top span:nth-child(2)');
-        if (groupSpan) {
-            const groupText = groupSpan.textContent.trim();
-            const groupNum = groupText.replace('G', '');
-            if (groupNum) {
-                card.dataset.group = groupNum;
-            }
-        }
-    });
-}
+function initQuicksilverCanvas() {
+    const bgCanvas = document.createElement('canvas');
+    bgCanvas.id = 'quicksilverBgCanvas';
+    bgCanvas.style.position = 'fixed';
+    bgCanvas.style.top = '0';
+    bgCanvas.style.left = '0';
+    bgCanvas.style.width = '100vw';
+    bgCanvas.style.height = '100vh';
+    bgCanvas.style.pointerEvents = 'none';
+    bgCanvas.style.zIndex = '1';
+    bgCanvas.style.opacity = '0.45';
+    bgCanvas.style.mixBlendMode = 'screen';
+    document.body.appendChild(bgCanvas);
 
-function initGroupAttributesObserver() {
-    applyGroupDataAttributes();
+    const ctx = bgCanvas.getContext('2d');
+    let width, height, t = 0;
 
-    const container = document.getElementById('ptGridContainer');
-    if (container) {
-        const observer = new MutationObserver(() => {
-            applyGroupDataAttributes();
-        });
-        observer.observe(container, { childList: true, subtree: true });
+    function resize() {
+        width = bgCanvas.width = window.innerWidth;
+        height = bgCanvas.height = window.innerHeight;
     }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function renderFrame() {
+        ctx.clearRect(0, 0, width, height);
+        t += 0.008;
+
+        // Dynamic Aero Liquid Waves
+        const grad = ctx.createLinearGradient(0, 0, width, height);
+        const offsetA = Math.sin(t) * 0.2 + 0.3;
+        const offsetB = Math.cos(t * 0.8) * 0.2 + 0.7;
+
+        grad.addColorStop(0, 'rgba(10, 15, 26, 0)');
+        grad.addColorStop(Math.max(0, offsetA - 0.2), 'rgba(56, 189, 248, 0.03)');
+        grad.addColorStop(offsetA, 'rgba(148, 163, 184, 0.08)');
+        grad.addColorStop(Math.min(1, offsetB), 'rgba(30, 58, 138, 0.05)');
+        grad.addColorStop(1, 'rgba(5, 8, 15, 0)');
+
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, width, height);
+
+        requestAnimationFrame(renderFrame);
+    }
+    renderFrame();
 }
 
-/**
- * Initialize Dark Smoked Optics via LiquidGL
- */
-function initLiquidGLEffects() {
-    if (typeof LiquidGL === 'undefined') return;
-
-    // Attach dark liquid WebGL shaders to main overlays
-    const glassPanels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
-    glassPanels.forEach(panel => {
-        new LiquidGL(panel, {
-            refraction: 0.045,      // Controlled refractive index for dark lens distortion
-            reflection: 0.18,       // Muted specular edge highlights
-            liquidColor: '#050811',
-            glassColor: 'rgba(10, 14, 22, 0.72)',
-            dispersion: 0.0,        // Zero rainbow chromatic dispersion
-            interactive: true,
-            intensity: 0.35,        // Smooth liquid ripple response on pointer hover
-            viscosity: 0.88         // Heavy liquid feel
-        });
-    });
-
-    // Attach subtle liquid feedback to interactive buttons
-    const liquidButtons = document.querySelectorAll('button.apply-btn, button.secondary-btn, .close-btn');
-    liquidButtons.forEach(btn => {
-        new LiquidGL(btn, {
-            refraction: 0.02,
-            reflection: 0.1,
-            liquidColor: '#090d18',
-            dispersion: 0.0,
-            interactive: true,
-            intensity: 0.2
-        });
-    });
-}
-
-/**
- * GSAP Micro-Interactions
- */
-function initGSAPAnimations() {
-    if (typeof gsap === 'undefined') return;
-
-    // Smooth UI Panel Entrance Sequence
-    gsap.from('#uiOverlay', {
-        x: -40,
-        opacity: 0,
-        duration: 0.6,
-        ease: 'power3.out',
-        delay: 0.15
-    });
-
-    gsap.from('#tpOverlay', {
-        x: 40,
-        opacity: 0,
-        duration: 0.6,
-        ease: 'power3.out',
-        delay: 0.25
-    });
-
-    // Button Hover Spring Micro-Animations
-    const buttons = document.querySelectorAll('button');
-    buttons.forEach(btn => {
-        btn.addEventListener('mouseenter', () => {
-            gsap.to(btn, {
-                scale: 1.02,
-                duration: 0.18,
-                ease: 'power1.out'
-            });
-        });
-
-        btn.addEventListener('mouseleave', () => {
-            gsap.to(btn, {
-                scale: 1.0,
-                duration: 0.18,
-                ease: 'power1.out'
-            });
-        });
-
-        btn.addEventListener('mousedown', () => {
-            gsap.to(btn, {
-                scale: 0.97,
-                duration: 0.08,
-                ease: 'power1.inOut'
-            });
-        });
-    });
-}
-
-/**
- * Cursor Tracking & Subtle Tilt
- */
-function initGlassInteractivity() {
-    const glassPanels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
-
-    glassPanels.forEach(panel => {
+function initInteractiveEdgeGlow() {
+    const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
+    panels.forEach(panel => {
         panel.addEventListener('mousemove', (e) => {
             const rect = panel.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
-
             panel.style.setProperty('--mouse-x', `${x}px`);
             panel.style.setProperty('--mouse-y', `${y}px`);
-
-            if (typeof gsap !== 'undefined' && !panel.classList.contains('pt-modal-window')) {
-                const centerX = rect.left + rect.width / 2;
-                const centerY = rect.top + rect.height / 2;
-                const rotateX = ((e.clientY - centerY) / (rect.height / 2)) * -2.0;
-                const rotateY = ((e.clientX - centerX) / (rect.width / 2)) * 2.0;
-
-                gsap.to(panel, {
-                    rotateX: rotateX,
-                    rotateY: rotateY,
-                    transformPerspective: 1000,
-                    duration: 0.3,
-                    ease: 'power1.out'
-                });
-            }
-        });
-
-        panel.addEventListener('mouseleave', () => {
-            if (typeof gsap !== 'undefined' && !panel.classList.contains('pt-modal-window')) {
-                gsap.to(panel, {
-                    rotateX: 0,
-                    rotateY: 0,
-                    duration: 0.5,
-                    ease: 'power2.out'
-                });
-            }
         });
     });
 }
