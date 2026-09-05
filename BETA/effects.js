@@ -1,44 +1,42 @@
 // effects.js
 
-/* Layer 1 — ultra-smooth actinium quicksilver melt (bottom) */
-const ACTINIUM = {
+/* Molten Quicksilver Primary Layer Configuration */
+const ACTINIUM_MELT_CONFIG = {
     layerClass: 'actinium-liquid-layer',
-    refraction: 0.022,   // extra soft, silky fluid motion — zero distortion jitter
-    aberration: 0.002,   // crisp, smooth metallic sheen without harsh color dispersion
-    bevelDepth: 0.65,    // deep, curved liquid meniscus
-    bevelWidth: 0.32,    // ultra-wide, seamless transition for molten quicksilver effect
+    refraction: 0.022,
+    aberration: 0.002,
+    bevelDepth: 0.65,
+    bevelWidth: 0.32,
     frost:      0
 };
 
-/* Layer 2 — weak liquid glass film (above melt, below content) */
-const LIQUID_GLASS_FILM = {
+/* Quicksilver Specular Film Configuration */
+const GLASS_FILM_CONFIG = {
     layerClass: 'actinium-glass-film',
-    refraction: 0.008,   // subtle liquid glaze
-    aberration: 0.001,   // ultra-clean fringe
-    bevelDepth: 0.20,    // smooth glass lip
-    bevelWidth: 0.18,    // wide soft sheen
-    frost:      0.08     // micro-smooth satin grain
+    refraction: 0.008,
+    aberration: 0.001,
+    bevelDepth: 0.20,
+    bevelWidth: 0.18,
+    frost:      0.08
 };
 
-const PANEL_SELECTOR    = '.ui-overlay, .tp-overlay, .pt-modal-window';
-const SNAPSHOT_SELECTOR = '#renderCanvas';
+const TARGET_PANEL_SELECTOR = '.ui-overlay, .tp-overlay, .pt-modal-window';
+const CANVAS_SNAPSHOT_ID    = '#renderCanvas';
 
-let liquidInstances = [];
-let dynamicLoopRunning = false;
+let activeLiquidInstances = [];
+let isRenderLoopActive    = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     initGroupAttributesObserver();
     initModalVisibilityHandler();
     initGSAPAnimations();
     initGlassInteractivity();
-    // Let the Babylon scene render a few frames first so the
-    // snapshot textures have real content to refract.
+    
+    // Defer liquidGL instantiation until 3D viewport canvas finishes mounting
     setTimeout(initLiquidEffects, 400);
 });
 
-/* ------------------------------------------------------------------ */
-/* Periodic-table group attributes (supports existing filter logic)   */
-/* ------------------------------------------------------------------ */
+/* Periodic Table Dynamic Data Attributes Observer */
 function applyGroupDataAttributes() {
     const cards = document.querySelectorAll('.pt-element-card');
     cards.forEach(card => {
@@ -61,19 +59,16 @@ function initGroupAttributesObserver() {
     }
 }
 
-/* ------------------------------------------------------------------ */
-/* Modal visibility — a closed backdrop must never be a pointer wall  */
-/* ------------------------------------------------------------------ */
+/* Modal Stacking & Pointer Interaction Protection */
 function initModalVisibilityHandler() {
     const modalBackdrop = document.querySelector('.pt-modal-backdrop');
     if (!modalBackdrop) return;
 
     const syncModalDisplay = () => {
-        const open = modalBackdrop.classList.contains('open');
-        modalBackdrop.style.display = open ? 'flex' : 'none';
-        modalBackdrop.style.pointerEvents = open ? 'auto' : 'none';
-        if (open) {
-            // Layers become measurable only when visible — re-wake both melts
+        const isOpen = modalBackdrop.classList.contains('open');
+        modalBackdrop.style.display = isOpen ? 'flex' : 'none';
+        modalBackdrop.style.pointerEvents = isOpen ? 'auto' : 'none';
+        if (isOpen) {
             requestAnimationFrame(() => refreshAllLiquid());
         }
     };
@@ -83,57 +78,52 @@ function initModalVisibilityHandler() {
     observer.observe(modalBackdrop, { attributes: true, attributeFilter: ['class'] });
 }
 
-/* ------------------------------------------------------------------ */
-/* Liquid substrate layers                                            */
-/* ------------------------------------------------------------------ */
-
-/** Raise a node above both liquid layers only if it would sink under them. */
+/* Dynamic Z-Index Elevation & Substrate Injection */
 function elevateAboveLiquid(el) {
-    const cs = window.getComputedStyle(el);
-    if (cs.position === 'static') el.style.position = 'relative';
-    const z = parseInt(cs.zIndex, 10);
-    if (isNaN(z) || z < 2) el.style.zIndex = '2';
+    const computed = window.getComputedStyle(el);
+    if (computed.position === 'static') {
+        el.style.position = 'relative';
+    }
+    const currentZ = parseInt(computed.zIndex, 10);
+    if (isNaN(currentZ) || currentZ < 2) {
+        el.style.zIndex = '2';
+    }
 }
 
-/**
- * Injects the two liquid layers per panel and keeps stacking sane for
- * current AND future direct children (kernel.js rebuilds orbit rows,
- * filters and the table grid at runtime).
- */
 function prepareLiquidLayers() {
-    const panels = document.querySelectorAll(PANEL_SELECTOR);
+    const panels = document.querySelectorAll(TARGET_PANEL_SELECTOR);
 
     panels.forEach(panel => {
-        // 1) Quicksilver melt — bottom of the panel stack
-        let melt = panel.querySelector(`:scope > .${ACTINIUM.layerClass}`);
-        if (!melt) {
-            melt = document.createElement('div');
-            melt.className = ACTINIUM.layerClass;
-            melt.setAttribute('aria-hidden', 'true');
-            panel.prepend(melt);
+        // Inject Layer 1: Quicksilver Melt
+        let meltLayer = panel.querySelector(`:scope > .${ACTINIUM_MELT_CONFIG.layerClass}`);
+        if (!meltLayer) {
+            meltLayer = document.createElement('div');
+            meltLayer.className = ACTINIUM_MELT_CONFIG.layerClass;
+            meltLayer.setAttribute('aria-hidden', 'true');
+            panel.prepend(meltLayer);
         }
 
-        // 2) Weak liquid-glass film — directly above the melt
-        let film = panel.querySelector(`:scope > .${LIQUID_GLASS_FILM.layerClass}`);
-        if (!film) {
-            film = document.createElement('div');
-            film.className = LIQUID_GLASS_FILM.layerClass;
-            film.setAttribute('aria-hidden', 'true');
-            melt.insertAdjacentElement('afterend', film);
+        // Inject Layer 2: Glass Film
+        let filmLayer = panel.querySelector(`:scope > .${GLASS_FILM_CONFIG.layerClass}`);
+        if (!filmLayer) {
+            filmLayer = document.createElement('div');
+            filmLayer.className = GLASS_FILM_CONFIG.layerClass;
+            filmLayer.setAttribute('aria-hidden', 'true');
+            meltLayer.insertAdjacentElement('afterend', filmLayer);
         }
 
-        // 3) Content must sit above both layers
+        // Safeguard existing UI elements above shader canvases
         Array.from(panel.children).forEach(child => {
-            if (child === melt || child === film) return;
+            if (child === meltLayer || child === filmLayer) return;
             elevateAboveLiquid(child);
         });
 
-        // Keep future direct children above the liquid stack
+        // Watch for dynamically inserted content (e.g., dynamic orbit rows)
         const childObserver = new MutationObserver(mutations => {
             mutations.forEach(m => m.addedNodes.forEach(node => {
                 if (node.nodeType === 1 &&
-                    !node.classList.contains(ACTINIUM.layerClass) &&
-                    !node.classList.contains(LIQUID_GLASS_FILM.layerClass)) {
+                    !node.classList.contains(ACTINIUM_MELT_CONFIG.layerClass) &&
+                    !node.classList.contains(GLASS_FILM_CONFIG.layerClass)) {
                     elevateAboveLiquid(node);
                 }
             }));
@@ -142,31 +132,26 @@ function prepareLiquidLayers() {
     });
 }
 
-/** Never let shader canvases swallow clicks from the UI. */
 function neutralizeLiquidCanvases() {
-    document.querySelectorAll('canvas').forEach(cvs => {
-        if (cvs.id === 'renderCanvas') return;
-        cvs.style.pointerEvents = 'none';
-        cvs.style.zIndex = '0';
+    document.querySelectorAll('canvas').forEach(canvas => {
+        if (canvas.id === 'renderCanvas') return;
+        canvas.style.pointerEvents = 'none';
+        canvas.style.zIndex = '0';
     });
 }
 
-/* ------------------------------------------------------------------ */
-/* liquidGL boot                                                      */
-/* ------------------------------------------------------------------ */
-
-/** Boots one liquidGL layer. Guarded: one failing layer never kills the other. */
-function bootLiquidLayer(cfg) {
+/* liquidGL Boot Sequences */
+function bootLiquidLayer(config) {
     try {
         liquidGL({
-            snapshot:   SNAPSHOT_SELECTOR,           // refract ONLY the 3D scene
-            target:     '.' + cfg.layerClass,
+            snapshot:   CANVAS_SNAPSHOT_ID,
+            target:     '.' + config.layerClass,
             resolution: 1.0,
-            refraction: cfg.refraction,
-            aberration: cfg.aberration,
-            bevelDepth: cfg.bevelDepth,
-            bevelWidth: cfg.bevelWidth,
-            frost:      cfg.frost,
+            refraction: config.refraction,
+            aberration: config.aberration,
+            bevelDepth: config.bevelDepth,
+            bevelWidth: config.bevelWidth,
+            frost:      config.frost,
             shadow:     false,
             specular:   true,
             reveal:     'fade',
@@ -174,63 +159,52 @@ function bootLiquidLayer(cfg) {
             magnify:    1.0,
             on: {
                 init(instance) {
-                    if (instance) liquidInstances.push(instance);
+                    if (instance) activeLiquidInstances.push(instance);
                     neutralizeLiquidCanvases();
                     startDynamicRenderLoop();
                 }
             }
         });
     } catch (err) {
-        console.warn('liquidGL layer failed to boot:', cfg.layerClass, err);
+        console.warn('liquidGL substrate execution deferred:', config.layerClass, err);
     }
 }
 
 function initLiquidEffects() {
     prepareLiquidLayers();
 
-    if (typeof liquidGL !== 'function') return; // CSS dark-glass fallback stays intact
+    if (typeof liquidGL !== 'function') return;
 
-    bootLiquidLayer(ACTINIUM);          // molten actinium metal
-    bootLiquidLayer(LIQUID_GLASS_FILM); // weak glass film on top
+    bootLiquidLayer(ACTINIUM_MELT_CONFIG);
+    bootLiquidLayer(GLASS_FILM_CONFIG);
 
     neutralizeLiquidCanvases();
-    // Safety pass for late-injected shader canvases
     setTimeout(neutralizeLiquidCanvases, 900);
 }
 
-/* ------------------------------------------------------------------ */
-/* Dynamic render — live refresh of EVERY liquidGL instance           */
-/* ------------------------------------------------------------------ */
-
-/** Single-shot refresh of all live instances (modal open, resize, etc.). */
+/* Continuous Render Loop */
 function refreshAllLiquid() {
-    liquidInstances.forEach(inst => {
-        if (!inst) return;
-        if (typeof inst.update === 'function') inst.update();
-        else if (typeof inst.refresh === 'function') inst.refresh();
-        else if (typeof inst.render === 'function') inst.render();
+    activeLiquidInstances.forEach(instance => {
+        if (!instance) return;
+        if (typeof instance.update === 'function') instance.update();
+        else if (typeof instance.refresh === 'function') instance.refresh();
+        else if (typeof instance.render === 'function') instance.render();
     });
 }
 
-/**
- * Frame-budgeted dynamic render loop: refreshes both liquid layers
- * every animation frame, paused while the tab is hidden.
- */
 function startDynamicRenderLoop() {
-    if (dynamicLoopRunning) return;
-    dynamicLoopRunning = true;
+    if (isRenderLoopActive) return;
+    isRenderLoopActive = true;
     (function tick() {
         if (!document.hidden) refreshAllLiquid();
         requestAnimationFrame(tick);
     })();
 }
 
-/* ------------------------------------------------------------------ */
-/* Cursor-tracked specular bloom (feeds --mouse-x / --mouse-y)        */
-/* ------------------------------------------------------------------ */
+/* Interactive Cursor Radial Lighting */
 function initGlassInteractivity() {
-    const glassPanels = document.querySelectorAll(PANEL_SELECTOR);
-    glassPanels.forEach(panel => {
+    const panels = document.querySelectorAll(TARGET_PANEL_SELECTOR);
+    panels.forEach(panel => {
         panel.addEventListener('mousemove', (e) => {
             const rect = panel.getBoundingClientRect();
             panel.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
@@ -239,9 +213,7 @@ function initGlassInteractivity() {
     });
 }
 
-/* ------------------------------------------------------------------ */
-/* GSAP micro-interactions                                            */
-/* ------------------------------------------------------------------ */
+/* GSAP Transitions & Micro-Interactions */
 function initGSAPAnimations() {
     if (typeof gsap === 'undefined') return;
 
@@ -262,9 +234,7 @@ function initGSAPAnimations() {
     });
 }
 
-/* ------------------------------------------------------------------ */
-/* Control panel mode switcher (AUTO / MANUAL)                        */
-/* ------------------------------------------------------------------ */
+/* Control Panel Switcher Callback */
 function switchControlMode(mode) {
     const autoContainer = document.getElementById('autoModeContainer');
     const manualContainer = document.getElementById('manualModeContainer');
