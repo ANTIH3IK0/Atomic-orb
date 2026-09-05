@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Atomic-orb r1.2</title>
+    <title>Atomic-orb b1.3-2</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,7 +12,7 @@
     <!-- Stylesheets -->
     <link rel="stylesheet" href="effects.css">
 
-    <!-- External UI & Effect APIs -->
+    <!-- External APIs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -28,7 +28,10 @@
     <button class="restore-btn" id="restoreBtn" style="display:none;" onclick="togglePanel(false)">☰</button>
     <button class="tp-restore-btn" id="tpRestoreBtn" style="display:none;" onclick="toggleTpPanel(false)">⧇</button>
 
-    <!-- Camera / Teleport Overlay -->
+    <!-- 3D Babylon Rendering Canvas -->
+    <canvas id="renderCanvas"></canvas>
+
+    <!-- Camera Navigation Overlay -->
     <div class="tp-overlay" id="tpOverlay">
         <div class="tp-title">
             <span>CAMERA POS & GOTO</span>
@@ -46,112 +49,65 @@
         </div>
     </div>
 
-    <!-- Main UI Panel -->
+    <!-- Control Overlay -->
     <div class="ui-overlay" id="uiOverlay">
         <header style="display:flex; justify-content:space-between; align-items:center;">
             <h1>DIRAC QUANTUM 3D</h1>
             <button class="minimize-btn" onclick="togglePanel(true)">✕</button>
         </header>
 
-        <!-- Element Selector via Periodic Table Modal -->
-        <div>
-            <div class="section-title">Element Selector</div>
-            <button class="secondary-btn" style="margin-top:6px;" onclick="openPeriodicTableModal()">PERIODIC TABLE ⊞</button>
-        </div>
-
-        <!-- Mode Switcher -->
         <div class="mode-switch-bar">
-            <button class="mode-btn active" id="btnModeAuto" onclick="switchControlMode('auto')">AUTO BUILDER</button>
-            <button class="mode-btn" id="btnModeManual" onclick="switchControlMode('manual')">MANUAL (r1.1)</button>
+            <button id="btnModeAuto" class="mode-btn active" onclick="switchControlMode('auto')">PERIODIC</button>
+            <button id="btnModeManual" class="mode-btn" onclick="switchControlMode('manual')">MANUAL</button>
         </div>
 
-        <!-- AUTO BUILDER MODE SECTION -->
         <div id="autoModeContainer" class="mode-container">
-            <div>
-                <div class="section-title">Quantum System Setup</div>
-                <div class="input-card" style="margin-top:6px;">
-                    <div class="input-field">
-                        <label>Atomic Number (Z)</label>
-                        <input type="number" id="inputZ" value="6" onchange="rebuildQuantumModel()">
-                    </div>
-
-                    <div class="input-field">
-                        <label>Max Principal Quantum Number (n)</label>
-                        <input type="number" id="inputMaxN" value="2" min="1" max="12" onchange="generateOrbitsBuilder()">
-                    </div>
+            <div class="input-card">
+                <div class="input-header">
+                    <span class="section-title">ELEMENT SELECTION</span>
+                    <span id="selectedElementTag" class="action-link" onclick="openPeriodicTableModal()">[Z = 6 Carbon]</span>
                 </div>
-            </div>
-
-            <div>
-                <div class="section-title">
-                    <span>Suborbit Configuration</span>
-                    <span style="font-size:8px; color:var(--text-muted);">EX | ORBIT | ELEC</span>
-                </div>
-                
-                <div class="orbits-scroll-area" id="orbitsBuilderContainer" style="margin-top:6px;"></div>
-            </div>
-
-            <div>
-                <div class="input-card">
-                    <div class="input-header">
-                        <label style="font-size:10px; color:var(--text-muted); font-family:'JetBrains Mono';">Binding Energy En (eV)</label>
-                        <span class="action-link" onclick="autoCalculateSuborbitEnergiesUI()">[CALC EN]</span>
-                    </div>
-                    <input type="text" id="inputEn" value="" placeholder="Calculated per split suborbit">
-                    <button class="apply-btn" style="margin-top:4px;" onclick="rebuildQuantumModel()">SOLVE DIRAC MODEL</button>
-                </div>
+                <button class="apply-btn" onclick="openPeriodicTableModal()">OPEN PERIODIC TABLE</button>
             </div>
         </div>
 
-        <!-- MANUAL MODE SECTION (r1.1 Parameters) -->
         <div id="manualModeContainer" class="mode-container hidden">
-            <div>
-                <div class="section-title">Manual Quantum Parameters</div>
-                <div class="input-card" style="margin-top:6px;">
-                    <div class="input-field">
-                        <label>Atomic Number (Z)</label>
-                        <input type="number" id="inputZManual" value="6">
-                    </div>
-                    <div class="input-field">
-                        <label>Elec Config (e.g., 1s2 2s2 2p2)</label>
-                        <input type="text" id="inputConfig" value="1s2 2s2 2p2" oninput="if(typeof onConfigInputChanged === 'function') onConfigInputChanged();">
-                    </div>
-                    <div class="input-field">
-                        <label>Electrons Array (elec)</label>
-                        <input type="text" id="inputElec" value="2, 2, 2">
-                    </div>
-                    <div class="input-field">
-                        <label>Principal Quantum (n)</label>
-                        <input type="text" id="inputN" value="1, 2, 2">
-                    </div>
-                    <div class="input-field">
-                        <label>Azimuthal Quantum (l)</label>
-                        <input type="text" id="inputL" value="0, 0, 1">
-                    </div>
+            <div class="input-card">
+                <div class="input-field">
+                    <label for="inputZ">ATOMIC NUMBER (Z)</label>
+                    <input type="number" id="inputZ" value="6" min="1" max="172">
+                </div>
+                <div class="input-field">
+                    <label for="inputMaxN">MAX PRINCIPAL QUANTUM NUMBER (n)</label>
+                    <input type="number" id="inputMaxN" value="2" min="1" max="24" onchange="generateOrbitsBuilder(true)">
                 </div>
             </div>
+
+            <div class="section-title">ORBITAL CONFIGURATION</div>
+            <div class="orbits-scroll-area" id="orbitsBuilderContainer"></div>
+
+            <button class="apply-btn" onclick="autoCalculateSuborbitEnergiesUI(); rebuildQuantumModel();">UPDATE QUANTUM MODEL</button>
         </div>
 
-        <!-- Orbital Filters & Controls -->
-        <div>
-            <div class="section-title">Orbital Visibility Filters</div>
-            <div class="filter-list" id="dynamicFilterContainer" style="margin-top:6px;"></div>
+        <div class="input-card">
+            <div class="section-title">ORBITAL ENERGIES</div>
+            <input type="text" id="inputEn" readonly placeholder="Energies will compute here...">
         </div>
 
-        <div>
-            <div class="section-title">Global Mesh Opacity</div>
-            <input type="range" id="opacityRange" min="0.05" max="1.0" step="0.05" value="0.35" oninput="updateOpacity(this.value)" style="margin-top:6px;">
+        <div class="input-card">
+            <div class="section-title">OPACITY CONTROL</div>
+            <input type="range" id="opacityRange" min="0.05" max="1.0" step="0.05" value="0.35" oninput="updateOpacity(this.value)">
         </div>
+
+        <div class="section-title">VISIBILITY FILTERS</div>
+        <div class="filter-list" id="dynamicFilterContainer"></div>
     </div>
 
-    <!-- Periodic Table Modal Backdrop -->
+    <!-- Periodic Table Modal -->
     <div class="pt-modal-backdrop" id="ptModalBackdrop" onclick="handleBackdropClick(event)">
         <div class="pt-modal-window">
             <div class="pt-modal-header">
-                <div class="pt-modal-title">
-                    <span>PERIODIC TABLE SELECTOR</span>
-                    <span id="selectedElementTag" style="color:var(--text-accent); font-size:11px;"></span>
-                </div>
+                <div class="pt-modal-title">PERIODIC TABLE OF ELEMENTS</div>
                 <button class="close-btn" onclick="closePeriodicTableModal()">✕</button>
             </div>
             <div class="pt-scroll-area">
@@ -160,6 +116,5 @@
         </div>
     </div>
 
-    <canvas id="renderCanvas"></canvas>
 </body>
 </html>
