@@ -1,6 +1,6 @@
 /**
  * effects.js
- * Dark Low-Key Quicksilver & Dynamic Liquid Optics Engine
+ * Dynamic Low-Key Dark Quicksilver Engine (Non-Blocking Event Loop)
  */
 document.addEventListener('DOMContentLoaded', () => {
     initGroupAttributesObserver();
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * Prevents the closed modal backdrop from blocking viewport clicks.
+ * Prevents closed modal backdrop from creating an invisible pointer barrier.
  */
 function initModalVisibilityHandler() {
     const modalBackdrop = document.querySelector('.pt-modal-backdrop');
@@ -31,7 +31,6 @@ function initModalVisibilityHandler() {
     };
 
     syncModalDisplay();
-
     const observer = new MutationObserver(syncModalDisplay);
     observer.observe(modalBackdrop, { attributes: true, attributeFilter: ['class'] });
 }
@@ -64,32 +63,33 @@ function initGroupAttributesObserver() {
 }
 
 /**
- * Low-Key Smoked Quicksilver Physics Configuration
+ * Low-Key Smoked Quicksilver Engine + Non-Blocking Render Loop
  */
 let liquidInstance = null;
+let isRendering = false;
 
 function initLiquidGLEffects() {
     if (typeof liquidGL !== 'function') return;
 
     liquidInstance = liquidGL({
-        snapshot: "body",
+        snapshot: "#renderCanvas", // Target the underlying 3D canvas directly
         target: ".ui-overlay, .tp-overlay, .pt-modal-window",
         resolution: 1.0,
-        refraction: 0.025,     // Low distortion (低調) - eliminates wild purple warping
-        aberration: 0.002,     // Minimal chromatic dispersion - removes pink/purple fringe
-        bevelDepth: 0.35,      // Soft, sleek dark bevel
-        bevelWidth: 0.10,      // Subtle edge light reflection
+        refraction: 0.02,     // Subtle refractive index (低調)
+        aberration: 0.001,    // Near-zero chromatic fringe
+        bevelDepth: 0.30,     // Soft, dark smoked glass edge
+        bevelWidth: 0.08,
         frost: 0,
-        shadow: true,          // Dark obsidian drop depth
-        specular: true,        // Muted metallic light response
+        shadow: true,
+        specular: true,
         reveal: "fade",
         tilt: false,
-        magnify: 1.00,         // Exact 1:1 scale (no zoom distortion)
+        magnify: 1.00,
         on: {
             init(instance) {
-                console.log("Dark Low-Key Quicksilver active:", instance);
+                console.log("Dynamic Quicksilver active:", instance);
                 fixPointerEventsAndZIndex();
-                startDynamicRenderLoop(instance);
+                startDynamicLoop(instance);
             }
         }
     });
@@ -98,25 +98,32 @@ function initLiquidGLEffects() {
 }
 
 /**
- * Continuous RequestAnimationFrame Loop to keep liquidGL dynamic with moving 3D scene
+ * Non-blocking, frame-budgeted rendering loop.
+ * Replaces while(true)+sleep without locking the main browser thread.
  */
-function startDynamicRenderLoop(instance) {
-    let frameCount = 0;
+function startDynamicLoop(instance) {
+    if (isRendering) return;
+    isRendering = true;
 
-    function renderStep() {
-        // Force refresh every 3 frames to dynamically mirror moving 3D particles behind panels
-        if (frameCount % 3 === 0 && instance && typeof instance.update === 'function') {
-            instance.update();
+    function renderFrame() {
+        if (instance) {
+            // Force texture snapshot refresh on every animation frame
+            if (typeof instance.update === 'function') {
+                instance.update();
+            } else if (typeof instance.refresh === 'function') {
+                instance.refresh();
+            } else if (typeof instance.render === 'function') {
+                instance.render();
+            }
         }
-        frameCount++;
-        requestAnimationFrame(renderStep);
+        requestAnimationFrame(renderFrame);
     }
 
-    requestAnimationFrame(renderStep);
+    requestAnimationFrame(renderFrame);
 }
 
 /**
- * Ensures liquidGL WebGL canvases pass clicks directly to panel controls.
+ * Pass mouse input through WebGL shader overlays to active controls.
  */
 function fixPointerEventsAndZIndex() {
     const canvases = document.querySelectorAll('canvas:not(#renderCanvas)');
@@ -138,7 +145,7 @@ function fixPointerEventsAndZIndex() {
 }
 
 /**
- * Dynamic Cursor Fluid Ripple Interactivity
+ * Dynamic Pointer Specular Reflection
  */
 function initGlassInteractivity() {
     const glassPanels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
@@ -151,17 +158,12 @@ function initGlassInteractivity() {
 
             panel.style.setProperty('--mouse-x', `${x}px`);
             panel.style.setProperty('--mouse-y', `${y}px`);
-
-            // Dynamically trigger liquid update on mouse movement for active liquid flow
-            if (liquidInstance && typeof liquidInstance.update === 'function') {
-                liquidInstance.update();
-            }
         });
     });
 }
 
 /**
- * GSAP Micro-Interactions
+ * GSAP Interface Micro-Interactions
  */
 function initGSAPAnimations() {
     if (typeof gsap === 'undefined') return;
@@ -229,7 +231,7 @@ function switchControlMode(mode) {
     } else {
         autoContainer.classList.add('hidden');
         manualContainer.classList.remove('hidden');
-        btnAuto.classList.remove('active');
+        btnAuto.classList.add('active');
         btnManual.classList.add('active');
     }
 
