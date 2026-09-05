@@ -1,23 +1,23 @@
 // effects.js
 
-/* Molten Quicksilver Primary Fluid Layer Configuration */
+/* Molten Quicksilver Primary Layer Configuration */
 const ACTINIUM_MELT_CONFIG = {
     layerClass: 'actinium-liquid-layer',
-    refraction: 0.014,    // Reduced for a smoother metallic fluid motion
-    aberration: 0.001,    // Subtle chromatic dispersion
-    bevelDepth: 0.38,     // Soft liquid edge transition
-    bevelWidth: 0.22,
-    frost:      0.0
+    refraction: 0.022,
+    aberration: 0.002,
+    bevelDepth: 0.65,
+    bevelWidth: 0.32,
+    frost:      0
 };
 
 /* Quicksilver Specular Film Configuration */
 const GLASS_FILM_CONFIG = {
     layerClass: 'actinium-glass-film',
-    refraction: 0.005,
-    aberration: 0.0005,
-    bevelDepth: 0.12,
-    bevelWidth: 0.10,
-    frost:      0.04
+    refraction: 0.008,
+    aberration: 0.001,
+    bevelDepth: 0.20,
+    bevelWidth: 0.18,
+    frost:      0.08
 };
 
 const TARGET_PANEL_SELECTOR = '.ui-overlay, .tp-overlay, .pt-modal-window';
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initGlassInteractivity();
     
     // Defer liquidGL instantiation until 3D viewport canvas finishes mounting
-    setTimeout(initLiquidEffects, 400);
+    setTimeout(initLiquidEffects, 300);
 });
 
 /* Periodic Table Dynamic Data Attributes Observer */
@@ -167,26 +167,31 @@ function bootLiquidLayer(config) {
         });
     } catch (err) {
         console.warn('liquidGL substrate execution deferred:', config.layerClass, err);
+        // Fallback: start render loop regardless of liquidGL initialization state
+        startDynamicRenderLoop();
     }
 }
 
 function initLiquidEffects() {
     prepareLiquidLayers();
 
-    if (typeof liquidGL !== 'function') return;
-
-    bootLiquidLayer(ACTINIUM_MELT_CONFIG);
-    bootLiquidLayer(GLASS_FILM_CONFIG);
+    if (typeof liquidGL === 'function') {
+        bootLiquidLayer(ACTINIUM_MELT_CONFIG);
+        bootLiquidLayer(GLASS_FILM_CONFIG);
+    } else {
+        startDynamicRenderLoop();
+    }
 
     neutralizeLiquidCanvases();
     setTimeout(neutralizeLiquidCanvases, 900);
 }
 
-/* Continuous Render Loop */
+/* Continuous Render Loop to Prevent Frozen Background Snapshots */
 function refreshAllLiquid() {
     activeLiquidInstances.forEach(instance => {
         if (!instance) return;
-        if (typeof instance.update === 'function') instance.update();
+        if (typeof instance.updateSource === 'function') instance.updateSource();
+        else if (typeof instance.update === 'function') instance.update();
         else if (typeof instance.refresh === 'function') instance.refresh();
         else if (typeof instance.render === 'function') instance.render();
     });
@@ -195,10 +200,15 @@ function refreshAllLiquid() {
 function startDynamicRenderLoop() {
     if (isRenderLoopActive) return;
     isRenderLoopActive = true;
-    (function tick() {
-        if (!document.hidden) refreshAllLiquid();
-        requestAnimationFrame(tick);
-    })();
+
+    function renderFrame() {
+        if (!document.hidden) {
+            refreshAllLiquid();
+        }
+        requestAnimationFrame(renderFrame);
+    }
+    
+    requestAnimationFrame(renderFrame);
 }
 
 /* Interactive Cursor Radial Lighting */
