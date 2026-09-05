@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Atomic-orb r1.2</title>
+    <title>Atomic-orb Beta b1.25-3</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -67,38 +67,61 @@
 
         <!-- AUTO BUILDER MODE SECTION -->
         <div id="autoModeContainer" class="mode-container">
-            <div>
-                <div class="section-title">Quantum System Setup</div>
-                <div class="input-card" style="margin-top:6px;">
-                    <div class="input-field">
-                        <label>Atomic Number (Z)</label>
-                        <input type="number" id="inputZ" value="6" onchange="rebuildQuantumModel()">
-                    </div>
+            <!-- 1. Collapsible: QUANTUM SYSTEM SETUP -->
+            <div class="collapsible-section">
+                <div class="section-title" style="cursor:pointer;" onclick="toggleSection('quantumSetupContent', this.querySelector('.collapse-btn'))">
+                    <span>Quantum System Setup</span>
+                    <button class="minimize-btn collapse-btn" type="button" onclick="event.stopPropagation(); toggleSection('quantumSetupContent', this)">−</button>
+                </div>
+                <div id="quantumSetupContent" class="collapsible-content">
+                    <div class="input-card" style="margin-top:6px;">
+                        <div class="input-field">
+                            <label>Atomic Number (Z)</label>
+                            <input type="number" id="inputZ" value="6" onchange="rebuildQuantumModel()">
+                        </div>
 
-                    <div class="input-field">
-                        <label>Max Principal Quantum Number (n)</label>
-                        <input type="number" id="inputMaxN" value="2" min="1" max="12" onchange="generateOrbitsBuilder()">
+                        <div class="input-field">
+                            <label>Max Principal Quantum Number (n)</label>
+                            <input type="number" id="inputMaxN" value="2" min="1" max="12" onchange="generateOrbitsBuilder()">
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div>
-                <div class="section-title">
-                    <span>Suborbit Configuration</span>
-                    <span style="font-size:8px; color:var(--text-muted);">EX | ORBIT | ELEC</span>
+            <!-- 2. Collapsible: SUBORBIT CONFIGURATION -->
+            <div class="collapsible-section" style="margin-top:10px;">
+                <div class="section-title" style="cursor:pointer;" onclick="toggleSection('suborbitConfigContent', this.querySelector('.collapse-btn'))">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span>Suborbit Configuration</span>
+                        <span style="font-size:8px; color:var(--text-muted);">EX | ORBIT | ELEC</span>
+                    </div>
+                    <button class="minimize-btn collapse-btn" type="button" onclick="event.stopPropagation(); toggleSection('suborbitConfigContent', this)">−</button>
                 </div>
                 
-                <div class="orbits-scroll-area" id="orbitsBuilderContainer" style="margin-top:6px;"></div>
-            </div>
+                <div id="suborbitConfigContent" class="collapsible-content">
+                    <div class="orbits-scroll-area" id="orbitsBuilderContainer" style="margin-top:6px;"></div>
 
-            <div>
-                <div class="input-card">
-                    <div class="input-header">
-                        <label style="font-size:10px; color:var(--text-muted); font-family:'JetBrains Mono';">Binding Energy En (eV)</label>
-                        <span class="action-link" onclick="autoCalculateSuborbitEnergiesUI()">[CALC EN]</span>
+                    <div style="margin-top:6px;">
+                        <div class="input-card">
+                            <div class="input-header">
+                                <label style="font-size:10px; color:var(--text-muted); font-family:'JetBrains Mono';">Binding Energy En (eV)</label>
+                                <span class="action-link" onclick="autoCalculateSuborbitEnergiesUI()">[CALC EN]</span>
+                            </div>
+                            <input type="text" id="inputEn" value="" placeholder="Calculated per split suborbit">
+                            <button class="apply-btn" style="margin-top:4px;" onclick="rebuildQuantumModel()">SOLVE DIRAC MODEL</button>
+                        </div>
                     </div>
-                    <input type="text" id="inputEn" value="" placeholder="Calculated per split suborbit">
-                    <button class="apply-btn" style="margin-top:4px;" onclick="rebuildQuantumModel()">SOLVE DIRAC MODEL</button>
+
+                    <!-- 3. Nested Collapsible: ORBITAL VISIBILITY FILTERS -->
+                    <div class="collapsible-section" style="margin-top:10px;">
+                        <div class="section-title" style="cursor:pointer;" onclick="toggleSection('visibilityFiltersContent', this.querySelector('.collapse-btn'))">
+                            <span>Orbital Visibility Filters</span>
+                            <button class="minimize-btn collapse-btn" type="button" onclick="event.stopPropagation(); toggleSection('visibilityFiltersContent', this)">−</button>
+                        </div>
+                        <div id="visibilityFiltersContent" class="collapsible-content">
+                            <div class="filter-list" id="dynamicFilterContainer" style="margin-top:6px;"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -132,12 +155,6 @@
             </div>
         </div>
 
-        <!-- Orbital Filters & Controls -->
-        <div>
-            <div class="section-title">Orbital Visibility Filters</div>
-            <div class="filter-list" id="dynamicFilterContainer" style="margin-top:6px;"></div>
-        </div>
-
         <div>
             <div class="section-title">Global Mesh Opacity</div>
             <input type="range" id="opacityRange" min="0.05" max="1.0" step="0.05" value="0.35" oninput="updateOpacity(this.value)" style="margin-top:6px;">
@@ -161,5 +178,19 @@
     </div>
 
     <canvas id="renderCanvas"></canvas>
+
+    <script>
+        function toggleSection(targetId, btn) {
+            const target = document.getElementById(targetId);
+            if (!target) return;
+            const isCollapsed = target.classList.toggle('collapsed');
+            if (btn) {
+                btn.textContent = isCollapsed ? '+' : '−';
+            }
+            if (typeof refreshAllLiquid === 'function') {
+                requestAnimationFrame(() => refreshAllLiquid());
+            }
+        }
+    </script>
 </body>
 </html>
