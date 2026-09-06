@@ -3,13 +3,13 @@
 :root {
     --bg-dark: #010307;
 
-    /* Extra-Blue Black Obsidian Quicksilver Glass Base */
-    --panel-glass: rgba(2, 6, 14, 0.94);
-    --card-glass: rgba(4, 10, 20, 0.82);
-    --row-glass: rgba(6, 14, 26, 0.78);
-    --input-bg: rgba(1, 4, 10, 0.95);
+    /* Extra-Blue Black Liquid Obsidian Glass Base */
+    --panel-glass: rgba(2, 6, 16, 0.95);
+    --card-glass: rgba(4, 12, 26, 0.85);
+    --row-glass: rgba(6, 16, 32, 0.80);
+    --input-bg: rgba(1, 4, 12, 0.96);
 
-    /* Liquid Chromium Ultra-Reflective Specular Palette */
+    /* Quicksilver Specular & High-Reflection Chrome Palette */
     --quicksilver-bright: #ffffff;
     --quicksilver-silver: #b5cdde;
     --quicksilver-dark: #01040a;
@@ -33,10 +33,10 @@
     --chk-tick-color: #ffffff;
 }
 
-/* Dynamic Quicksilver High-Gloss Gleam */
+/* Dynamic Quicksilver High-Gloss Gleam Animation */
 @keyframes quicksilverGleam {
     0%, 100% { opacity: 0.4; transform: scale(1); filter: drop-shadow(0 0 4px #70c0ff); }
-    50%      { opacity: 0.95; transform: scale(1.04); filter: drop-shadow(0 0 12px #ffffff); }
+    50%      { opacity: 0.95; transform: scale(1.05); filter: drop-shadow(0 0 14px #ffffff); }
 }
 
 @keyframes actiniumCardPulse {
@@ -89,8 +89,8 @@ body.modal-open .tp-restore-btn {
 /* Extra-Blue Black Deep Quicksilver Metallic Panels */
 .ui-overlay, .tp-overlay, .pt-modal-window {
     position: absolute;
-    background: linear-gradient(150deg, rgba(8, 16, 30, 0.96) 0%, rgba(2, 5, 12, 0.98) 60%, rgba(1, 3, 7, 0.99) 100%);
-    border: 1px solid rgba(200, 235, 255, 0.28) !important;
+    background: linear-gradient(150deg, rgba(6, 14, 28, 0.96) 0%, rgba(2, 5, 12, 0.98) 60%, rgba(1, 3, 7, 0.99) 100%);
+    border: 1px solid rgba(200, 235, 255, 0.32) !important;
     border-radius: 20px;
 
     backdrop-filter: blur(24px) saturate(210%);
@@ -103,22 +103,22 @@ body.modal-open .tp-restore-btn {
     box-shadow:
         0 40px 80px rgba(0, 0, 0, 0.95),
         0 0 50px rgba(0, 3, 10, 0.9),
-        0 0 35px rgba(100, 190, 255, 0.16),
-        inset 0 1px 3px rgba(255, 255, 255, 0.65),
+        0 0 35px rgba(100, 190, 255, 0.18),
+        inset 0 1px 3px rgba(255, 255, 255, 0.7),
         inset 0 -3px 8px rgba(0, 0, 0, 0.95);
     will-change: transform, opacity;
     overflow: hidden;
 }
 
-/* Hyper-Reflective Surface Spot Light */
+/* Dynamic Interactive High-Gloss Specular Reflection */
 .ui-overlay::before, .tp-overlay::before, .pt-modal-window::before {
     content: '';
     position: absolute;
     inset: 0;
     background: radial-gradient(
-        550px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        rgba(255, 255, 255, 0.38),
-        rgba(120, 200, 255, 0.15) 30%,
+        600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(255, 255, 255, 0.42),
+        rgba(120, 200, 255, 0.18) 30%,
         rgba(10, 30, 60, 0.05) 60%,
         transparent 80%
     );
@@ -126,16 +126,16 @@ body.modal-open .tp-restore-btn {
     z-index: 1;
 }
 
-/* High-Gloss Metallic Bevel & Specular Edge Reflection */
+/* High-Gloss Metallic Bevel & Edge Reflection Layer */
 .ui-overlay::after, .tp-overlay::after, .pt-modal-window::after {
     content: '';
     position: absolute;
     inset: 0;
     border-radius: inherit;
     box-shadow:
-        inset 0 1.5px 0.5px rgba(255, 255, 255, 0.75),
+        inset 0 1.5px 0.5px rgba(255, 255, 255, 0.85),
         inset 0 -1.5px 1px rgba(0, 0, 0, 0.95),
-        inset 0 0 28px rgba(140, 215, 255, 0.12);
+        inset 0 0 28px rgba(140, 215, 255, 0.15);
     pointer-events: none;
     z-index: 2;
 }
@@ -171,12 +171,12 @@ body.modal-open .tp-restore-btn {
 }
 .tp-overlay.collapsed { display: none; }
 
-/* Segmented Control Bar */
+/* Mode Switcher Segmented Bar */
 .mode-switch-bar {
     display: grid;
     grid-template-columns: 1fr 1fr;
     background: rgba(1, 4, 10, 0.92);
-    border: 1px solid rgba(200, 235, 255, 0.18);
+    border: 1px solid rgba(200, 235, 255, 0.20);
     border-radius: 12px;
     padding: 4px;
     gap: 4px;
@@ -207,7 +207,7 @@ body.modal-open .tp-restore-btn {
     color: #ffffff;
     box-shadow: 
         0 4px 16px rgba(0, 0, 0, 0.85), 
-        inset 0 1px 0.5px rgba(255, 255, 255, 0.6);
+        inset 0 1px 0.5px rgba(255, 255, 255, 0.65);
 }
 
 .mode-container {
@@ -255,7 +255,7 @@ body.modal-open .tp-restore-btn {
     justify-content: space-between;
     align-items: center;
     padding-bottom: 14px;
-    border-bottom: 1px solid rgba(200, 235, 255, 0.16);
+    border-bottom: 1px solid rgba(200, 235, 255, 0.18);
     position: relative;
     z-index: 3;
 }
@@ -326,14 +326,14 @@ body.modal-open .tp-restore-btn {
     height: 58px;
     padding: 6px;
     border-radius: 10px;
-    border: 1px solid rgba(200, 235, 255, 0.15);
+    border: 1px solid rgba(200, 235, 255, 0.18);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     cursor: pointer;
-    background: linear-gradient(140deg, rgba(8, 16, 28, 0.95) 0%, rgba(2, 6, 12, 0.98) 100%);
+    background: linear-gradient(140deg, rgba(8, 18, 32, 0.95) 0%, rgba(2, 6, 14, 0.98) 100%);
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.25), inset 0 0 14px rgba(0, 0, 0, 0.8);
+    box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.3), inset 0 0 14px rgba(0, 0, 0, 0.85);
     overflow: hidden;
 }
 
@@ -341,29 +341,29 @@ body.modal-open .tp-restore-btn {
     content: '';
     position: absolute;
     top: 0; left: -100%; width: 100%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
     transition: left 0.45s ease;
     pointer-events: none;
 }
 .pt-element-card:hover::before { left: 100%; }
 
 .pt-element-card:hover {
-    background: linear-gradient(140deg, rgba(18, 36, 60, 0.98) 0%, rgba(6, 15, 28, 0.99) 100%);
+    background: linear-gradient(140deg, rgba(20, 40, 68, 0.98) 0%, rgba(6, 16, 32, 0.99) 100%);
     transform: translateY(-2px) scale(1.03);
-    border-color: rgba(255, 255, 255, 0.6);
-    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.9), 0 0 22px rgba(140, 215, 255, 0.4);
+    border-color: rgba(255, 255, 255, 0.65);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.9), 0 0 22px rgba(140, 215, 255, 0.45);
     z-index: 10;
 }
 
 .pt-element-card.active {
-    background: linear-gradient(140deg, rgba(24, 46, 76, 0.98) 0%, rgba(8, 20, 36, 0.99) 100%);
-    border-color: rgba(255, 255, 255, 0.8);
-    box-shadow: 0 0 28px rgba(160, 225, 255, 0.5), inset 0 1px 0.5px rgba(255, 255, 255, 0.7);
+    background: linear-gradient(140deg, rgba(28, 52, 84, 0.98) 0%, rgba(8, 22, 40, 0.99) 100%);
+    border-color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 28px rgba(160, 225, 255, 0.55), inset 0 1px 0.5px rgba(255, 255, 255, 0.75);
 }
 
 .pt-element-card[data-cat^="lanthanide"],
 .pt-element-card[data-cat^="actinide"] {
-    border-color: rgba(140, 215, 255, 0.28);
+    border-color: rgba(140, 215, 255, 0.32);
 }
 
 [id^="pt-card_Ac"] {
@@ -417,7 +417,7 @@ body.modal-open .tp-restore-btn {
 /* Dynamic Dark Metallic Inputs */
 input[type="text"], input[type="number"] {
     background: var(--input-bg);
-    border: 1px solid rgba(200, 235, 255, 0.16);
+    border: 1px solid rgba(200, 235, 255, 0.18);
     color: var(--quicksilver-bright);
     padding: 9px 12px;
     border-radius: 10px;
@@ -429,8 +429,8 @@ input[type="text"], input[type="number"] {
 }
 input[type="text"]:focus, input[type="number"]:focus {
     outline: none;
-    border-color: rgba(255, 255, 255, 0.7);
-    box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.95), 0 0 16px rgba(140, 215, 255, 0.45);
+    border-color: rgba(255, 255, 255, 0.75);
+    box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.95), 0 0 16px rgba(140, 215, 255, 0.5);
 }
 
 .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; position: relative; z-index: 3; }
@@ -439,8 +439,8 @@ input[type="text"]:focus, input[type="number"]:focus {
     position: absolute;
     top: 16px;
     z-index: 9;
-    background: linear-gradient(145deg, rgba(10, 20, 36, 0.95) 0%, rgba(2, 5, 12, 0.98) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: linear-gradient(145deg, rgba(12, 24, 42, 0.95) 0%, rgba(2, 5, 12, 0.98) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.35);
     color: var(--quicksilver-bright);
     width: 40px;
     height: 40px;
@@ -450,15 +450,15 @@ input[type="text"]:focus, input[type="number"]:focus {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.9), inset 0 1px 0.5px rgba(255, 255, 255, 0.6);
+    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.9), inset 0 1px 0.5px rgba(255, 255, 255, 0.65);
     transition: all 0.25s ease;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
 }
 .restore-btn:hover, .tp-restore-btn:hover {
     transform: scale(1.06);
-    border-color: rgba(255, 255, 255, 0.7);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.95), 0 0 24px rgba(140, 215, 255, 0.45);
+    border-color: rgba(255, 255, 255, 0.75);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.95), 0 0 24px rgba(140, 215, 255, 0.5);
 }
 .restore-btn { left: 16px; }
 .tp-restore-btn { right: 16px; }
@@ -508,8 +508,8 @@ header h1::before {
     background: var(--card-glass);
     padding: 12px;
     border-radius: 12px;
-    border: 1px solid rgba(200, 235, 255, 0.12);
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2), inset 0 0 14px rgba(0, 0, 0, 0.85);
+    border: 1px solid rgba(200, 235, 255, 0.15);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25), inset 0 0 14px rgba(0, 0, 0, 0.85);
     position: relative;
     z-index: 3;
 }
@@ -525,8 +525,8 @@ header h1::before {
 button.apply-btn {
     position: relative;
     padding: 10px 14px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    background: linear-gradient(180deg, rgba(16, 36, 62, 0.92) 0%, rgba(4, 12, 24, 0.98) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: linear-gradient(180deg, rgba(18, 40, 70, 0.92) 0%, rgba(4, 12, 24, 0.98) 100%);
     color: var(--quicksilver-bright);
     border-radius: 10px;
     font-size: 10px;
@@ -537,28 +537,28 @@ button.apply-btn {
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 3;
     width: 100%;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.85), inset 0 1px 0.5px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.85), inset 0 1px 0.5px rgba(255, 255, 255, 0.55);
 }
 button.apply-btn::before {
     content: '';
     position: absolute;
     top: 0; left: -100%; width: 100%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
     transition: left 0.5s ease;
 }
 button.apply-btn:hover::before { left: 100%; }
 button.apply-btn:hover {
-    background: linear-gradient(180deg, rgba(26, 52, 88, 0.98) 0%, rgba(8, 20, 38, 0.99) 100%);
-    border-color: rgba(255, 255, 255, 0.6);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 20px rgba(140, 215, 255, 0.45);
+    background: linear-gradient(180deg, rgba(28, 58, 96, 0.98) 0%, rgba(8, 22, 42, 0.99) 100%);
+    border-color: rgba(255, 255, 255, 0.65);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 20px rgba(140, 215, 255, 0.5);
     transform: translateY(-1px);
 }
 
 button.secondary-btn {
     position: relative;
     padding: 9px;
-    border: 1px solid rgba(200, 235, 255, 0.15);
-    background: rgba(6, 12, 22, 0.75);
+    border: 1px solid rgba(200, 235, 255, 0.18);
+    background: rgba(6, 14, 26, 0.75);
     color: var(--quicksilver-silver);
     border-radius: 10px;
     font-size: 10px;
@@ -568,12 +568,12 @@ button.secondary-btn {
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     width: 100%;
     z-index: 3;
-    box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.25);
+    box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.3);
 }
 button.secondary-btn:hover {
-    background: rgba(14, 26, 44, 0.9);
+    background: rgba(16, 30, 50, 0.9);
     color: var(--quicksilver-bright);
-    border-color: rgba(255, 255, 255, 0.4);
+    border-color: rgba(255, 255, 255, 0.45);
     transform: translateY(-1px);
 }
 
@@ -598,7 +598,7 @@ button.secondary-btn:hover {
     background: var(--row-glass);
     padding: 6px 8px;
     border-radius: 10px;
-    border: 1px solid rgba(200, 235, 255, 0.12);
+    border: 1px solid rgba(200, 235, 255, 0.14);
     box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.7);
 }
 .orbit-row .ex-input { width: 100%; text-align: center; padding: 4px; font-size: 10px; }
@@ -631,8 +631,8 @@ input[type="checkbox"] {
 }
 input[type="checkbox"]:checked {
     background: var(--chk-checked-bg);
-    border-color: rgba(255, 255, 255, 0.7);
-    box-shadow: 0 0 16px rgba(140, 215, 255, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    border-color: rgba(255, 255, 255, 0.75);
+    box-shadow: 0 0 16px rgba(140, 215, 255, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 input[type="checkbox"]:checked::after {
     content: '✓';
@@ -654,7 +654,7 @@ input[type="checkbox"]:checked::after {
     background: var(--row-glass);
     padding: 7px 10px;
     border-radius: 10px;
-    border: 1px solid rgba(200, 235, 255, 0.12);
+    border: 1px solid rgba(200, 235, 255, 0.14);
     box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.7);
 }
 
