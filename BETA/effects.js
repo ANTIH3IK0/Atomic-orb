@@ -77,26 +77,23 @@ function formatSuborbitNotation(text) {
 }
 
 function processSuborbitRows() {
-    const rows = document.querySelectorAll('.orbit-row');
-    rows.forEach(row => {
-        const targetSpans = row.querySelectorAll('span, label, div');
-        targetSpans.forEach(el => {
-            if (!el.dataset.suborbitFormatted && el.children.length === 0) {
-                const text = el.textContent.trim();
-                if (/^[0-9][a-zA-Z][0-9]+\/[0-9]+$/.test(text)) {
-                    el.innerHTML = formatSuborbitNotation(text);
-                    el.classList.add('suborbit-label');
-                    el.dataset.suborbitFormatted = 'true';
-                }
+    const targets = document.querySelectorAll('.orbit-row span, .filter-item span');
+    targets.forEach(el => {
+        if (!el.dataset.suborbitFormatted && el.children.length === 0) {
+            const text = el.textContent.trim();
+            if (/^[0-9][a-zA-Z][0-9]+\/[0-9]+$/.test(text)) {
+                el.innerHTML = formatSuborbitNotation(text);
+                el.classList.add('suborbit-label');
+                el.dataset.suborbitFormatted = 'true';
             }
-        });
+        }
     });
 }
 
-/* Scoped Mutation Observer to prevent DOM thrashing */
+/* Scoped Mutation Observer for UI suborbit labels */
 function initSuborbitNotationObserver() {
     processSuborbitRows();
-    const container = document.getElementById('orbitsBuilderContainer') || document.body;
+    const container = document.getElementById('uiOverlay') || document.body;
     const observer = new MutationObserver(() => processSuborbitRows());
     observer.observe(container, { childList: true, subtree: true });
 }
@@ -124,15 +121,24 @@ function initGroupAttributesObserver() {
     }
 }
 
-/* Modal Visibility Handler */
+/* Modal Visibility Handler with smooth transition sync */
 function initModalVisibilityHandler() {
     const modalBackdrop = document.querySelector('.pt-modal-backdrop');
     if (!modalBackdrop) return;
 
     const syncModalDisplay = () => {
         const isOpen = modalBackdrop.classList.contains('open');
-        modalBackdrop.style.display = isOpen ? 'flex' : 'none';
-        modalBackdrop.style.pointerEvents = isOpen ? 'auto' : 'none';
+        if (isOpen) {
+            modalBackdrop.style.display = 'flex';
+            modalBackdrop.style.pointerEvents = 'auto';
+        } else {
+            modalBackdrop.style.pointerEvents = 'none';
+            setTimeout(() => {
+                if (!modalBackdrop.classList.contains('open')) {
+                    modalBackdrop.style.display = 'none';
+                }
+            }, 250);
+        }
     };
 
     syncModalDisplay();
@@ -176,7 +182,7 @@ function switchControlMode(mode) {
     } else {
         autoContainer.classList.add('hidden');
         manualContainer.classList.remove('hidden');
-        btnAuto.classList.add('active');
+        btnAuto.classList.remove('active');
         btnManual.classList.add('active');
     }
 
