@@ -53,25 +53,51 @@ body {
     z-index: 0;
 }
 
-/* Base Panel Glass Properties (Eliminates forced 3D stacking context layout shifts) */
-.ui-overlay, .tp-overlay, .pt-modal-window {
+/* Liquid Metal Surface Depression Layer */
+.ui-overlay::after, .tp-overlay::after, .pt-modal-window::after {
+    content: '';
     position: absolute;
-    background: rgba(12, 13, 17, 0.88);
-    backdrop-filter: blur(28px) saturate(190%);
-    -webkit-backdrop-filter: blur(28px) saturate(190%);
-    border-radius: 40px;
-    border: 1.52px solid transparent !important;
+    inset: 0;
+    border-radius: 20px;
+    pointer-events: none !important;
+    z-index: 6;
 
-    /* Base Shadow & Metallic Edge Rim */
-    box-shadow: 
-        0 30px 60px -12px rgba(0, 0, 0, 0.85),
-        inset 0 0 0 1px rgba(220, 220, 220, 0.12);
+    /* Perpendicular physical grooves (X line parallel to vertical edge, Y line parallel to horizontal edge) */
+    background: 
+        /* Vertical depression axis */
+        linear-gradient(
+            90deg,
+            transparent calc(var(--mouse-x, 0px) - 18px),
+            rgba(0, 0, 0, calc(0.95 * var(--press-intensity-x, 0))) var(--mouse-x, 0px),
+            rgba(255, 255, 255, calc(0.18 * var(--press-intensity-x, 0))) calc(var(--mouse-x, 0px) + 2px),
+            transparent calc(var(--mouse-x, 0px) + 20px)
+        ),
+        /* Horizontal depression axis */
+        linear-gradient(
+            180deg,
+            transparent calc(var(--mouse-y, 0px) - 18px),
+            rgba(0, 0, 0, calc(0.95 * var(--press-intensity-y, 0))) var(--mouse-y, 0px),
+            rgba(255, 255, 255, calc(0.18 * var(--press-intensity-y, 0))) calc(var(--mouse-y, 0px) + 2px),
+            transparent calc(var(--mouse-y, 0px) + 20px)
+        );
 
-    /* Clean tilt mapping without forced perspective overlap */
-    transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: transform;
-    pointer-events: auto !important;
+    /* Localized radial compression spot around interaction point */
+    -webkit-mask-image: radial-gradient(
+        130px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(0, 0, 0, 1) 0%,
+        rgba(0, 0, 0, 0.4) 60%,
+        transparent 100%
+    );
+    mask-image: radial-gradient(
+        130px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(0, 0, 0, 1) 0%,
+        rgba(0, 0, 0, 0.4) 60%,
+        transparent 100%
+    );
+
+    opacity: var(--distortion-opacity, 0);
+    mix-blend-mode: multiply;
+    transition: opacity 0.15s ease-out;
 }
 
 /* Left UI Overlay Panel */
