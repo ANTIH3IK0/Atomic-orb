@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Atomic-orb Beta b1.25-4-semifinal</title>
+    <title>Atomic-orb Beta b1.25-45</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,6 +32,10 @@
 </head>
 <body>
 
+    <!-- Primary 3D Quantum Render Canvas -->
+    <canvas id="renderCanvas"></canvas>
+
+    <!-- Floating Restore Trigger Buttons -->
     <button class="restore-btn" id="restoreBtn" style="display:none;" onclick="togglePanel(false)">☰</button>
     <button class="tp-restore-btn" id="tpRestoreBtn" style="display:none;" onclick="toggleTpPanel(false)">⧇</button>
 
@@ -55,7 +59,7 @@
 
     <!-- Main UI Panel -->
     <div class="ui-overlay" id="uiOverlay">
-        <header style="display:flex; justify-content:space-between; align-items:center;">
+        <header style="display:flex; justify-space-between; align-items:center;">
             <h1>DIRAC QUANTUM 3D</h1>
             <button class="minimize-btn" onclick="togglePanel(true)">✕</button>
         </header>
@@ -74,7 +78,7 @@
 
         <!-- AUTO BUILDER MODE SECTION -->
         <div id="autoModeContainer" class="mode-container">
-            <!-- 1. Collapsible: QUANTUM SYSTEM SETUP (Default: Collapsed) -->
+            <!-- 1. Collapsible: QUANTUM SYSTEM SETUP -->
             <div class="collapsible-section">
                 <div class="section-title" style="cursor:pointer;" onclick="toggleSection('quantumSetupContent', this.querySelector('.collapse-btn'))">
                     <span>Quantum System Setup</span>
@@ -95,7 +99,7 @@
                 </div>
             </div>
 
-            <!-- 2. Collapsible: SUBORBIT CONFIGURATION (Default: Collapsed) -->
+            <!-- 2. Collapsible: SUBORBIT CONFIGURATION -->
             <div class="collapsible-section" style="margin-top:10px;">
                 <div class="section-title" style="cursor:pointer;" onclick="toggleSection('suborbitConfigContent', this.querySelector('.collapse-btn'))">
                     <div style="display:flex; align-items:center; gap:8px;">
@@ -119,7 +123,7 @@
                         </div>
                     </div>
 
-                    <!-- 3. Nested Collapsible: ORBITAL VISIBILITY FILTERS (Default: Collapsed) -->
+                    <!-- 3. Nested Collapsible: ORBITAL VISIBILITY FILTERS -->
                     <div class="collapsible-section" style="margin-top:10px;">
                         <div class="section-title" style="cursor:pointer;" onclick="toggleSection('visibilityFiltersContent', this.querySelector('.collapse-btn'))">
                             <span>Orbital Visibility Filters</span>
@@ -133,7 +137,7 @@
             </div>
         </div>
 
-        <!-- MANUAL MODE SECTION (r1.1 Parameters) -->
+        <!-- MANUAL MODE SECTION -->
         <div id="manualModeContainer" class="mode-container hidden">
             <div>
                 <div class="section-title">Manual Quantum Parameters</div>
@@ -183,8 +187,6 @@
             </div>
         </div>
     </div>
-
-    <canvas id="renderCanvas"></canvas>
 
     <script>
         function toggleSection(targetId, btn) {
