@@ -3,24 +3,24 @@
 :root {
     --bg-dark: #050505;
 
-    /* Glass Panels */
-    --panel-glass: rgba(12, 12, 12, 0.90);
-    --card-glass: rgba(8, 8, 8, 0.85);
-    --row-glass: rgba(10, 10, 10, 0.82);
-    --input-bg: rgba(3, 3, 3, 0.95);
+    /* Translucent Obsidian Glass (Allows LiquidGlass WebGL shader to pass through) */
+    --panel-glass: rgba(10, 10, 10, 0.35);
+    --card-glass: rgba(15, 15, 15, 0.45);
+    --row-glass: rgba(18, 18, 18, 0.50);
+    --input-bg: rgba(5, 5, 5, 0.75);
 
-    /* Text & Metallic Spectrum */
-    --quicksilver-bright: #989898;
-    --quicksilver-silver: #5C5C5C;
-    --text-main: #4a4c4f;
-    --text-sub: #3b3b3b;
-    --text-muted: #3b3b3b;
-    --text-accent: #4a4c4f;
+    /* Quicksilver Metallic & Bright Specular Spectrum */
+    --quicksilver-bright: #e0e0e0;
+    --quicksilver-silver: #8e9297;
+    --text-main: #d0d4dc;
+    --text-sub: #9ca3af;
+    --text-muted: #6b7280;
+    --text-accent: #ffffff;
 
     /* Controls */
-    --chk-bg: rgba(5, 5, 5, 0.95);
-    --chk-checked-bg: rgba(25, 25, 25, 0.95);
-    --chk-tick-color: #626262;
+    --chk-bg: rgba(10, 10, 10, 0.85);
+    --chk-checked-bg: rgba(40, 40, 40, 0.95);
+    --chk-tick-color: #ffffff;
 }
 
 * {
@@ -39,10 +39,10 @@ body {
     color: var(--text-main);
     overflow: hidden;
     display: flex;
-    font-weight: 100;
+    font-weight: 300;
 }
 
-/* 3D WebGL Background Canvas */
+/* Dynamic WebGL Background Canvas */
 #renderCanvas {
     width: 100%;
     height: 100%;
@@ -53,80 +53,84 @@ body {
     z-index: 0;
 }
 
-/* Glass Panels with LiquidGlass Shader Compatibility */
+/* Glass Panels: Semi-transparent container for LiquidGlass WebGL Shader Output */
 .ui-overlay, .tp-overlay, .pt-modal-window {
     position: absolute;
-    background: linear-gradient(135deg, rgba(12, 12, 12, 0.90) 0%, rgba(5, 5, 5, 0.98) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.16) !important;
+    background: linear-gradient(135deg, rgba(20, 20, 20, 0.35) 0%, rgba(5, 5, 5, 0.55) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
     border-radius: 20px;
-
-    backdrop-filter: blur(36px) contrast(125%);
-    -webkit-backdrop-filter: blur(36px) contrast(125%);
-
+    
+    /* Native backdrop-filter removed so WebGL LiquidGlass shader handles refraction directly */
     box-shadow:
-        0 30px 80px rgba(0, 0, 0, 0.98),
-        0 0 35px rgba(255, 255, 255, 0.03),
-        inset 0 1px 2px rgba(255, 255, 255, 0.30);
+        0 20px 50px rgba(0, 0, 0, 0.80),
+        0 0 20px rgba(255, 255, 255, 0.08),
+        inset 0 1px 1px rgba(255, 255, 255, 0.40);
     
     pointer-events: auto !important;
     overflow: hidden;
 }
 
-/* Dynamic Metallic Surface Overlay */
+/* LiquidGlass canvas element injection scaling */
+.ui-overlay > canvas, .tp-overlay > canvas, .pt-modal-window > canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Quicksilver Dynamic Metallic Sheen Overlay */
 .ui-overlay::after, .tp-overlay::after, .pt-modal-window::after {
     content: '';
     position: absolute;
-    top: 50%;
-    left: 50%;
+    top: -50%;
+    left: -50%;
     width: 200%;
     height: 200%;
     background: radial-gradient(
         circle at center,
-        rgba(255, 255, 255, 0.06) 0%,
-        rgba(180, 180, 180, 0.02) 40%,
-        rgba(5, 5, 5, 0) 70%
+        rgba(255, 255, 255, 0.18) 0%,
+        rgba(180, 190, 200, 0.08) 35%,
+        rgba(0, 0, 0, 0) 70%
     );
     transform: translate(-50%, -50%);
-    animation: metallicShine 10s infinite ease-in-out;
+    animation: quicksilverFlow 8s infinite ease-in-out;
+    mix-blend-mode: screen;
     pointer-events: none !important;
-    z-index: 1;
+    z-index: 2;
 }
 
-@keyframes metallicShine {
+@keyframes quicksilverFlow {
     0% {
-        transform: translate(-50%, -50%) rotate(0deg) scale(1);
-        opacity: 0.15;
-        filter: blur(6px);
+        transform: translate(-30%, -30%) rotate(0deg) scale(1);
+        opacity: 0.25;
     }
-    30% {
-        transform: translate(-46%, -54%) rotate(4deg) scale(1.03);
-        opacity: 0.30;
-        filter: blur(4px) drop-shadow(0 0 8px rgba(255, 255, 255, 0.25));
-    }
-    60% {
-        transform: translate(-54%, -46%) rotate(-3deg) scale(0.99);
-        opacity: 0.12;
-        filter: blur(8px);
+    50% {
+        transform: translate(-20%, -20%) rotate(6deg) scale(1.08);
+        opacity: 0.55;
     }
     100% {
-        transform: translate(-50%, -50%) rotate(0deg) scale(1);
-        opacity: 0.15;
-        filter: blur(6px);
+        transform: translate(-30%, -30%) rotate(0deg) scale(1);
+        opacity: 0.25;
     }
 }
 
-/* Mouse Specular Lighting Track */
+/* Mouse Quicksilver Specular Highlighting Track */
 .ui-overlay::before, .tp-overlay::before, .pt-modal-window::before {
     content: '';
     position: absolute;
     inset: 0;
     background: radial-gradient(
-        450px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        rgba(255, 255, 255, 0.08),
-        transparent 70%
+        350px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(255, 255, 255, 0.20),
+        rgba(200, 200, 200, 0.05) 50%,
+        transparent 80%
     );
+    mix-blend-mode: overlay;
     pointer-events: none !important;
-    z-index: 2;
+    z-index: 3;
 }
 
 .ui-overlay {
@@ -161,8 +165,8 @@ body {
 .mode-switch-bar {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    background: rgba(5, 5, 5, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(10, 10, 10, 0.80);
+    border: 1px solid rgba(255, 255, 255, 0.20);
     border-radius: 12px;
     padding: 4px;
     gap: 4px;
@@ -173,7 +177,7 @@ body {
 .mode-btn {
     background: transparent;
     border: none;
-    color: var(--text-muted);
+    color: var(--quicksilver-silver);
     padding: 8px 10px;
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
@@ -188,12 +192,12 @@ body {
 }
 .mode-btn:hover {
     color: var(--quicksilver-bright);
-    background: rgba(255, 255, 255, 0.10);
+    background: rgba(255, 255, 255, 0.15);
 }
 .mode-btn.active {
-    background: linear-gradient(180deg, rgba(40, 40, 40, 0.95) 0%, rgba(10, 10, 10, 0.98) 100%);
+    background: linear-gradient(180deg, rgba(60, 60, 60, 0.90) 0%, rgba(20, 20, 20, 0.95) 100%);
     color: #ffffff;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.6);
 }
 
 .mode-container {
@@ -213,7 +217,7 @@ body {
     background: var(--row-glass);
     padding: 8px 10px;
     border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     position: relative;
     z-index: 10;
 }
@@ -231,7 +235,7 @@ body {
 
 .suborbit-label sub {
     font-size: 10px;
-    color: var(--text-sub);
+    color: var(--quicksilver-silver);
     margin-left: 2px;
     font-weight: 500;
     vertical-align: sub;
@@ -241,7 +245,7 @@ body {
     position: fixed;
     top: 0; left: 0;
     width: 100vw; height: 100vh;
-    background: rgba(5, 5, 5, 0.94);
+    background: rgba(5, 5, 5, 0.85);
     z-index: 1000;
     display: flex;
     align-items: center;
@@ -274,7 +278,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding-bottom: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.20);
     position: relative;
     z-index: 10;
 }
@@ -288,9 +292,9 @@ body {
 }
 
 .close-btn {
-    background: rgba(5, 5, 5, 0.90);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    color: var(--text-sub);
+    background: rgba(10, 10, 10, 0.80);
+    border: 1px solid rgba(255, 255, 255, 0.30);
+    color: var(--quicksilver-bright);
     width: 32px;
     height: 32px;
     border-radius: 10px;
@@ -329,21 +333,21 @@ body {
     height: 56px;
     padding: 4px 5px;
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     cursor: pointer;
-    background: linear-gradient(145deg, rgba(16, 16, 16, 0.85) 0%, rgba(5, 5, 5, 0.95) 100%);
+    background: linear-gradient(145deg, rgba(25, 25, 25, 0.65) 0%, rgba(10, 10, 10, 0.85) 100%);
     transition: all 0.15s ease;
     z-index: 10;
     overflow: hidden;
     pointer-events: auto !important;
 }
 .pt-element-card:hover {
-    background: linear-gradient(145deg, rgba(35, 35, 35, 0.95) 0%, rgba(10, 10, 10, 0.98) 100%);
+    background: linear-gradient(145deg, rgba(45, 45, 45, 0.85) 0%, rgba(15, 15, 15, 0.95) 100%);
     transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.70);
+    border-color: rgba(255, 255, 255, 0.80);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.85);
 }
 
@@ -354,7 +358,7 @@ body {
     font-family: 'JetBrains Mono', monospace;
     font-size: 8px;
     line-height: 1;
-    color: var(--text-muted);
+    color: var(--quicksilver-silver);
 }
 
 .pt-card-symbol {
@@ -371,7 +375,7 @@ body {
     font-size: 7.5px;
     line-height: 1;
     text-align: center;
-    color: var(--text-sub);
+    color: var(--quicksilver-silver);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -383,7 +387,7 @@ body {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1.2px;
-    color: var(--quicksilver-silver);
+    color: var(--quicksilver-bright);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -393,11 +397,11 @@ body {
 
 .tp-grid { display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 10; }
 .tp-field { display: flex; flex-direction: row; align-items: center; gap: 8px; }
-.tp-field label { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; width: 14px; }
+.tp-field label { font-size: 10px; color: var(--quicksilver-silver); font-family: 'JetBrains Mono', monospace; width: 14px; }
 
 input[type="text"], input[type="number"] {
     background: var(--input-bg);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.22);
     color: var(--quicksilver-bright);
     padding: 8px 10px;
     border-radius: 9px;
@@ -410,8 +414,8 @@ input[type="text"], input[type="number"] {
 }
 input[type="text"]:focus, input[type="number"]:focus {
     outline: none;
-    border-color: rgba(255, 255, 255, 0.85);
-    box-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.90);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.30);
 }
 
 .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; position: relative; z-index: 10; }
@@ -420,8 +424,8 @@ input[type="text"]:focus, input[type="number"]:focus {
     position: absolute;
     top: 16px;
     z-index: 150;
-    background: linear-gradient(145deg, rgba(20, 20, 20, 0.90) 0%, rgba(5, 5, 5, 0.95) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: linear-gradient(145deg, rgba(30, 30, 30, 0.85) 0%, rgba(10, 10, 10, 0.95) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.40);
     color: var(--quicksilver-bright);
     width: 40px;
     height: 40px;
@@ -448,7 +452,7 @@ header h1 {
 .minimize-btn {
     background: transparent;
     border: none;
-    color: var(--text-muted);
+    color: var(--quicksilver-silver);
     cursor: pointer;
     font-size: 14px;
     position: relative;
@@ -464,18 +468,18 @@ header h1 {
     background: var(--card-glass);
     padding: 12px;
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     position: relative;
     z-index: 10;
 }
 
 .input-field { display: flex; flex-direction: column; gap: 4px; position: relative; z-index: 10; }
 .input-header { display: flex; justify-content: space-between; align-items: center; }
-.input-field label { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+.input-field label { font-size: 10px; color: var(--quicksilver-silver); font-family: 'JetBrains Mono', monospace; }
 
 .action-link {
     font-size: 9px;
-    color: var(--quicksilver-silver);
+    color: var(--quicksilver-bright);
     cursor: pointer;
     font-family: 'JetBrains Mono', monospace;
     position: relative;
@@ -487,9 +491,9 @@ header h1 {
 button.apply-btn {
     position: relative;
     padding: 9px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.40);
-    background: linear-gradient(180deg, rgba(35, 35, 35, 0.95) 0%, rgba(8, 8, 8, 0.98) 100%);
-    color: var(--quicksilver-bright);
+    border: 1px solid rgba(255, 255, 255, 0.50);
+    background: linear-gradient(180deg, rgba(50, 50, 50, 0.90) 0%, rgba(15, 15, 15, 0.98) 100%);
+    color: #ffffff;
     border-radius: 9px;
     font-size: 10px;
     font-family: 'JetBrains Mono', monospace;
@@ -500,15 +504,15 @@ button.apply-btn {
     pointer-events: auto !important;
 }
 button.apply-btn:hover {
-    background: linear-gradient(180deg, rgba(55, 55, 55, 0.98) 0%, rgba(15, 15, 15, 1) 100%);
-    border-color: rgba(255, 255, 255, 0.80);
+    background: linear-gradient(180deg, rgba(70, 70, 70, 0.98) 0%, rgba(25, 25, 25, 1) 100%);
+    border-color: rgba(255, 255, 255, 0.90);
 }
 
 button.secondary-btn {
     position: relative;
     padding: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    background: rgba(15, 15, 15, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(20, 20, 20, 0.75);
     color: var(--quicksilver-silver);
     border-radius: 9px;
     font-size: 10px;
@@ -519,7 +523,7 @@ button.secondary-btn {
     pointer-events: auto !important;
 }
 button.secondary-btn:hover {
-    background: rgba(30, 30, 30, 0.95);
+    background: rgba(40, 40, 40, 0.88);
     color: var(--quicksilver-bright);
 }
 
@@ -539,7 +543,7 @@ input[type="checkbox"] {
     width: 16px;
     height: 16px;
     background: var(--chk-bg);
-    border: 1px solid rgba(255, 255, 255, 0.30);
+    border: 1px solid rgba(255, 255, 255, 0.35);
     border-radius: 5px;
     cursor: pointer;
     position: relative;
@@ -566,18 +570,18 @@ input[type="checkbox"]:checked::after {
     align-items: center;
     justify-content: space-between;
     font-size: 11px;
-    color: var(--quicksilver-silver);
+    color: var(--quicksilver-bright);
     background: var(--row-glass);
     padding: 7px 10px;
     border-radius: 9px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     position: relative;
     z-index: 10;
 }
 
 input[type="range"] {
     width: 100%;
-    accent-color: var(--text-accent);
+    accent-color: var(--quicksilver-bright);
     cursor: pointer;
     position: relative;
     z-index: 10;
