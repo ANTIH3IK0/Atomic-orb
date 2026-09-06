@@ -1,26 +1,26 @@
 /* effects.css */
 
 :root {
-    --bg-dark: #000000;
+    --bg-dark: #050505;
 
     /* Obsidian Glass Panels */
-    --panel-glass: rgba(8, 8, 8, 0.85);
-    --card-glass: rgba(14, 14, 14, 0.82);
-    --row-glass: rgba(18, 18, 18, 0.80);
-    --input-bg: rgba(5, 5, 5, 0.92);
+    --panel-glass: rgba(5, 5, 5, 0.88);
+    --card-glass: rgba(8, 8, 8, 0.85);
+    --row-glass: rgba(10, 10, 10, 0.82);
+    --input-bg: rgba(3, 3, 3, 0.95);
 
-    /* Quicksilver Metallic & High-Contrast Spectrum */
+    /* Quicksilver Metallic & Darkened Text Spectrum */
     --quicksilver-bright: #ffffff;
-    --quicksilver-silver: #e2e8f0;
-    --text-main: #f8fafc;
-    --text-sub: #94a3b8;
-    --text-muted: #64748b;
+    --quicksilver-silver: #626262;
+    --text-main: #e2e8f0;
+    --text-sub: #626262;
+    --text-muted: #626262;
     --text-accent: #ffffff;
 
     /* Controls */
-    --chk-bg: rgba(10, 10, 10, 0.95);
+    --chk-bg: rgba(5, 5, 5, 0.95);
     --chk-checked-bg: rgba(255, 255, 255, 0.95);
-    --chk-tick-color: #000000;
+    --chk-tick-color: #050505;
 }
 
 * {
@@ -52,11 +52,11 @@ body {
     z-index: 0;
 }
 
-/* Deep Obsidian Glass Overlay Panels */
+/* Deep Obsidian Glass Overlay Panels with #050505 Base Color */
 .ui-overlay, .tp-overlay, .pt-modal-window {
     position: absolute;
-    background: linear-gradient(135deg, rgba(16, 16, 16, 0.88) 0%, rgba(2, 2, 2, 0.96) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.20) !important;
+    background: linear-gradient(135deg, rgba(12, 12, 12, 0.90) 0%, rgba(5, 5, 5, 0.98) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
     border-radius: 20px;
 
     backdrop-filter: blur(36px) contrast(125%);
@@ -64,8 +64,8 @@ body {
 
     box-shadow:
         0 30px 80px rgba(0, 0, 0, 0.98),
-        0 0 35px rgba(255, 255, 255, 0.04),
-        inset 0 1px 2px rgba(255, 255, 255, 0.40);
+        0 0 35px rgba(255, 255, 255, 0.03),
+        inset 0 1px 2px rgba(255, 255, 255, 0.30);
     
     pointer-events: auto !important;
     overflow: hidden;
@@ -81,9 +81,9 @@ body {
     height: 200%;
     background: radial-gradient(
         circle at center,
-        rgba(255, 255, 255, 0.12) 0%,
-        rgba(200, 200, 200, 0.05) 35%,
-        rgba(0, 0, 0, 0) 70%
+        rgba(255, 255, 255, 0.10) 0%,
+        rgba(150, 150, 150, 0.04) 35%,
+        rgba(5, 5, 5, 0) 70%
     );
     transform: translate(-50%, -50%);
     animation: glitchQuicksilver 7s infinite ease-in-out;
@@ -100,7 +100,7 @@ body {
     20% {
         transform: translate(-48%, -52%) rotate(3deg) scale(1.05);
         opacity: 0.55;
-        filter: blur(4px) drop-shadow(0 0 12px rgba(255, 255, 255, 0.6));
+        filter: blur(4px) drop-shadow(0 0 12px rgba(255, 255, 255, 0.5));
     }
     22% {
         transform: translate(-52%, -48%) rotate(-2deg) scale(0.98);
@@ -115,7 +115,7 @@ body {
     75% {
         transform: translate(-51%, -49%) rotate(1deg) scale(1.02);
         opacity: 0.65;
-        filter: blur(3px) drop-shadow(0 0 15px rgba(255, 255, 255, 0.8));
+        filter: blur(3px) drop-shadow(0 0 15px rgba(255, 255, 255, 0.7));
     }
     77% {
         transform: translate(-49%, -51%) rotate(-1deg) scale(0.99);
@@ -136,7 +136,7 @@ body {
     inset: 0;
     background: radial-gradient(
         450px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        rgba(255, 255, 255, 0.16),
+        rgba(255, 255, 255, 0.12),
         transparent 70%
     );
     pointer-events: none !important;
@@ -176,8 +176,8 @@ body {
 .mode-switch-bar {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    background: rgba(4, 4, 4, 0.92);
-    border: 1px solid rgba(255, 255, 255, 0.20);
+    background: rgba(5, 5, 5, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.16);
     border-radius: 12px;
     padding: 4px;
     gap: 4px;
@@ -203,12 +203,12 @@ body {
 }
 .mode-btn:hover {
     color: var(--quicksilver-bright);
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.10);
 }
 .mode-btn.active {
-    background: linear-gradient(180deg, rgba(50, 50, 50, 0.95) 0%, rgba(12, 12, 12, 0.98) 100%);
+    background: linear-gradient(180deg, rgba(40, 40, 40, 0.95) 0%, rgba(10, 10, 10, 0.98) 100%);
     color: #ffffff;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.5);
 }
 
 .mode-container {
@@ -229,7 +229,7 @@ body {
     background: var(--row-glass);
     padding: 8px 10px;
     border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     position: relative;
     z-index: 10;
 }
@@ -258,7 +258,7 @@ body {
     position: fixed;
     top: 0; left: 0;
     width: 100vw; height: 100vh;
-    background: rgba(0, 0, 0, 0.92);
+    background: rgba(5, 5, 5, 0.94);
     z-index: 1000;
     display: flex;
     align-items: center;
@@ -291,7 +291,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding-bottom: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
     position: relative;
     z-index: 10;
 }
@@ -305,8 +305,8 @@ body {
 }
 
 .close-btn {
-    background: rgba(10, 10, 10, 0.90);
-    border: 1px solid rgba(255, 255, 255, 0.30);
+    background: rgba(5, 5, 5, 0.90);
+    border: 1px solid rgba(255, 255, 255, 0.25);
     color: var(--text-sub);
     width: 32px;
     height: 32px;
@@ -347,22 +347,22 @@ body {
     height: 56px;
     padding: 4px 5px;
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     cursor: pointer;
-    background: linear-gradient(145deg, rgba(20, 20, 20, 0.80) 0%, rgba(6, 6, 6, 0.90) 100%);
+    background: linear-gradient(145deg, rgba(16, 16, 16, 0.85) 0%, rgba(5, 5, 5, 0.95) 100%);
     transition: all 0.15s ease;
     z-index: 10;
     overflow: hidden;
     pointer-events: auto !important;
 }
 .pt-element-card:hover {
-    background: linear-gradient(145deg, rgba(45, 45, 45, 0.95) 0%, rgba(15, 15, 15, 0.98) 100%);
+    background: linear-gradient(145deg, rgba(35, 35, 35, 0.95) 0%, rgba(10, 10, 10, 0.98) 100%);
     transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.80);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+    border-color: rgba(255, 255, 255, 0.70);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.85);
 }
 
 .pt-card-top {
@@ -416,7 +416,7 @@ body {
 /* Inputs & Form Controls */
 input[type="text"], input[type="number"] {
     background: var(--input-bg);
-    border: 1px solid rgba(255, 255, 255, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     color: var(--quicksilver-bright);
     padding: 8px 10px;
     border-radius: 9px;
@@ -429,8 +429,8 @@ input[type="text"], input[type="number"] {
 }
 input[type="text"]:focus, input[type="number"]:focus {
     outline: none;
-    border-color: rgba(255, 255, 255, 0.90);
-    box-shadow: 0 0 12px rgba(255, 255, 255, 0.35);
+    border-color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
 }
 
 .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; position: relative; z-index: 10; }
@@ -439,8 +439,8 @@ input[type="text"]:focus, input[type="number"]:focus {
     position: absolute;
     top: 16px;
     z-index: 150;
-    background: linear-gradient(145deg, rgba(25, 25, 25, 0.90) 0%, rgba(5, 5, 5, 0.95) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.45);
+    background: linear-gradient(145deg, rgba(20, 20, 20, 0.90) 0%, rgba(5, 5, 5, 0.95) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.35);
     color: var(--quicksilver-bright);
     width: 40px;
     height: 40px;
@@ -483,7 +483,7 @@ header h1 {
     background: var(--card-glass);
     padding: 12px;
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     position: relative;
     z-index: 10;
 }
@@ -506,8 +506,8 @@ header h1 {
 button.apply-btn {
     position: relative;
     padding: 9px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.50);
-    background: linear-gradient(180deg, rgba(45, 45, 45, 0.95) 0%, rgba(10, 10, 10, 0.98) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.40);
+    background: linear-gradient(180deg, rgba(35, 35, 35, 0.95) 0%, rgba(8, 8, 8, 0.98) 100%);
     color: var(--quicksilver-bright);
     border-radius: 9px;
     font-size: 10px;
@@ -519,15 +519,15 @@ button.apply-btn {
     pointer-events: auto !important;
 }
 button.apply-btn:hover {
-    background: linear-gradient(180deg, rgba(65, 65, 65, 0.98) 0%, rgba(20, 20, 20, 1) 100%);
-    border-color: rgba(255, 255, 255, 0.90);
+    background: linear-gradient(180deg, rgba(55, 55, 55, 0.98) 0%, rgba(15, 15, 15, 1) 100%);
+    border-color: rgba(255, 255, 255, 0.80);
 }
 
 button.secondary-btn {
     position: relative;
     padding: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    background: rgba(20, 20, 20, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(15, 15, 15, 0.85);
     color: var(--quicksilver-silver);
     border-radius: 9px;
     font-size: 10px;
@@ -538,7 +538,7 @@ button.secondary-btn {
     pointer-events: auto !important;
 }
 button.secondary-btn:hover {
-    background: rgba(40, 40, 40, 0.95);
+    background: rgba(30, 30, 30, 0.95);
     color: var(--quicksilver-bright);
 }
 
@@ -558,7 +558,7 @@ input[type="checkbox"] {
     width: 16px;
     height: 16px;
     background: var(--chk-bg);
-    border: 1px solid rgba(255, 255, 255, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.30);
     border-radius: 5px;
     cursor: pointer;
     position: relative;
@@ -589,7 +589,7 @@ input[type="checkbox"]:checked::after {
     background: var(--row-glass);
     padding: 7px 10px;
     border-radius: 9px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     position: relative;
     z-index: 10;
 }
