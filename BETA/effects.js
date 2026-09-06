@@ -1,7 +1,6 @@
 // effects.js
 
-const TARGET_PANEL_SELECTOR = '.ui-overlay, .tp-overlay, .pt-modal-window';
-let liquidGLInstances = [];
+let liquidGLInstance = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     initLiquidGLQuicksilver();
@@ -11,44 +10,46 @@ document.addEventListener('DOMContentLoaded', () => {
     initGlassInteractivity();
 });
 
-/* LiquidGL Initialization - Deep Extra-Blue Black Quicksilver with Boosted Specular Reflections */
+/* Official LiquidGL Initialization - Dark Extra-Blue Black Quicksilver Theme */
 function initLiquidGLQuicksilver() {
-    const panels = document.querySelectorAll(TARGET_PANEL_SELECTOR);
-    if (!panels.length) return;
+    if (typeof liquidGL !== 'function') return;
 
-    panels.forEach(panel => {
-        if (typeof LiquidGL !== 'undefined') {
-            try {
-                const lgl = new LiquidGL({
-                    element: panel,
-                    captureBackground: false, // Prevents background sampling
-                    metallic: 0.98,           // Maximum metallic sheen
-                    specularPower: 256.0,     // Sharper pinpoint reflections
-                    lightIntensity: 2.5,      // Higher reflection contrast
-                    refraction: 0.0,          // Isolated panel surface pass
-                    surfaceTurbulence: 0.18,   // Liquid mercury ripples
-                    color: '#020712'          // Extra-blue black core hue
-                });
-                liquidGLInstances.push(lgl);
-            } catch (err) {
-                panel.classList.add('liquid-fallback');
+    try {
+        liquidGLInstance = liquidGL({
+            snapshot: "body",
+            target: ".ui-overlay, .tp-overlay, .pt-modal-window",
+            resolution: 2.0,
+            refraction: 0.015,   // Dark quicksilver refraction strength
+            aberration: 0.005,   // Clean, non-distorting specular edge tint
+            bevelDepth: 0.14,    // Deep bevel for thick liquid mercury edges
+            bevelWidth: 0.18,    // Broad metallic edge reflection
+            frost: 0,            // Pure, crystal clear reflection
+            shadow: true,        // Deep shadow beneath panels
+            specular: true,      // Enable animated high-contrast light highlights
+            reveal: "fade",
+            tilt: false,
+            tiltFactor: 5,
+            tiltEase: 400,
+            magnify: 1.0,
+            on: {
+                init(instance) {
+                    console.log("Dark Extra-Blue Quicksilver LiquidGL Ready!", instance);
+                }
             }
-        }
-    });
+        });
+    } catch (err) {
+        console.warn("LiquidGL initialization fallback:", err);
+    }
 }
 
-/* Global Liquid Refresh Callback */
+/* Global Liquid Refresh Handler */
 function refreshAllLiquid() {
-    liquidGLInstances.forEach(inst => {
-        if (inst && typeof inst.refresh === 'function') {
-            inst.refresh();
-        } else if (inst && typeof inst.resize === 'function') {
-            inst.resize();
-        }
-    });
+    if (liquidGLInstance && typeof liquidGLInstance.refresh === 'function') {
+        liquidGLInstance.refresh();
+    }
 }
 
-/* Periodic Table Dynamic Data Attributes Observer */
+/* Dynamic Data-Group Attribute Applicator for Periodic Table Elements */
 function applyGroupDataAttributes() {
     const cards = document.querySelectorAll('.pt-element-card');
     cards.forEach(card => {
@@ -71,7 +72,7 @@ function initGroupAttributesObserver() {
     }
 }
 
-/* Modal Stacking & Pointer Interaction Protection */
+/* Modal Synchronization & Pointer Events Protection */
 function initModalVisibilityHandler() {
     const modalBackdrop = document.querySelector('.pt-modal-backdrop');
     if (!modalBackdrop) return;
@@ -88,9 +89,9 @@ function initModalVisibilityHandler() {
     observer.observe(modalBackdrop, { attributes: true, attributeFilter: ['class'] });
 }
 
-/* Interactive Cursor Radial Lighting */
+/* Dynamic Mouse Cursor Lighting Track for Extra Metallic Gloss */
 function initGlassInteractivity() {
-    const panels = document.querySelectorAll(TARGET_PANEL_SELECTOR);
+    const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
     panels.forEach(panel => {
         panel.addEventListener('mousemove', (e) => {
             const rect = panel.getBoundingClientRect();
@@ -100,7 +101,7 @@ function initGlassInteractivity() {
     });
 }
 
-/* GSAP Transitions & Micro-Interactions */
+/* GSAP Entry Animations & Micro-Interactions */
 function initGSAPAnimations() {
     if (typeof gsap === 'undefined') return;
 
@@ -121,7 +122,7 @@ function initGSAPAnimations() {
     });
 }
 
-/* Control Panel Switcher Callback */
+/* Control Mode Switcher Callback */
 function switchControlMode(mode) {
     const autoContainer = document.getElementById('autoModeContainer');
     const manualContainer = document.getElementById('manualModeContainer');
