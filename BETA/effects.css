@@ -12,10 +12,10 @@
     /* Quicksilver Metallic & Darkened Text Spectrum */
     --quicksilver-bright: #ffffff;
     --quicksilver-silver: #626262;
-    --text-main: #e2e8f0;
+    --text-main: #83858a;
     --text-sub: #626262;
     --text-muted: #626262;
-    --text-accent: #ffffff;
+    --text-accent: #83858a;
 
     /* Controls */
     --chk-bg: rgba(5, 5, 5, 0.95);
