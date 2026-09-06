@@ -56,13 +56,26 @@ body {
 /* Base Panel Styling */
 .ui-overlay, .tp-overlay, .pt-modal-window {
     position: absolute;
-    background: linear-gradient(135deg, rgba(10, 10, 12, 0.88) 0%, rgba(4, 4, 6, 0.94) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.04) !important;
+    background: linear-gradient(135deg, rgba(12, 12, 16, 0.82) 0%, rgba(4, 4, 6, 0.92) 100%);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    
+    /* Liquid Edge Specular Reflection */
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.22) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.15) !important;
     border-radius: 20px;
 
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.60);
-    
+    /* Metallic Quicksilver Liquid Shadow */
+    box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.75),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.8);
+
+    transform: perspective(1000px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+    transition: transform 0.15s ease-out;
     pointer-events: auto !important;
+    overflow: hidden;
 }
 
 /* Left UI Overlay Panel - Scroll Fixed */
@@ -124,7 +137,8 @@ body {
     mix-blend-mode: overlay;
 }
 
-/* Very Faint Ambient Sheen */
+/* Very Faint Ambient Sheen 
+ * Ambient Metallic Refraction Sheen */
 .ui-overlay::after, .tp-overlay::after, .pt-modal-window::after {
     content: '';
     position: absolute;
@@ -132,14 +146,14 @@ body {
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(
-        circle at center,
-        rgba(255, 255, 255, 0.03) 0%,
-        transparent 60%
+    background: linear-gradient(
+        45deg,
+        transparent 45%,
+        rgba(255, 255, 255, 0.03) 50%,
+        transparent 55%
     );
     transform: translate(-50%, -50%);
-    animation: quicksilverShine 12s infinite ease-in-out;
-    mix-blend-mode: overlay;
+    animation: quicksilverLiquidSheen 8s infinite linear;
     pointer-events: none !important;
     z-index: 2;
 }
@@ -149,19 +163,20 @@ body {
     50% { opacity: 0.25; }
 }
 
-/* Mouse Spotlight */
+/* Mouse Spotlight 
+ * Dynamic Quicksilver Dynamic Specular Highlight */
 .ui-overlay::before, .tp-overlay::before, .pt-modal-window::before {
     content: '';
     position: absolute;
     inset: 0;
     background: radial-gradient(
-        350px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        rgba(255, 255, 255, 0.04),
-        transparent 70%
+        280px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(255, 255, 255, 0.12),
+        rgba(120, 118, 122, 0.03) 40%,
+        transparent 80%
     );
-    mix-blend-mode: overlay;
     pointer-events: none !important;
-    z-index: 3;
+    z-index: 1;
 }
 
 .mode-switch-bar {
