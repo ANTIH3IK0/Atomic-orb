@@ -10,12 +10,12 @@
     --input-bg: rgba(3, 3, 3, 0.95);
 
     /* Quicksilver Metallic & Darkened Text Spectrum */
-    --quicksilver-bright: #ffffff;
-    --quicksilver-silver: #626262;
-    --text-main: #83858a;
-    --text-sub: #626262;
-    --text-muted: #626262;
-    --text-accent: #83858a;
+    --quicksilver-bright: #989898;
+    --quicksilver-silver: #5C5C5C;
+    --text-main: #4a4c4f;
+    --text-sub: #3b3b3b;
+    --text-muted: #3b3b3b;
+    --text-accent: #4a4c4f;
 
     /* Controls */
     --chk-bg: rgba(5, 5, 5, 0.95);
@@ -39,6 +39,7 @@ body {
     color: var(--text-main);
     overflow: hidden;
     display: flex;
+    font-weight: 100;
 }
 
 /* 3D Render Canvas */
