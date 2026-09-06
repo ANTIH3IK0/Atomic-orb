@@ -9,12 +9,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initLiquidGlassMetallic();
 });
 
-/* Real-Time Dynamic WebGL LiquidGlass & Quicksilver Integration */
+/* Continuous Dynamic WebGL LiquidGlass Renderer Engine */
 async function initLiquidGlassMetallic() {
     try {
         const bgCanvas = document.getElementById('renderCanvas');
         if (bgCanvas) {
-            // Tell ybouane/liquidglass to capture canvas updates dynamically on every frame
             bgCanvas.setAttribute('data-dynamic', 'true');
         }
 
@@ -27,30 +26,35 @@ async function initLiquidGlassMetallic() {
         
         glassEls.forEach(el => {
             el.dataset.config = JSON.stringify({
-                blurAmount: 0.16,
-                refraction: 0.48,        /* Increased live refraction intensity */
-                specular: 0.70,          /* High Quicksilver specular reflections */
-                edgeHighlight: 0.35,     /* Silver metallic edge rims */
-                fresnel: 0.85,
-                chromAberration: 0.03,
+                blurAmount: 0.10,
+                refraction: 0.38,
+                specular: 0.45,
+                edgeHighlight: 0.20,
+                fresnel: 0.80,
+                chromAberration: 0.025,
                 opacity: 0.88,
                 cornerRadius: 20
             });
         });
 
-        const instance = await LiquidGlass.init({
+        const lgInstance = await LiquidGlass.init({
             root: document.body,
             glassElements: glassEls
         });
 
-        // Continuous animation frame update loop to continuously capture background WebGL movement
-        if (bgCanvas && instance && typeof instance.markChanged === 'function') {
-            const renderLoop = () => {
-                instance.markChanged(bgCanvas);
-                requestAnimationFrame(renderLoop);
-            };
-            requestAnimationFrame(renderLoop);
+        // Continuous Animation Loop forcing LiquidGlass to re-capture moving 3D background WebGL canvas
+        function continuousRefractionLoop() {
+            if (lgInstance) {
+                if (typeof lgInstance.update === 'function') {
+                    lgInstance.update();
+                } else if (typeof lgInstance.markChanged === 'function' && bgCanvas) {
+                    lgInstance.markChanged(bgCanvas);
+                }
+            }
+            requestAnimationFrame(continuousRefractionLoop);
         }
+        requestAnimationFrame(continuousRefractionLoop);
+
     } catch (err) {
         console.warn('LiquidGlass WebGL initialization skipped:', err);
     }
@@ -160,7 +164,7 @@ function switchControlMode(mode) {
     } else {
         autoContainer.classList.add('hidden');
         manualContainer.classList.remove('hidden');
-        btnAuto.classList.remove('active');
+        btnAuto.classList.add('active');
         btnManual.classList.add('active');
     }
 
