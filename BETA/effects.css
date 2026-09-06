@@ -3,11 +3,11 @@
 :root {
     --bg-dark: #010307;
 
-    /* Extra-Blue Black Liquid Obsidian Glass Base */
-    --panel-glass: rgba(2, 6, 16, 0.95);
-    --card-glass: rgba(4, 12, 26, 0.85);
-    --row-glass: rgba(6, 16, 32, 0.80);
-    --input-bg: rgba(1, 4, 12, 0.96);
+    /* Semi-Transparent Glass Bases */
+    --panel-glass: rgba(6, 18, 36, 0.45);
+    --card-glass: rgba(8, 22, 44, 0.55);
+    --row-glass: rgba(10, 28, 52, 0.50);
+    --input-bg: rgba(2, 8, 20, 0.70);
 
     /* Quicksilver Specular & High-Reflection Chrome Palette */
     --quicksilver-bright: #ffffff;
@@ -22,18 +22,17 @@
     --actinium-ember: rgba(100, 190, 255, 0.55);
 
     /* Text System */
-    --text-main: #a6c0d8;
-    --text-sub: #637f9e;
-    --text-muted: #3a5068;
+    --text-main: #d0e4f7;
+    --text-sub: #8aaac8;
+    --text-muted: #587898;
     --text-accent: #6ac3ff;
 
     /* Controls */
-    --chk-bg: rgba(1, 3, 8, 0.92);
-    --chk-checked-bg: rgba(10, 24, 42, 0.98);
+    --chk-bg: rgba(2, 8, 20, 0.80);
+    --chk-checked-bg: rgba(14, 38, 70, 0.90);
     --chk-tick-color: #ffffff;
 }
 
-/* Dynamic Quicksilver High-Gloss Gleam Animation */
 @keyframes quicksilverGleam {
     0%, 100% { opacity: 0.4; transform: scale(1); filter: drop-shadow(0 0 4px #70c0ff); }
     50%      { opacity: 0.95; transform: scale(1.05); filter: drop-shadow(0 0 14px #ffffff); }
@@ -41,12 +40,12 @@
 
 @keyframes actiniumCardPulse {
     0%, 100% { 
-        box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.98), 0 0 12px rgba(80, 160, 240, 0.2); 
-        border-color: rgba(200, 235, 255, 0.22);
+        box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.6), 0 0 12px rgba(80, 160, 240, 0.2); 
+        border-color: rgba(200, 235, 255, 0.3);
     }
     50% { 
-        box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.85), 0 0 28px rgba(160, 225, 255, 0.45); 
-        border-color: rgba(255, 255, 255, 0.65);
+        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.4), 0 0 24px rgba(160, 225, 255, 0.45); 
+        border-color: rgba(255, 255, 255, 0.7);
     }
 }
 
@@ -86,28 +85,33 @@ body.modal-open .tp-restore-btn {
     pointer-events: none;
 }
 
-/* Extra-Blue Black Deep Quicksilver Metallic Panels */
+/* Semi-Transparent Glass Overlay Panels */
 .ui-overlay, .tp-overlay, .pt-modal-window {
     position: absolute;
-    background: linear-gradient(150deg, rgba(6, 14, 28, 0.96) 0%, rgba(2, 5, 12, 0.98) 60%, rgba(1, 3, 7, 0.99) 100%);
-    border: 1px solid rgba(200, 235, 255, 0.32) !important;
+    background: linear-gradient(150deg, rgba(8, 22, 44, 0.45) 0%, rgba(4, 12, 26, 0.55) 60%, rgba(2, 6, 16, 0.65) 100%);
+    border: 1px solid rgba(200, 235, 255, 0.35) !important;
     border-radius: 20px;
 
-    backdrop-filter: blur(24px) saturate(210%);
-    -webkit-backdrop-filter: blur(24px) saturate(210%);
+    backdrop-filter: blur(18px) saturate(180%);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
 
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y !important;
     overscroll-behavior-y: contain;
 
     box-shadow:
-        0 40px 80px rgba(0, 0, 0, 0.95),
-        0 0 50px rgba(0, 3, 10, 0.9),
-        0 0 35px rgba(100, 190, 255, 0.18),
-        inset 0 1px 3px rgba(255, 255, 255, 0.7),
-        inset 0 -3px 8px rgba(0, 0, 0, 0.95);
+        0 20px 50px rgba(0, 0, 0, 0.5),
+        0 0 30px rgba(80, 160, 240, 0.15),
+        inset 0 1px 2px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 4px rgba(0, 0, 0, 0.5);
     will-change: transform, opacity;
     overflow: hidden;
+}
+
+/* Force All Internal Content Above Liquid Specular Layers */
+.ui-overlay > *, .tp-overlay > *, .pt-modal-window > * {
+    position: relative;
+    z-index: 10;
 }
 
 /* Dynamic Interactive High-Gloss Specular Reflection */
@@ -117,25 +121,24 @@ body.modal-open .tp-restore-btn {
     inset: 0;
     background: radial-gradient(
         600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        rgba(255, 255, 255, 0.42),
-        rgba(120, 200, 255, 0.18) 30%,
-        rgba(10, 30, 60, 0.05) 60%,
-        transparent 80%
+        rgba(255, 255, 255, 0.25),
+        rgba(120, 200, 255, 0.10) 30%,
+        transparent 70%
     );
     pointer-events: none;
     z-index: 1;
 }
 
-/* High-Gloss Metallic Bevel & Edge Reflection Layer */
+/* High-Gloss Metallic Bevel Edge Layer */
 .ui-overlay::after, .tp-overlay::after, .pt-modal-window::after {
     content: '';
     position: absolute;
     inset: 0;
     border-radius: inherit;
     box-shadow:
-        inset 0 1.5px 0.5px rgba(255, 255, 255, 0.85),
-        inset 0 -1.5px 1px rgba(0, 0, 0, 0.95),
-        inset 0 0 28px rgba(140, 215, 255, 0.15);
+        inset 0 1.5px 0.5px rgba(255, 255, 255, 0.7),
+        inset 0 -1.5px 1px rgba(0, 0, 0, 0.6),
+        inset 0 0 20px rgba(140, 215, 255, 0.12);
     pointer-events: none;
     z-index: 2;
 }
@@ -150,7 +153,7 @@ body.modal-open .tp-restore-btn {
     display: flex;
     flex-direction: column;
     gap: 18px;
-    z-index: 10;
+    z-index: 100;
     overflow-y: auto;
     pointer-events: auto;
 }
@@ -165,7 +168,7 @@ body.modal-open .tp-restore-btn {
     display: flex;
     flex-direction: column;
     gap: 14px;
-    z-index: 10;
+    z-index: 100;
     overflow-y: auto;
     pointer-events: auto;
 }
@@ -175,14 +178,12 @@ body.modal-open .tp-restore-btn {
 .mode-switch-bar {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    background: rgba(1, 4, 10, 0.92);
-    border: 1px solid rgba(200, 235, 255, 0.20);
+    background: rgba(2, 8, 20, 0.70);
+    border: 1px solid rgba(200, 235, 255, 0.25);
     border-radius: 12px;
     padding: 4px;
     gap: 4px;
-    position: relative;
-    z-index: 3;
-    box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.9);
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
 }
 
 .mode-btn {
@@ -200,13 +201,13 @@ body.modal-open .tp-restore-btn {
 }
 .mode-btn:hover {
     color: var(--quicksilver-bright);
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.12);
 }
 .mode-btn.active {
-    background: linear-gradient(180deg, rgba(20, 42, 72, 0.9) 0%, rgba(6, 15, 28, 0.95) 100%);
+    background: linear-gradient(180deg, rgba(30, 65, 110, 0.85) 0%, rgba(10, 28, 52, 0.90) 100%);
     color: #ffffff;
     box-shadow: 
-        0 4px 16px rgba(0, 0, 0, 0.85), 
+        0 4px 12px rgba(0, 0, 0, 0.5), 
         inset 0 1px 0.5px rgba(255, 255, 255, 0.65);
 }
 
@@ -222,7 +223,7 @@ body.modal-open .tp-restore-btn {
     position: fixed;
     top: 0; left: 0;
     width: 100vw; height: 100vh;
-    background: rgba(1, 2, 6, 0.94);
+    background: rgba(1, 4, 10, 0.75);
     z-index: 1000;
     display: flex;
     align-items: center;
@@ -255,9 +256,7 @@ body.modal-open .tp-restore-btn {
     justify-content: space-between;
     align-items: center;
     padding-bottom: 14px;
-    border-bottom: 1px solid rgba(200, 235, 255, 0.18);
-    position: relative;
-    z-index: 3;
+    border-bottom: 1px solid rgba(200, 235, 255, 0.2);
 }
 
 .pt-modal-title {
@@ -272,8 +271,8 @@ body.modal-open .tp-restore-btn {
 }
 
 .close-btn {
-    background: rgba(1, 3, 8, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(2, 8, 20, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.25);
     color: var(--text-sub);
     width: 32px;
     height: 32px;
@@ -284,21 +283,17 @@ body.modal-open .tp-restore-btn {
     align-items: center;
     justify-content: center;
     transition: all 0.25s ease;
-    position: relative;
-    z-index: 3;
 }
 .close-btn:hover {
-    background: rgba(230, 50, 50, 0.4);
+    background: rgba(230, 50, 50, 0.5);
     color: #ffffff;
-    box-shadow: 0 0 20px rgba(230, 50, 50, 0.5);
+    box-shadow: 0 0 16px rgba(230, 50, 50, 0.5);
 }
 
 .pt-scroll-area {
     overflow: auto;
     max-height: calc(92dvh - 80px);
     padding: 4px;
-    position: relative;
-    z-index: 3;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y !important;
 }
@@ -320,20 +315,20 @@ body.modal-open .tp-restore-btn {
     justify-content: center;
 }
 
-/* Quicksilver Dark Blue Reflective Metallic Cards */
+/* Glass Element Cards */
 .pt-element-card {
     position: relative;
     height: 58px;
     padding: 6px;
     border-radius: 10px;
-    border: 1px solid rgba(200, 235, 255, 0.18);
+    border: 1px solid rgba(200, 235, 255, 0.22);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     cursor: pointer;
-    background: linear-gradient(140deg, rgba(8, 18, 32, 0.95) 0%, rgba(2, 6, 14, 0.98) 100%);
+    background: linear-gradient(140deg, rgba(12, 30, 58, 0.65) 0%, rgba(4, 14, 30, 0.75) 100%);
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.3), inset 0 0 14px rgba(0, 0, 0, 0.85);
+    box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.4), inset 0 0 10px rgba(0, 0, 0, 0.5);
     overflow: hidden;
 }
 
@@ -348,22 +343,22 @@ body.modal-open .tp-restore-btn {
 .pt-element-card:hover::before { left: 100%; }
 
 .pt-element-card:hover {
-    background: linear-gradient(140deg, rgba(20, 40, 68, 0.98) 0%, rgba(6, 16, 32, 0.99) 100%);
+    background: linear-gradient(140deg, rgba(24, 52, 92, 0.85) 0%, rgba(8, 24, 48, 0.90) 100%);
     transform: translateY(-2px) scale(1.03);
-    border-color: rgba(255, 255, 255, 0.65);
-    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.9), 0 0 22px rgba(140, 215, 255, 0.45);
-    z-index: 10;
+    border-color: rgba(255, 255, 255, 0.75);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6), 0 0 18px rgba(140, 215, 255, 0.45);
+    z-index: 20;
 }
 
 .pt-element-card.active {
-    background: linear-gradient(140deg, rgba(28, 52, 84, 0.98) 0%, rgba(8, 22, 40, 0.99) 100%);
-    border-color: rgba(255, 255, 255, 0.85);
-    box-shadow: 0 0 28px rgba(160, 225, 255, 0.55), inset 0 1px 0.5px rgba(255, 255, 255, 0.75);
+    background: linear-gradient(140deg, rgba(32, 65, 110, 0.90) 0%, rgba(12, 32, 60, 0.95) 100%);
+    border-color: rgba(255, 255, 255, 0.90);
+    box-shadow: 0 0 24px rgba(160, 225, 255, 0.6), inset 0 1px 0.5px rgba(255, 255, 255, 0.85);
 }
 
 .pt-element-card[data-cat^="lanthanide"],
 .pt-element-card[data-cat^="actinide"] {
-    border-color: rgba(140, 215, 255, 0.32);
+    border-color: rgba(140, 215, 255, 0.35);
 }
 
 [id^="pt-card_Ac"] {
@@ -385,7 +380,7 @@ body.modal-open .tp-restore-btn {
     font-size: 13px;
     color: var(--quicksilver-bright);
     text-align: center;
-    text-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 .pt-card-name {
     font-size: 8px;
@@ -406,18 +401,16 @@ body.modal-open .tp-restore-btn {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    position: relative;
-    z-index: 3;
 }
 
-.tp-grid { display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 3; }
+.tp-grid { display: flex; flex-direction: column; gap: 6px; }
 .tp-field { display: flex; flex-direction: row; align-items: center; gap: 8px; }
 .tp-field label { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; width: 14px; }
 
-/* Dynamic Dark Metallic Inputs */
+/* Dynamic Glass Inputs */
 input[type="text"], input[type="number"] {
     background: var(--input-bg);
-    border: 1px solid rgba(200, 235, 255, 0.18);
+    border: 1px solid rgba(200, 235, 255, 0.25);
     color: var(--quicksilver-bright);
     padding: 9px 12px;
     border-radius: 10px;
@@ -425,22 +418,22 @@ input[type="text"], input[type="number"] {
     font-family: 'JetBrains Mono', monospace;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     width: 100%;
-    box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.9);
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
 }
 input[type="text"]:focus, input[type="number"]:focus {
     outline: none;
-    border-color: rgba(255, 255, 255, 0.75);
-    box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.95), 0 0 16px rgba(140, 215, 255, 0.5);
+    border-color: rgba(255, 255, 255, 0.85);
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7), 0 0 14px rgba(140, 215, 255, 0.5);
 }
 
-.btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; position: relative; z-index: 3; }
+.btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 
 .restore-btn, .tp-restore-btn {
     position: absolute;
     top: 16px;
-    z-index: 9;
-    background: linear-gradient(145deg, rgba(12, 24, 42, 0.95) 0%, rgba(2, 5, 12, 0.98) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.35);
+    z-index: 100;
+    background: linear-gradient(145deg, rgba(16, 38, 70, 0.75) 0%, rgba(4, 14, 30, 0.85) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
     color: var(--quicksilver-bright);
     width: 40px;
     height: 40px;
@@ -450,26 +443,25 @@ input[type="text"]:focus, input[type="number"]:focus {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.9), inset 0 1px 0.5px rgba(255, 255, 255, 0.65);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), inset 0 1px 0.5px rgba(255, 255, 255, 0.75);
     transition: all 0.25s ease;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
 }
 .restore-btn:hover, .tp-restore-btn:hover {
     transform: scale(1.06);
-    border-color: rgba(255, 255, 255, 0.75);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.95), 0 0 24px rgba(140, 215, 255, 0.5);
+    border-color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(140, 215, 255, 0.5);
 }
 .restore-btn { left: 16px; }
 .tp-restore-btn { right: 16px; }
 
 .ui-overlay::-webkit-scrollbar, .pt-scroll-area::-webkit-scrollbar, .orbits-scroll-area::-webkit-scrollbar { width: 4px; height: 4px; }
 .ui-overlay::-webkit-scrollbar-thumb, .pt-scroll-area::-webkit-scrollbar-thumb, .orbits-scroll-area::-webkit-scrollbar-thumb {
-    background: rgba(200, 235, 255, 0.35);
+    background: rgba(200, 235, 255, 0.4);
     border-radius: 2px;
 }
 
-header { position: relative; z-index: 3; }
 header h1 {
     margin: 0;
     font-family: 'JetBrains Mono', monospace;
@@ -508,10 +500,8 @@ header h1::before {
     background: var(--card-glass);
     padding: 12px;
     border-radius: 12px;
-    border: 1px solid rgba(200, 235, 255, 0.15);
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25), inset 0 0 14px rgba(0, 0, 0, 0.85);
-    position: relative;
-    z-index: 3;
+    border: 1px solid rgba(200, 235, 255, 0.2);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3), inset 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 .input-field { display: flex; flex-direction: column; gap: 4px; }
@@ -521,12 +511,12 @@ header h1::before {
 .action-link { font-size: 9px; color: var(--text-accent); cursor: pointer; font-family: 'JetBrains Mono', monospace; opacity: 0.85; transition: opacity 0.2s; }
 .action-link:hover { opacity: 1; text-decoration: underline; }
 
-/* Liquid Dark Quicksilver Buttons */
+/* Interactive Liquid Glass Buttons */
 button.apply-btn {
     position: relative;
     padding: 10px 14px;
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    background: linear-gradient(180deg, rgba(18, 40, 70, 0.92) 0%, rgba(4, 12, 24, 0.98) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    background: linear-gradient(180deg, rgba(28, 60, 102, 0.85) 0%, rgba(8, 22, 44, 0.90) 100%);
     color: var(--quicksilver-bright);
     border-radius: 10px;
     font-size: 10px;
@@ -535,9 +525,8 @@ button.apply-btn {
     cursor: pointer;
     overflow: hidden;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 3;
     width: 100%;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.85), inset 0 1px 0.5px rgba(255, 255, 255, 0.55);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5), inset 0 1px 0.5px rgba(255, 255, 255, 0.65);
 }
 button.apply-btn::before {
     content: '';
@@ -548,17 +537,17 @@ button.apply-btn::before {
 }
 button.apply-btn:hover::before { left: 100%; }
 button.apply-btn:hover {
-    background: linear-gradient(180deg, rgba(28, 58, 96, 0.98) 0%, rgba(8, 22, 42, 0.99) 100%);
-    border-color: rgba(255, 255, 255, 0.65);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 20px rgba(140, 215, 255, 0.5);
+    background: linear-gradient(180deg, rgba(38, 78, 128, 0.92) 0%, rgba(12, 32, 60, 0.95) 100%);
+    border-color: rgba(255, 255, 255, 0.75);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 18px rgba(140, 215, 255, 0.5);
     transform: translateY(-1px);
 }
 
 button.secondary-btn {
     position: relative;
     padding: 9px;
-    border: 1px solid rgba(200, 235, 255, 0.18);
-    background: rgba(6, 14, 26, 0.75);
+    border: 1px solid rgba(200, 235, 255, 0.25);
+    background: rgba(10, 24, 46, 0.65);
     color: var(--quicksilver-silver);
     border-radius: 10px;
     font-size: 10px;
@@ -567,13 +556,12 @@ button.secondary-btn {
     overflow: hidden;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     width: 100%;
-    z-index: 3;
-    box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.3);
+    box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.35);
 }
 button.secondary-btn:hover {
-    background: rgba(16, 30, 50, 0.9);
+    background: rgba(20, 42, 72, 0.85);
     color: var(--quicksilver-bright);
-    border-color: rgba(255, 255, 255, 0.45);
+    border-color: rgba(255, 255, 255, 0.55);
     transform: translateY(-1px);
 }
 
@@ -584,8 +572,6 @@ button.secondary-btn:hover {
     flex-direction: column;
     gap: 6px;
     padding-right: 4px;
-    position: relative;
-    z-index: 3;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y !important;
 }
@@ -598,8 +584,8 @@ button.secondary-btn:hover {
     background: var(--row-glass);
     padding: 6px 8px;
     border-radius: 10px;
-    border: 1px solid rgba(200, 235, 255, 0.14);
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(200, 235, 255, 0.2);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
 }
 .orbit-row .ex-input { width: 100%; text-align: center; padding: 4px; font-size: 10px; }
 .orbit-row .orbit-label {
@@ -618,7 +604,7 @@ input[type="checkbox"] {
     width: 16px;
     height: 16px;
     background: var(--chk-bg);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.35);
     border-radius: 5px;
     cursor: pointer;
     position: relative;
@@ -627,12 +613,12 @@ input[type="checkbox"] {
     margin: 0;
     display: inline-block;
     vertical-align: middle;
-    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.9);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 input[type="checkbox"]:checked {
     background: var(--chk-checked-bg);
-    border-color: rgba(255, 255, 255, 0.75);
-    box-shadow: 0 0 16px rgba(140, 215, 255, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    border-color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 12px rgba(140, 215, 255, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.65);
 }
 input[type="checkbox"]:checked::after {
     content: '✓';
@@ -644,7 +630,7 @@ input[type="checkbox"]:checked::after {
     color: var(--chk-tick-color);
 }
 
-.filter-list { display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 3; }
+.filter-list { display: flex; flex-direction: column; gap: 6px; }
 .filter-item {
     display: flex;
     align-items: center;
@@ -654,16 +640,14 @@ input[type="checkbox"]:checked::after {
     background: var(--row-glass);
     padding: 7px 10px;
     border-radius: 10px;
-    border: 1px solid rgba(200, 235, 255, 0.14);
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(200, 235, 255, 0.2);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
 }
 
 input[type="range"] {
     width: 100%;
     accent-color: var(--text-accent);
     cursor: pointer;
-    position: relative;
-    z-index: 3;
 }
 
 @media (prefers-reduced-motion: reduce) {
