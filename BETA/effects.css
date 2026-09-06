@@ -1,26 +1,26 @@
 /* effects.css */
 
 :root {
-    --bg-dark: #010307;
+    --bg-dark: #000000;
 
-    /* Extra Blue-Black Glass Panels */
-    --panel-glass: rgba(2, 7, 16, 0.82);
-    --card-glass: rgba(4, 11, 24, 0.78);
-    --row-glass: rgba(3, 9, 20, 0.75);
-    --input-bg: rgba(1, 4, 10, 0.90);
+    /* Obsidian Glass Panels */
+    --panel-glass: rgba(8, 8, 8, 0.85);
+    --card-glass: rgba(14, 14, 14, 0.82);
+    --row-glass: rgba(18, 18, 18, 0.80);
+    --input-bg: rgba(5, 5, 5, 0.92);
 
-    /* Metallic Silver & Cyan Accents */
+    /* Quicksilver Metallic & High-Contrast Spectrum */
     --quicksilver-bright: #ffffff;
-    --quicksilver-silver: #bcd5ec;
-    --text-main: #e2f0fd;
-    --text-sub: #7aa3cc;
-    --text-muted: #4a7099;
-    --text-accent: #38bdf8;
+    --quicksilver-silver: #e2e8f0;
+    --text-main: #f8fafc;
+    --text-sub: #94a3b8;
+    --text-muted: #64748b;
+    --text-accent: #ffffff;
 
     /* Controls */
-    --chk-bg: rgba(2, 6, 14, 0.90);
-    --chk-checked-bg: rgba(12, 40, 80, 0.95);
-    --chk-tick-color: #ffffff;
+    --chk-bg: rgba(10, 10, 10, 0.95);
+    --chk-checked-bg: rgba(255, 255, 255, 0.95);
+    --chk-tick-color: #000000;
 }
 
 * {
@@ -52,37 +52,95 @@ body {
     z-index: 0;
 }
 
-/* Deep Blue-Black Glass Overlay Panels */
+/* Deep Obsidian Glass Overlay Panels */
 .ui-overlay, .tp-overlay, .pt-modal-window {
     position: absolute;
-    background: linear-gradient(145deg, rgba(4, 12, 28, 0.85) 0%, rgba(1, 4, 10, 0.92) 100%);
-    border: 1px solid rgba(180, 220, 255, 0.22) !important;
+    background: linear-gradient(135deg, rgba(16, 16, 16, 0.88) 0%, rgba(2, 2, 2, 0.96) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.20) !important;
     border-radius: 20px;
 
-    backdrop-filter: blur(28px) saturate(210%);
-    -webkit-backdrop-filter: blur(28px) saturate(210%);
+    backdrop-filter: blur(36px) contrast(125%);
+    -webkit-backdrop-filter: blur(36px) contrast(125%);
 
     box-shadow:
-        0 25px 60px rgba(0, 0, 0, 0.85),
-        0 0 25px rgba(56, 189, 248, 0.08),
-        inset 0 1px 1px rgba(255, 255, 255, 0.35);
+        0 30px 80px rgba(0, 0, 0, 0.98),
+        0 0 35px rgba(255, 255, 255, 0.04),
+        inset 0 1px 2px rgba(255, 255, 255, 0.40);
     
     pointer-events: auto !important;
     overflow: hidden;
 }
 
-/* Interactive Cursor Metallic Specular Highlight */
+/* Animated Glitch-Quicksilver Metallic Backdrop Overlay */
+.ui-overlay::after, .tp-overlay::after, .pt-modal-window::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(
+        circle at center,
+        rgba(255, 255, 255, 0.12) 0%,
+        rgba(200, 200, 200, 0.05) 35%,
+        rgba(0, 0, 0, 0) 70%
+    );
+    transform: translate(-50%, -50%);
+    animation: glitchQuicksilver 7s infinite ease-in-out;
+    pointer-events: none !important;
+    z-index: 1;
+}
+
+@keyframes glitchQuicksilver {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg) scale(1);
+        opacity: 0.25;
+        filter: blur(8px);
+    }
+    20% {
+        transform: translate(-48%, -52%) rotate(3deg) scale(1.05);
+        opacity: 0.55;
+        filter: blur(4px) drop-shadow(0 0 12px rgba(255, 255, 255, 0.6));
+    }
+    22% {
+        transform: translate(-52%, -48%) rotate(-2deg) scale(0.98);
+        opacity: 0.15;
+        filter: blur(12px);
+    }
+    50% {
+        transform: translate(-50%, -50%) rotate(0deg) scale(1);
+        opacity: 0.3;
+        filter: blur(6px);
+    }
+    75% {
+        transform: translate(-51%, -49%) rotate(1deg) scale(1.02);
+        opacity: 0.65;
+        filter: blur(3px) drop-shadow(0 0 15px rgba(255, 255, 255, 0.8));
+    }
+    77% {
+        transform: translate(-49%, -51%) rotate(-1deg) scale(0.99);
+        opacity: 0.2;
+        filter: blur(10px);
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(0deg) scale(1);
+        opacity: 0.25;
+        filter: blur(8px);
+    }
+}
+
+/* Interactive Cursor Specular Lighting Track */
 .ui-overlay::before, .tp-overlay::before, .pt-modal-window::before {
     content: '';
     position: absolute;
     inset: 0;
     background: radial-gradient(
-        500px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        rgba(255, 255, 255, 0.12),
+        450px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(255, 255, 255, 0.16),
         transparent 70%
     );
     pointer-events: none !important;
-    z-index: 1;
+    z-index: 2;
 }
 
 .ui-overlay {
@@ -118,8 +176,8 @@ body {
 .mode-switch-bar {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    background: rgba(2, 6, 14, 0.88);
-    border: 1px solid rgba(180, 220, 255, 0.18);
+    background: rgba(4, 4, 4, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.20);
     border-radius: 12px;
     padding: 4px;
     gap: 4px;
@@ -145,12 +203,12 @@ body {
 }
 .mode-btn:hover {
     color: var(--quicksilver-bright);
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.12);
 }
 .mode-btn.active {
-    background: linear-gradient(180deg, rgba(20, 50, 95, 0.90) 0%, rgba(6, 20, 42, 0.95) 100%);
+    background: linear-gradient(180deg, rgba(50, 50, 50, 0.95) 0%, rgba(12, 12, 12, 0.98) 100%);
     color: #ffffff;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.6);
 }
 
 .mode-container {
@@ -162,12 +220,45 @@ body {
 }
 .mode-container.hidden { display: none !important; }
 
+/* Quantum Suborbit Formatted Layout */
+.orbit-row {
+    display: grid;
+    grid-template-columns: 36px 88px 1fr;
+    align-items: center;
+    gap: 8px;
+    background: var(--row-glass);
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    position: relative;
+    z-index: 10;
+}
+
+.suborbit-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--quicksilver-bright);
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: baseline;
+    justify-content: flex-start;
+}
+
+.suborbit-label sub {
+    font-size: 10px;
+    color: var(--text-sub);
+    margin-left: 2px;
+    font-weight: 500;
+    vertical-align: sub;
+}
+
 /* Fixed Periodic Table Modal & Layout */
 .pt-modal-backdrop {
     position: fixed;
     top: 0; left: 0;
     width: 100vw; height: 100vh;
-    background: rgba(0, 2, 5, 0.88);
+    background: rgba(0, 0, 0, 0.92);
     z-index: 1000;
     display: flex;
     align-items: center;
@@ -200,7 +291,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding-bottom: 12px;
-    border-bottom: 1px solid rgba(180, 220, 255, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
     position: relative;
     z-index: 10;
 }
@@ -214,8 +305,8 @@ body {
 }
 
 .close-btn {
-    background: rgba(2, 6, 14, 0.90);
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(10, 10, 10, 0.90);
+    border: 1px solid rgba(255, 255, 255, 0.30);
     color: var(--text-sub);
     width: 32px;
     height: 32px;
@@ -250,28 +341,28 @@ body {
     min-width: 1100px;
 }
 
-/* Strict Layout Isolation for Element Cards to Stop Text Overlaps */
+/* Strict Layout Isolation for Element Cards */
 .pt-element-card {
     position: relative;
     height: 56px;
     padding: 4px 5px;
     border-radius: 8px;
-    border: 1px solid rgba(180, 220, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     cursor: pointer;
-    background: linear-gradient(145deg, rgba(6, 18, 38, 0.70) 0%, rgba(2, 6, 15, 0.85) 100%);
+    background: linear-gradient(145deg, rgba(20, 20, 20, 0.80) 0%, rgba(6, 6, 6, 0.90) 100%);
     transition: all 0.15s ease;
     z-index: 10;
     overflow: hidden;
     pointer-events: auto !important;
 }
 .pt-element-card:hover {
-    background: linear-gradient(145deg, rgba(16, 44, 88, 0.90) 0%, rgba(4, 14, 30, 0.95) 100%);
+    background: linear-gradient(145deg, rgba(45, 45, 45, 0.95) 0%, rgba(15, 15, 15, 0.98) 100%);
     transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.75);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    border-color: rgba(255, 255, 255, 0.80);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
 }
 
 .pt-card-top {
@@ -322,10 +413,10 @@ body {
 .tp-field { display: flex; flex-direction: row; align-items: center; gap: 8px; }
 .tp-field label { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; width: 14px; }
 
-/* Real Input Controls */
+/* Inputs & Form Controls */
 input[type="text"], input[type="number"] {
     background: var(--input-bg);
-    border: 1px solid rgba(180, 220, 255, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.22);
     color: var(--quicksilver-bright);
     padding: 8px 10px;
     border-radius: 9px;
@@ -338,8 +429,8 @@ input[type="text"], input[type="number"] {
 }
 input[type="text"]:focus, input[type="number"]:focus {
     outline: none;
-    border-color: rgba(255, 255, 255, 0.80);
-    box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+    border-color: rgba(255, 255, 255, 0.90);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.35);
 }
 
 .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; position: relative; z-index: 10; }
@@ -348,8 +439,8 @@ input[type="text"]:focus, input[type="number"]:focus {
     position: absolute;
     top: 16px;
     z-index: 150;
-    background: linear-gradient(145deg, rgba(8, 22, 45, 0.90) 0%, rgba(2, 6, 14, 0.95) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: linear-gradient(145deg, rgba(25, 25, 25, 0.90) 0%, rgba(5, 5, 5, 0.95) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.45);
     color: var(--quicksilver-bright);
     width: 40px;
     height: 40px;
@@ -392,7 +483,7 @@ header h1 {
     background: var(--card-glass);
     padding: 12px;
     border-radius: 12px;
-    border: 1px solid rgba(180, 220, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     position: relative;
     z-index: 10;
 }
@@ -403,19 +494,20 @@ header h1 {
 
 .action-link {
     font-size: 9px;
-    color: var(--text-accent);
+    color: var(--quicksilver-silver);
     cursor: pointer;
     font-family: 'JetBrains Mono', monospace;
     position: relative;
     z-index: 10;
     pointer-events: auto !important;
 }
+.action-link:hover { color: #ffffff; text-decoration: underline; }
 
 button.apply-btn {
     position: relative;
     padding: 9px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.45);
-    background: linear-gradient(180deg, rgba(20, 52, 96, 0.90) 0%, rgba(6, 20, 40, 0.95) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.50);
+    background: linear-gradient(180deg, rgba(45, 45, 45, 0.95) 0%, rgba(10, 10, 10, 0.98) 100%);
     color: var(--quicksilver-bright);
     border-radius: 9px;
     font-size: 10px;
@@ -427,15 +519,15 @@ button.apply-btn {
     pointer-events: auto !important;
 }
 button.apply-btn:hover {
-    background: linear-gradient(180deg, rgba(28, 68, 122, 0.95) 0%, rgba(8, 26, 52, 0.98) 100%);
-    border-color: rgba(255, 255, 255, 0.80);
+    background: linear-gradient(180deg, rgba(65, 65, 65, 0.98) 0%, rgba(20, 20, 20, 1) 100%);
+    border-color: rgba(255, 255, 255, 0.90);
 }
 
 button.secondary-btn {
     position: relative;
     padding: 8px;
-    border: 1px solid rgba(180, 220, 255, 0.20);
-    background: rgba(6, 18, 38, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(20, 20, 20, 0.85);
     color: var(--quicksilver-silver);
     border-radius: 9px;
     font-size: 10px;
@@ -446,7 +538,7 @@ button.secondary-btn {
     pointer-events: auto !important;
 }
 button.secondary-btn:hover {
-    background: rgba(12, 32, 64, 0.88);
+    background: rgba(40, 40, 40, 0.95);
     color: var(--quicksilver-bright);
 }
 
@@ -460,26 +552,13 @@ button.secondary-btn:hover {
     z-index: 10;
 }
 
-.orbit-row {
-    display: grid;
-    grid-template-columns: 36px 70px 1fr;
-    align-items: center;
-    gap: 8px;
-    background: var(--row-glass);
-    padding: 6px 8px;
-    border-radius: 9px;
-    border: 1px solid rgba(180, 220, 255, 0.18);
-    position: relative;
-    z-index: 10;
-}
-
 input[type="checkbox"] {
     appearance: none;
     -webkit-appearance: none;
     width: 16px;
     height: 16px;
     background: var(--chk-bg);
-    border: 1px solid rgba(255, 255, 255, 0.30);
+    border: 1px solid rgba(255, 255, 255, 0.35);
     border-radius: 5px;
     cursor: pointer;
     position: relative;
@@ -488,7 +567,7 @@ input[type="checkbox"] {
 }
 input[type="checkbox"]:checked {
     background: var(--chk-checked-bg);
-    border-color: rgba(255, 255, 255, 0.85);
+    border-color: rgba(255, 255, 255, 1);
 }
 input[type="checkbox"]:checked::after {
     content: '✓';
@@ -510,7 +589,7 @@ input[type="checkbox"]:checked::after {
     background: var(--row-glass);
     padding: 7px 10px;
     border-radius: 9px;
-    border: 1px solid rgba(180, 220, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     position: relative;
     z-index: 10;
 }
