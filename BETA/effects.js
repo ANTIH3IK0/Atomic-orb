@@ -1,13 +1,54 @@
 // effects.js
 
 const TARGET_PANEL_SELECTOR = '.ui-overlay, .tp-overlay, .pt-modal-window';
+let liquidGLInstances = [];
 
 document.addEventListener('DOMContentLoaded', () => {
+    initLiquidGLQuicksilver();
     initGroupAttributesObserver();
     initModalVisibilityHandler();
     initGSAPAnimations();
     initGlassInteractivity();
 });
+
+/* LiquidGL Initialization - High Specular Quicksilver Light Reflection (Isolated Background) */
+function initLiquidGLQuicksilver() {
+    const panels = document.querySelectorAll(TARGET_PANEL_SELECTOR);
+    if (!panels.length) return;
+
+    panels.forEach(panel => {
+        // Construct or configure LiquidGL instance on panels
+        if (typeof LiquidGL !== 'undefined') {
+            try {
+                const lgl = new LiquidGL({
+                    element: panel,
+                    captureBackground: false, // Prevents sampling 3D scene/star background
+                    metallic: 0.95,           // Aggressive quicksilver metallic sheen
+                    specularPower: 128.0,      // Sharp pinpoint light reflections
+                    lightIntensity: 1.8,      // Bright mercury highlights
+                    refraction: 0.0,          // Zero background distortion pass
+                    surfaceTurbulence: 0.15,   // Micro liquid surface ripples
+                    color: '#08121f'
+                });
+                liquidGLInstances.push(lgl);
+            } catch (err) {
+                // Graceful fallback to CSS glass/specular shader if liquidGL constructor varies
+                panel.classList.add('liquid-fallback');
+            }
+        }
+    });
+}
+
+/* Global Liquid Refresh Callback used by index.html toggle logic */
+function refreshAllLiquid() {
+    liquidGLInstances.forEach(inst => {
+        if (inst && typeof inst.refresh === 'function') {
+            inst.refresh();
+        } else if (inst && typeof inst.resize === 'function') {
+            inst.resize();
+        }
+    });
+}
 
 /* Periodic Table Dynamic Data Attributes Observer */
 function applyGroupDataAttributes() {
@@ -41,6 +82,7 @@ function initModalVisibilityHandler() {
         const isOpen = modalBackdrop.classList.contains('open');
         modalBackdrop.style.display = isOpen ? 'flex' : 'none';
         modalBackdrop.style.pointerEvents = isOpen ? 'auto' : 'none';
+        if (isOpen) refreshAllLiquid();
     };
 
     syncModalDisplay();
@@ -48,7 +90,7 @@ function initModalVisibilityHandler() {
     observer.observe(modalBackdrop, { attributes: true, attributeFilter: ['class'] });
 }
 
-/* Interactive Cursor Radial Lighting */
+/* Interactive Cursor Radial Lighting (Coordinates relative to Panel) */
 function initGlassInteractivity() {
     const panels = document.querySelectorAll(TARGET_PANEL_SELECTOR);
     panels.forEach(panel => {
@@ -107,4 +149,6 @@ function switchControlMode(mode) {
             { opacity: 0, y: 8 },
             { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' });
     }
+
+    refreshAllLiquid();
 }
