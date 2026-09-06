@@ -150,3 +150,78 @@ function switchControlMode(mode) {
             { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' });
     }
 }
+
+/* Unified Quicksilver Glass Engine with Dynamic Trailing Edge Fade */
+function initQuicksilverGlassEngine() {
+    const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
+    
+    panels.forEach(panel => {
+        let currentX = 0, currentY = 0;
+        let targetX = 0, targetY = 0;
+        let opacity = 0;
+        let isHovered = false;
+        let animFrame = null;
+
+        function update() {
+            // LERP position: Glides light smoothly along the edge
+            currentX += (targetX - currentX) * 0.12;
+            currentY += (targetY - currentY) * 0.12;
+
+            // Distance to destination
+            const dist = Math.hypot(targetX - currentX, targetY - currentY);
+            
+            if (isHovered) {
+                // Brightens while moving across the edge; decays to 0 upon arrival
+                const targetOpacity = dist > 1 ? Math.min(1, dist / 30) : 0;
+                opacity += (targetOpacity - opacity) * 0.1;
+            } else {
+                // Fade out when cursor leaves
+                opacity += (0 - opacity) * 0.12;
+            }
+
+            panel.style.setProperty('--mouse-x', `${currentX}px`);
+            panel.style.setProperty('--mouse-y', `${currentY}px`);
+            panel.style.setProperty('--edge-opacity', opacity.toFixed(3));
+
+            // Keep frame loop active only while animating
+            if (opacity > 0.005 || isHovered) {
+                animFrame = requestAnimationFrame(update);
+            } else {
+                panel.style.setProperty('--edge-opacity', '0');
+                animFrame = null;
+            }
+        }
+
+        panel.addEventListener('mouseenter', (e) => {
+            isHovered = true;
+            const rect = panel.getBoundingClientRect();
+            currentX = targetX = e.clientX - rect.left;
+            currentY = targetY = e.clientY - rect.top;
+            if (!animFrame) animFrame = requestAnimationFrame(update);
+        });
+
+        panel.addEventListener('mousemove', (e) => {
+            const rect = panel.getBoundingClientRect();
+            targetX = e.clientX - rect.left;
+            targetY = e.clientY - rect.top;
+
+            // Subtle 3D spatial tilt
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const tiltX = (targetY - centerY) / centerY * -2;
+            const tiltY = (targetX - centerX) / centerX * 2;
+
+            panel.style.setProperty('--tilt-x', `${tiltX}deg`);
+            panel.style.setProperty('--tilt-y', `${tiltY}deg`);
+
+            if (!animFrame) animFrame = requestAnimationFrame(update);
+        });
+
+        panel.addEventListener('mouseleave', () => {
+            isHovered = false;
+            panel.style.setProperty('--tilt-x', `0deg`);
+            panel.style.setProperty('--tilt-y', `0deg`);
+            if (!animFrame) animFrame = requestAnimationFrame(update);
+        });
+    });
+}
