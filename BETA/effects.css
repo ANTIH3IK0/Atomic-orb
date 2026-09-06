@@ -70,7 +70,7 @@ body {
     top: 16px;
     left: 16px;
     width: 380px;
-    height: calc(100dvh - 32px); /* Explicit height without conflicting bottom coordinate */
+    height: calc(100dvh - 32px);
     max-height: calc(100dvh - 32px);
     padding: 24px;
     display: flex;
@@ -78,7 +78,6 @@ body {
     gap: 18px;
     z-index: 100;
 
-    /* Scroll Engine Repair */
     overflow-y: auto !important;
     overscroll-behavior-y: contain;
     touch-action: pan-y;
@@ -102,6 +101,17 @@ body {
     touch-action: pan-y;
 }
 .tp-overlay.collapsed { display: none; }
+
+/* Periodic Table Grid Headers & Period Indicators */
+.pt-header-cell, .pt-period-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--text-muted);
+    user-select: none;
+}
 
 /* LiquidGlass Shader Canvas Layer */
 .ui-overlay > canvas, .tp-overlay > canvas, .pt-modal-window > canvas {
