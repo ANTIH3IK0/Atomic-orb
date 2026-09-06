@@ -8,9 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
     initModalVisibilityHandler();
     initGSAPAnimations();
     initGlassInteractivity();
+    enforcePointerEvents();
 });
 
-/* Official LiquidGL Initialization with Balanced Refraction & High Visibility */
+/* Initialize LiquidGL with non-blocking refraction canvas */
 function initLiquidGLQuicksilver() {
     if (typeof liquidGL !== 'function') return;
 
@@ -18,14 +19,14 @@ function initLiquidGLQuicksilver() {
         liquidGLInstance = liquidGL({
             snapshot: "body",
             target: ".ui-overlay, .tp-overlay, .pt-modal-window",
-            resolution: 2.0,
-            refraction: 0.008,   /* Balanced refraction strength to prevent pitch-black distortion */
-            aberration: 0.002,   /* Subtle metallic edge shimmer */
-            bevelDepth: 0.08,    /* Clean bevel depth */
-            bevelWidth: 0.12,    /* Proportional edge highlights */
-            frost: 0,            /* Crystal clear semi-transparent reflection */
-            shadow: true,        /* Soft drop-shadow */
-            specular: true,      /* Light highlights on movement */
+            resolution: 1.5,
+            refraction: 0.008,
+            aberration: 0.002,
+            bevelDepth: 0.06,
+            bevelWidth: 0.10,
+            frost: 0,
+            shadow: true,
+            specular: true,
             reveal: "fade",
             tilt: false,
             tiltFactor: 5,
@@ -33,7 +34,8 @@ function initLiquidGLQuicksilver() {
             magnify: 1.0,
             on: {
                 init(instance) {
-                    console.log("Semi-Transparent LiquidGL Glass Ready!", instance);
+                    console.log("Interactive Semi-Transparent Glass Ready!", instance);
+                    enforcePointerEvents();
                 }
             }
         });
@@ -42,11 +44,20 @@ function initLiquidGLQuicksilver() {
     }
 }
 
-/* Global Liquid Refresh Handler */
+/* Ensure LiquidGL Canvas Never Blocks Click Events */
+function enforcePointerEvents() {
+    const liquidCanvases = document.querySelectorAll('canvas:not(#renderCanvas)');
+    liquidCanvases.forEach(canvas => {
+        canvas.style.pointerEvents = 'none';
+    });
+}
+
+/* Refresh Liquid Effects without lockups */
 function refreshAllLiquid() {
     if (liquidGLInstance && typeof liquidGLInstance.refresh === 'function') {
         liquidGLInstance.refresh();
     }
+    enforcePointerEvents();
 }
 
 /* Dynamic Data-Group Attribute Applicator for Periodic Table Elements */
@@ -72,7 +83,7 @@ function initGroupAttributesObserver() {
     }
 }
 
-/* Modal Synchronization & Pointer Events Protection */
+/* Modal Synchronization */
 function initModalVisibilityHandler() {
     const modalBackdrop = document.querySelector('.pt-modal-backdrop');
     if (!modalBackdrop) return;
@@ -89,7 +100,7 @@ function initModalVisibilityHandler() {
     observer.observe(modalBackdrop, { attributes: true, attributeFilter: ['class'] });
 }
 
-/* Dynamic Mouse Cursor Lighting Track for Specular Gloss */
+/* Mouse Lighting Track */
 function initGlassInteractivity() {
     const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
     panels.forEach(panel => {
@@ -101,28 +112,15 @@ function initGlassInteractivity() {
     });
 }
 
-/* GSAP Entry Animations & Micro-Interactions */
+/* GSAP Animations */
 function initGSAPAnimations() {
     if (typeof gsap === 'undefined') return;
 
-    gsap.from('#uiOverlay', { x: -40, opacity: 0, duration: 0.6, ease: 'power3.out', delay: 0.15 });
-    gsap.from('#tpOverlay', { x: 40,  opacity: 0, duration: 0.6, ease: 'power3.out', delay: 0.25 });
-
-    const buttons = document.querySelectorAll('button');
-    buttons.forEach(btn => {
-        btn.addEventListener('mouseenter', () => {
-            gsap.to(btn, { scale: 1.02, duration: 0.18, ease: 'power1.out' });
-        });
-        btn.addEventListener('mouseleave', () => {
-            gsap.to(btn, { scale: 1.0, duration: 0.18, ease: 'power1.out' });
-        });
-        btn.addEventListener('mousedown', () => {
-            gsap.to(btn, { scale: 0.97, duration: 0.08, ease: 'power1.inOut' });
-        });
-    });
+    gsap.from('#uiOverlay', { x: -30, opacity: 0, duration: 0.5, ease: 'power2.out', delay: 0.1 });
+    gsap.from('#tpOverlay', { x: 30,  opacity: 0, duration: 0.5, ease: 'power2.out', delay: 0.2 });
 }
 
-/* Control Mode Switcher Callback */
+/* Control Mode Switcher */
 function switchControlMode(mode) {
     const autoContainer = document.getElementById('autoModeContainer');
     const manualContainer = document.getElementById('manualModeContainer');
@@ -145,8 +143,8 @@ function switchControlMode(mode) {
     if (typeof gsap !== 'undefined') {
         const activeContainer = mode === 'auto' ? autoContainer : manualContainer;
         gsap.fromTo(activeContainer,
-            { opacity: 0, y: 8 },
-            { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' });
+            { opacity: 0, y: 6 },
+            { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' });
     }
 
     refreshAllLiquid();
