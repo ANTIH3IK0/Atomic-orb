@@ -1,26 +1,26 @@
 /* effects.css */
 
 :root {
-    --bg-dark: #050505;
+    --bg-dark: #000000;
 
-    /* Translucent Obsidian Glass (Allows LiquidGlass WebGL shader to pass through) */
-    --panel-glass: rgba(10, 10, 10, 0.35);
-    --card-glass: rgba(15, 15, 15, 0.45);
-    --row-glass: rgba(18, 18, 18, 0.50);
-    --input-bg: rgba(5, 5, 5, 0.75);
+    /* Total Dark Obsidian Translucency */
+    --panel-glass: rgba(5, 5, 6, 0.86);
+    --card-glass: rgba(10, 10, 12, 0.88);
+    --row-glass: rgba(8, 8, 10, 0.85);
+    --input-bg: rgba(3, 3, 4, 0.95);
 
-    /* Quicksilver Metallic & Bright Specular Spectrum */
-    --quicksilver-bright: #e0e0e0;
-    --quicksilver-silver: #8e9297;
-    --text-main: #d0d4dc;
-    --text-sub: #9ca3af;
-    --text-muted: #6b7280;
-    --text-accent: #ffffff;
+    /* Stealth Quicksilver Palette */
+    --quicksilver-bright: #78767a;
+    --quicksilver-silver: #565657;
+    --text-main: #474748;
+    --text-sub: #474748;
+    --text-muted: #3c3c3c;
+    --text-accent: #78767a;
 
-    /* Controls */
-    --chk-bg: rgba(10, 10, 10, 0.85);
-    --chk-checked-bg: rgba(40, 40, 40, 0.95);
-    --chk-tick-color: #ffffff;
+    /* Dark Controls */
+    --chk-bg: rgba(4, 4, 5, 0.95);
+    --chk-checked-bg: rgba(30, 30, 35, 0.95);
+    --chk-tick-color: #78767a;
 }
 
 * {
@@ -39,10 +39,10 @@ body {
     color: var(--text-main);
     overflow: hidden;
     display: flex;
-    font-weight: 300;
+    font-weight: 100;
 }
 
-/* Dynamic WebGL Background Canvas */
+/* 3D WebGL Background Canvas */
 #renderCanvas {
     width: 100%;
     height: 100%;
@@ -53,35 +53,34 @@ body {
     z-index: 0;
 }
 
-/* Glass Panels: Semi-transparent container for LiquidGlass WebGL Shader Output */
+/* Pitch-Black Total Dark Glass Panels */
 .ui-overlay, .tp-overlay, .pt-modal-window {
     position: absolute;
-    background: linear-gradient(135deg, rgba(20, 20, 20, 0.35) 0%, rgba(5, 5, 5, 0.55) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    background: linear-gradient(135deg, rgba(8, 8, 10, 0.88) 0%, rgba(2, 2, 3, 0.94) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
     border-radius: 20px;
-    
-    /* Native backdrop-filter removed so WebGL LiquidGlass shader handles refraction directly */
+
     box-shadow:
-        0 20px 50px rgba(0, 0, 0, 0.80),
-        0 0 20px rgba(255, 255, 255, 0.08),
-        inset 0 1px 1px rgba(255, 255, 255, 0.40);
+        0 30px 80px rgba(0, 0, 0, 0.98),
+        0 0 25px rgba(0, 0, 0, 0.90),
+        inset 0 1px 1px rgba(255, 255, 255, 0.25);
     
     pointer-events: auto !important;
     overflow: hidden;
 }
 
-/* LiquidGlass canvas element injection scaling */
+/* LiquidGlass Shader Layer Sizing */
 .ui-overlay > canvas, .tp-overlay > canvas, .pt-modal-window > canvas {
     position: absolute;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100% !important;
     height: 100% !important;
     z-index: 0;
     pointer-events: none;
+    mix-blend-mode: overlay;
 }
 
-/* Quicksilver Dynamic Metallic Sheen Overlay */
+/* Dynamic Quicksilver Metallic Sheen */
 .ui-overlay::after, .tp-overlay::after, .pt-modal-window::after {
     content: '';
     position: absolute;
@@ -91,41 +90,41 @@ body {
     height: 200%;
     background: radial-gradient(
         circle at center,
-        rgba(255, 255, 255, 0.18) 0%,
-        rgba(180, 190, 200, 0.08) 35%,
+        rgba(255, 255, 255, 0.12) 0%,
+        rgba(160, 160, 170, 0.03) 40%,
         rgba(0, 0, 0, 0) 70%
     );
     transform: translate(-50%, -50%);
-    animation: quicksilverFlow 8s infinite ease-in-out;
-    mix-blend-mode: screen;
+    animation: quicksilverShine 10s infinite ease-in-out;
+    mix-blend-mode: color-dodge;
     pointer-events: none !important;
     z-index: 2;
 }
 
-@keyframes quicksilverFlow {
+@keyframes quicksilverShine {
     0% {
         transform: translate(-30%, -30%) rotate(0deg) scale(1);
-        opacity: 0.25;
+        opacity: 0.20;
     }
     50% {
-        transform: translate(-20%, -20%) rotate(6deg) scale(1.08);
-        opacity: 0.55;
+        transform: translate(-20%, -25%) rotate(4deg) scale(1.05);
+        opacity: 0.45;
     }
     100% {
         transform: translate(-30%, -30%) rotate(0deg) scale(1);
-        opacity: 0.25;
+        opacity: 0.20;
     }
 }
 
-/* Mouse Quicksilver Specular Highlighting Track */
+/* Mouse Specular Metallic Tracking */
 .ui-overlay::before, .tp-overlay::before, .pt-modal-window::before {
     content: '';
     position: absolute;
     inset: 0;
     background: radial-gradient(
         350px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        rgba(255, 255, 255, 0.20),
-        rgba(200, 200, 200, 0.05) 50%,
+        rgba(255, 255, 255, 0.14),
+        rgba(180, 180, 180, 0.02) 60%,
         transparent 80%
     );
     mix-blend-mode: overlay;
@@ -165,8 +164,8 @@ body {
 .mode-switch-bar {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    background: rgba(10, 10, 10, 0.80);
-    border: 1px solid rgba(255, 255, 255, 0.20);
+    background: rgba(3, 3, 4, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 12px;
     padding: 4px;
     gap: 4px;
@@ -192,12 +191,12 @@ body {
 }
 .mode-btn:hover {
     color: var(--quicksilver-bright);
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08);
 }
 .mode-btn.active {
-    background: linear-gradient(180deg, rgba(60, 60, 60, 0.90) 0%, rgba(20, 20, 20, 0.95) 100%);
+    background: linear-gradient(180deg, rgba(35, 35, 40, 0.95) 0%, rgba(10, 10, 12, 0.98) 100%);
     color: #ffffff;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.9), inset 0 1px 1px rgba(255, 255, 255, 0.4);
 }
 
 .mode-container {
@@ -217,7 +216,7 @@ body {
     background: var(--row-glass);
     padding: 8px 10px;
     border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.10);
     position: relative;
     z-index: 10;
 }
@@ -235,7 +234,7 @@ body {
 
 .suborbit-label sub {
     font-size: 10px;
-    color: var(--quicksilver-silver);
+    color: var(--text-sub);
     margin-left: 2px;
     font-weight: 500;
     vertical-align: sub;
@@ -245,7 +244,7 @@ body {
     position: fixed;
     top: 0; left: 0;
     width: 100vw; height: 100vh;
-    background: rgba(5, 5, 5, 0.85);
+    background: rgba(2, 2, 3, 0.95);
     z-index: 1000;
     display: flex;
     align-items: center;
@@ -278,7 +277,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding-bottom: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.20);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
     position: relative;
     z-index: 10;
 }
@@ -292,9 +291,9 @@ body {
 }
 
 .close-btn {
-    background: rgba(10, 10, 10, 0.80);
-    border: 1px solid rgba(255, 255, 255, 0.30);
-    color: var(--quicksilver-bright);
+    background: rgba(5, 5, 6, 0.90);
+    border: 1px solid rgba(255, 255, 255, 0.20);
+    color: var(--text-sub);
     width: 32px;
     height: 32px;
     border-radius: 10px;
@@ -333,22 +332,22 @@ body {
     height: 56px;
     padding: 4px 5px;
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.10);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     cursor: pointer;
-    background: linear-gradient(145deg, rgba(25, 25, 25, 0.65) 0%, rgba(10, 10, 10, 0.85) 100%);
+    background: linear-gradient(145deg, rgba(12, 12, 14, 0.85) 0%, rgba(3, 3, 4, 0.95) 100%);
     transition: all 0.15s ease;
     z-index: 10;
     overflow: hidden;
     pointer-events: auto !important;
 }
 .pt-element-card:hover {
-    background: linear-gradient(145deg, rgba(45, 45, 45, 0.85) 0%, rgba(15, 15, 15, 0.95) 100%);
+    background: linear-gradient(145deg, rgba(28, 28, 32, 0.95) 0%, rgba(8, 8, 10, 0.98) 100%);
     transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.80);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.85);
+    border-color: rgba(255, 255, 255, 0.50);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.90);
 }
 
 .pt-card-top {
@@ -358,7 +357,7 @@ body {
     font-family: 'JetBrains Mono', monospace;
     font-size: 8px;
     line-height: 1;
-    color: var(--quicksilver-silver);
+    color: var(--text-muted);
 }
 
 .pt-card-symbol {
@@ -375,7 +374,7 @@ body {
     font-size: 7.5px;
     line-height: 1;
     text-align: center;
-    color: var(--quicksilver-silver);
+    color: var(--text-sub);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -387,7 +386,7 @@ body {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1.2px;
-    color: var(--quicksilver-bright);
+    color: var(--quicksilver-silver);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -397,11 +396,11 @@ body {
 
 .tp-grid { display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 10; }
 .tp-field { display: flex; flex-direction: row; align-items: center; gap: 8px; }
-.tp-field label { font-size: 10px; color: var(--quicksilver-silver); font-family: 'JetBrains Mono', monospace; width: 14px; }
+.tp-field label { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; width: 14px; }
 
 input[type="text"], input[type="number"] {
     background: var(--input-bg);
-    border: 1px solid rgba(255, 255, 255, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     color: var(--quicksilver-bright);
     padding: 8px 10px;
     border-radius: 9px;
@@ -414,8 +413,8 @@ input[type="text"], input[type="number"] {
 }
 input[type="text"]:focus, input[type="number"]:focus {
     outline: none;
-    border-color: rgba(255, 255, 255, 0.90);
-    box-shadow: 0 0 12px rgba(255, 255, 255, 0.30);
+    border-color: rgba(255, 255, 255, 0.70);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.15);
 }
 
 .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; position: relative; z-index: 10; }
@@ -424,8 +423,8 @@ input[type="text"]:focus, input[type="number"]:focus {
     position: absolute;
     top: 16px;
     z-index: 150;
-    background: linear-gradient(145deg, rgba(30, 30, 30, 0.85) 0%, rgba(10, 10, 10, 0.95) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.40);
+    background: linear-gradient(145deg, rgba(15, 15, 18, 0.90) 0%, rgba(3, 3, 4, 0.95) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.25);
     color: var(--quicksilver-bright);
     width: 40px;
     height: 40px;
@@ -452,7 +451,7 @@ header h1 {
 .minimize-btn {
     background: transparent;
     border: none;
-    color: var(--quicksilver-silver);
+    color: var(--text-muted);
     cursor: pointer;
     font-size: 14px;
     position: relative;
@@ -468,18 +467,18 @@ header h1 {
     background: var(--card-glass);
     padding: 12px;
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.10);
     position: relative;
     z-index: 10;
 }
 
 .input-field { display: flex; flex-direction: column; gap: 4px; position: relative; z-index: 10; }
 .input-header { display: flex; justify-content: space-between; align-items: center; }
-.input-field label { font-size: 10px; color: var(--quicksilver-silver); font-family: 'JetBrains Mono', monospace; }
+.input-field label { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
 
 .action-link {
     font-size: 9px;
-    color: var(--quicksilver-bright);
+    color: var(--quicksilver-silver);
     cursor: pointer;
     font-family: 'JetBrains Mono', monospace;
     position: relative;
@@ -491,9 +490,9 @@ header h1 {
 button.apply-btn {
     position: relative;
     padding: 9px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.50);
-    background: linear-gradient(180deg, rgba(50, 50, 50, 0.90) 0%, rgba(15, 15, 15, 0.98) 100%);
-    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.30);
+    background: linear-gradient(180deg, rgba(30, 30, 35, 0.95) 0%, rgba(5, 5, 6, 0.98) 100%);
+    color: var(--quicksilver-bright);
     border-radius: 9px;
     font-size: 10px;
     font-family: 'JetBrains Mono', monospace;
@@ -504,15 +503,15 @@ button.apply-btn {
     pointer-events: auto !important;
 }
 button.apply-btn:hover {
-    background: linear-gradient(180deg, rgba(70, 70, 70, 0.98) 0%, rgba(25, 25, 25, 1) 100%);
-    border-color: rgba(255, 255, 255, 0.90);
+    background: linear-gradient(180deg, rgba(45, 45, 52, 0.98) 0%, rgba(12, 12, 15, 1) 100%);
+    border-color: rgba(255, 255, 255, 0.60);
 }
 
 button.secondary-btn {
     position: relative;
     padding: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    background: rgba(20, 20, 20, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(10, 10, 12, 0.85);
     color: var(--quicksilver-silver);
     border-radius: 9px;
     font-size: 10px;
@@ -523,7 +522,7 @@ button.secondary-btn {
     pointer-events: auto !important;
 }
 button.secondary-btn:hover {
-    background: rgba(40, 40, 40, 0.88);
+    background: rgba(22, 22, 26, 0.95);
     color: var(--quicksilver-bright);
 }
 
@@ -543,7 +542,7 @@ input[type="checkbox"] {
     width: 16px;
     height: 16px;
     background: var(--chk-bg);
-    border: 1px solid rgba(255, 255, 255, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.20);
     border-radius: 5px;
     cursor: pointer;
     position: relative;
@@ -552,7 +551,7 @@ input[type="checkbox"] {
 }
 input[type="checkbox"]:checked {
     background: var(--chk-checked-bg);
-    border-color: rgba(255, 255, 255, 1);
+    border-color: rgba(255, 255, 255, 0.8);
 }
 input[type="checkbox"]:checked::after {
     content: '✓';
@@ -570,11 +569,11 @@ input[type="checkbox"]:checked::after {
     align-items: center;
     justify-content: space-between;
     font-size: 11px;
-    color: var(--quicksilver-bright);
+    color: var(--quicksilver-silver);
     background: var(--row-glass);
     padding: 7px 10px;
     border-radius: 9px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.10);
     position: relative;
     z-index: 10;
 }
