@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initLiquidGlassMetallic();
 });
 
-/* Continuous Dynamic WebGL LiquidGlass Renderer Engine */
+/* Throttled High-Reflection WebGL LiquidGlass Engine */
 async function initLiquidGlassMetallic() {
     try {
         const bgCanvas = document.getElementById('renderCanvas');
@@ -24,15 +24,16 @@ async function initLiquidGlassMetallic() {
 
         const glassEls = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
         
+        // Aggressive specular reflection and edge highlight setup
         glassEls.forEach(el => {
             el.dataset.config = JSON.stringify({
-                blurAmount: 0.10,
-                refraction: 0.38,
-                specular: 0.45,
-                edgeHighlight: 0.20,
-                fresnel: 0.80,
-                chromAberration: 0.025,
-                opacity: 0.88,
+                blurAmount: 0.08,
+                refraction: 0.55,
+                specular: 1.40,        /* Boosted light reflection */
+                edgeHighlight: 0.90,   /* Sharp metallic glass edges */
+                fresnel: 1.20,         /* Aggressive angle reflections */
+                chromAberration: 0.04,
+                opacity: 0.90,
                 cornerRadius: 20
             });
         });
@@ -42,25 +43,34 @@ async function initLiquidGlassMetallic() {
             glassElements: glassEls
         });
 
-        // Continuous Animation Loop forcing LiquidGlass to re-capture moving 3D background WebGL canvas
-        function continuousRefractionLoop() {
-            if (lgInstance) {
-                if (typeof lgInstance.update === 'function') {
-                    lgInstance.update();
-                } else if (typeof lgInstance.markChanged === 'function' && bgCanvas) {
-                    lgInstance.markChanged(bgCanvas);
+        // Frame Throttler (Limits texture capturing to 30 FPS to eliminate performance lag)
+        let lastFrameTime = 0;
+        const fpsInterval = 1000 / 30;
+
+        function throttledRefractionLoop(timestamp) {
+            requestAnimationFrame(throttledRefractionLoop);
+
+            const elapsed = timestamp - lastFrameTime;
+            if (elapsed > fpsInterval) {
+                lastFrameTime = timestamp - (elapsed % fpsInterval);
+
+                if (lgInstance) {
+                    if (typeof lgInstance.update === 'function') {
+                        lgInstance.update();
+                    } else if (typeof lgInstance.markChanged === 'function' && bgCanvas) {
+                        lgInstance.markChanged(bgCanvas);
+                    }
                 }
             }
-            requestAnimationFrame(continuousRefractionLoop);
         }
-        requestAnimationFrame(continuousRefractionLoop);
+        requestAnimationFrame(throttledRefractionLoop);
 
     } catch (err) {
         console.warn('LiquidGlass WebGL initialization skipped:', err);
     }
 }
 
-/* Format Quantum Suborbit Notation (e.g. 1s1/2 -> 1s<sub>1/2</sub>) */
+/* Format Quantum Suborbit Notation */
 function formatSuborbitNotation(text) {
     if (!text) return '';
     return text.replace(/([0-9][a-zA-Z])([0-9]+\/[0-9]+)/g, '$1<sub>$2</sub>');
@@ -83,10 +93,12 @@ function processSuborbitRows() {
     });
 }
 
+/* Scoped Mutation Observer to prevent DOM thrashing */
 function initSuborbitNotationObserver() {
     processSuborbitRows();
+    const container = document.getElementById('orbitsBuilderContainer') || document.body;
     const observer = new MutationObserver(() => processSuborbitRows());
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(container, { childList: true, subtree: true });
 }
 
 /* Dynamic Periodic Table Group Attributes */
