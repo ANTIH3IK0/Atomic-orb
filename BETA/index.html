@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Atomic-orb Beta b1.25-45</title>
+    <title>Atomic-orb Beta b1.25-42</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,7 +23,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/naughtyduk/liquidGL/scripts/liquidGL.js"></script>
 
     <!-- 3D Engine & Application Core -->
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
@@ -32,7 +31,7 @@
 </head>
 <body>
 
-    <!-- Primary 3D Quantum Render Canvas -->
+    <!-- 3D Render Canvas -->
     <canvas id="renderCanvas"></canvas>
 
     <!-- Floating Restore Trigger Buttons -->
@@ -59,7 +58,7 @@
 
     <!-- Main UI Panel -->
     <div class="ui-overlay" id="uiOverlay">
-        <header style="display:flex; justify-space-between; align-items:center;">
+        <header style="display:flex; justify-content:space-between; align-items:center;">
             <h1>DIRAC QUANTUM 3D</h1>
             <button class="minimize-btn" onclick="togglePanel(true)">✕</button>
         </header>
@@ -195,9 +194,6 @@
             const isCollapsed = target.classList.toggle('collapsed');
             if (btn) {
                 btn.textContent = isCollapsed ? '+' : '−';
-            }
-            if (typeof refreshAllLiquid === 'function') {
-                requestAnimationFrame(() => refreshAllLiquid());
             }
         }
     </script>
