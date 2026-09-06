@@ -19,8 +19,8 @@
 
     /* Controls */
     --chk-bg: rgba(5, 5, 5, 0.95);
-    --chk-checked-bg: rgba(255, 255, 255, 0.95);
-    --chk-tick-color: #050505;
+    --chk-checked-bg: rgba(25, 25, 25, 0.95);
+    --chk-tick-color: #626262;
 }
 
 * {
