@@ -53,34 +53,68 @@ body {
     z-index: 0;
 }
 
-/* Pitch-Black Total Dark Glass Panels */
+/* Base Panel Styling */
 .ui-overlay, .tp-overlay, .pt-modal-window {
     position: absolute;
-    background: linear-gradient(135deg, rgba(8, 8, 10, 0.88) 0%, rgba(2, 2, 3, 0.94) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background: linear-gradient(135deg, rgba(10, 10, 12, 0.88) 0%, rgba(4, 4, 6, 0.94) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.04) !important;
     border-radius: 20px;
 
-    box-shadow:
-        0 30px 80px rgba(0, 0, 0, 0.98),
-        0 0 25px rgba(0, 0, 0, 0.90),
-        inset 0 1px 1px rgba(255, 255, 255, 0.25);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.60);
     
     pointer-events: auto !important;
-    overflow: hidden;
 }
 
-/* LiquidGlass Shader Layer Sizing */
+/* Left UI Overlay Panel - Scroll Fixed */
+.ui-overlay {
+    top: 16px;
+    left: 16px;
+    width: 380px;
+    height: calc(100dvh - 32px); /* Explicit height without conflicting bottom coordinate */
+    max-height: calc(100dvh - 32px);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    z-index: 100;
+
+    /* Scroll Engine Repair */
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
+}
+.ui-overlay.collapsed { display: none; }
+
+/* Right Overlay Panel */
+.tp-overlay {
+    top: 16px;
+    right: 16px;
+    width: 250px;
+    height: auto;
+    max-height: calc(100dvh - 32px);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    z-index: 100;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
+}
+.tp-overlay.collapsed { display: none; }
+
+/* LiquidGlass Shader Canvas Layer */
 .ui-overlay > canvas, .tp-overlay > canvas, .pt-modal-window > canvas {
     position: absolute;
     inset: 0;
     width: 100% !important;
     height: 100% !important;
     z-index: 0;
-    pointer-events: none;
+    pointer-events: none !important;
     mix-blend-mode: overlay;
 }
 
-/* Dynamic Quicksilver Metallic Sheen */
+/* Very Faint Ambient Sheen */
 .ui-overlay::after, .tp-overlay::after, .pt-modal-window::after {
     content: '';
     position: absolute;
@@ -90,87 +124,47 @@ body {
     height: 200%;
     background: radial-gradient(
         circle at center,
-        rgba(255, 255, 255, 0.12) 0%,
-        rgba(160, 160, 170, 0.03) 40%,
-        rgba(0, 0, 0, 0) 70%
+        rgba(255, 255, 255, 0.03) 0%,
+        transparent 60%
     );
     transform: translate(-50%, -50%);
-    animation: quicksilverShine 10s infinite ease-in-out;
-    mix-blend-mode: color-dodge;
+    animation: quicksilverShine 12s infinite ease-in-out;
+    mix-blend-mode: overlay;
     pointer-events: none !important;
     z-index: 2;
 }
 
 @keyframes quicksilverShine {
-    0% {
-        transform: translate(-30%, -30%) rotate(0deg) scale(1);
-        opacity: 0.20;
-    }
-    50% {
-        transform: translate(-20%, -25%) rotate(4deg) scale(1.05);
-        opacity: 0.45;
-    }
-    100% {
-        transform: translate(-30%, -30%) rotate(0deg) scale(1);
-        opacity: 0.20;
-    }
+    0%, 100% { opacity: 0.1; }
+    50% { opacity: 0.25; }
 }
 
-/* Mouse Specular Metallic Tracking */
+/* Mouse Spotlight */
 .ui-overlay::before, .tp-overlay::before, .pt-modal-window::before {
     content: '';
     position: absolute;
     inset: 0;
     background: radial-gradient(
         350px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        rgba(255, 255, 255, 0.14),
-        rgba(180, 180, 180, 0.02) 60%,
-        transparent 80%
+        rgba(255, 255, 255, 0.04),
+        transparent 70%
     );
     mix-blend-mode: overlay;
     pointer-events: none !important;
     z-index: 3;
 }
 
-.ui-overlay {
-    top: 16px;
-    bottom: 16px;
-    left: 16px;
-    width: 380px;
-    height: calc(100dvh - 32px);
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    z-index: 100;
-    overflow-y: auto;
-}
-.ui-overlay.collapsed { display: none; }
-
-.tp-overlay {
-    top: 16px;
-    right: 16px;
-    width: 250px;
-    max-height: calc(100dvh - 32px);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    z-index: 100;
-    overflow-y: auto;
-}
-.tp-overlay.collapsed { display: none; }
-
 .mode-switch-bar {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    background: rgba(3, 3, 4, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(6, 6, 8, 0.90);
+    border: 1px solid rgba(255, 255, 255, 0.04);
     border-radius: 12px;
     padding: 4px;
     gap: 4px;
     position: relative;
     z-index: 10;
+    flex-shrink: 0;
 }
 
 .mode-btn {
@@ -180,7 +174,7 @@ body {
     padding: 8px 10px;
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
-    font-weight: 600;
+    font-weight: 500;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -191,12 +185,12 @@ body {
 }
 .mode-btn:hover {
     color: var(--quicksilver-bright);
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
 }
 .mode-btn.active {
-    background: linear-gradient(180deg, rgba(35, 35, 40, 0.95) 0%, rgba(10, 10, 12, 0.98) 100%);
-    color: #ffffff;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.9), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+    background: rgba(24, 24, 28, 0.90);
+    color: var(--quicksilver-bright);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05);
 }
 
 .mode-container {
@@ -216,7 +210,7 @@ body {
     background: var(--row-glass);
     padding: 8px 10px;
     border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.03);
     position: relative;
     z-index: 10;
 }
@@ -224,7 +218,7 @@ body {
 .suborbit-label {
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--quicksilver-bright);
     letter-spacing: 0.5px;
     display: inline-flex;
@@ -236,7 +230,7 @@ body {
     font-size: 10px;
     color: var(--text-sub);
     margin-left: 2px;
-    font-weight: 500;
+    font-weight: 400;
     vertical-align: sub;
 }
 
@@ -244,7 +238,7 @@ body {
     position: fixed;
     top: 0; left: 0;
     width: 100vw; height: 100vh;
-    background: rgba(2, 2, 3, 0.95);
+    background: rgba(2, 2, 3, 0.92);
     z-index: 1000;
     display: flex;
     align-items: center;
@@ -277,22 +271,23 @@ body {
     justify-content: space-between;
     align-items: center;
     padding-bottom: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
     position: relative;
     z-index: 10;
+    flex-shrink: 0;
 }
 
 .pt-modal-title {
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: 1.5px;
     color: var(--quicksilver-bright);
 }
 
 .close-btn {
     background: rgba(5, 5, 6, 0.90);
-    border: 1px solid rgba(255, 255, 255, 0.20);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     color: var(--text-sub);
     width: 32px;
     height: 32px;
@@ -308,8 +303,8 @@ body {
     pointer-events: auto !important;
 }
 .close-btn:hover {
-    background: rgba(220, 38, 38, 0.85);
-    color: #ffffff;
+    background: rgba(140, 30, 30, 0.80);
+    color: #d4d4d8;
 }
 
 .pt-scroll-area {
@@ -318,6 +313,7 @@ body {
     padding: 4px;
     position: relative;
     z-index: 10;
+    overscroll-behavior-y: contain;
 }
 
 .pt-grid-container {
@@ -332,22 +328,21 @@ body {
     height: 56px;
     padding: 4px 5px;
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.04);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     cursor: pointer;
-    background: linear-gradient(145deg, rgba(12, 12, 14, 0.85) 0%, rgba(3, 3, 4, 0.95) 100%);
+    background: rgba(12, 12, 15, 0.80);
     transition: all 0.15s ease;
     z-index: 10;
     overflow: hidden;
     pointer-events: auto !important;
 }
 .pt-element-card:hover {
-    background: linear-gradient(145deg, rgba(28, 28, 32, 0.95) 0%, rgba(8, 8, 10, 0.98) 100%);
-    transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.50);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.90);
+    background: rgba(20, 20, 25, 0.90);
+    transform: translateY(-1px);
+    border-color: rgba(255, 255, 255, 0.12);
 }
 
 .pt-card-top {
@@ -363,7 +358,7 @@ body {
 .pt-card-symbol {
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 600;
     text-align: center;
     line-height: 1;
     color: var(--quicksilver-bright);
@@ -383,7 +378,7 @@ body {
 .tp-title, .section-title {
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
-    font-weight: 600;
+    font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 1.2px;
     color: var(--quicksilver-silver);
@@ -400,7 +395,7 @@ body {
 
 input[type="text"], input[type="number"] {
     background: var(--input-bg);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.04);
     color: var(--quicksilver-bright);
     padding: 8px 10px;
     border-radius: 9px;
@@ -413,8 +408,7 @@ input[type="text"], input[type="number"] {
 }
 input[type="text"]:focus, input[type="number"]:focus {
     outline: none;
-    border-color: rgba(255, 255, 255, 0.70);
-    box-shadow: 0 0 12px rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.18);
 }
 
 .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; position: relative; z-index: 10; }
@@ -423,8 +417,8 @@ input[type="text"]:focus, input[type="number"]:focus {
     position: absolute;
     top: 16px;
     z-index: 150;
-    background: linear-gradient(145deg, rgba(15, 15, 18, 0.90) 0%, rgba(3, 3, 4, 0.95) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(10, 10, 12, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     color: var(--quicksilver-bright);
     width: 40px;
     height: 40px;
@@ -443,7 +437,7 @@ header h1 {
     margin: 0;
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: 1.5px;
     color: var(--quicksilver-bright);
 }
@@ -467,7 +461,7 @@ header h1 {
     background: var(--card-glass);
     padding: 12px;
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.03);
     position: relative;
     z-index: 10;
 }
@@ -485,33 +479,33 @@ header h1 {
     z-index: 10;
     pointer-events: auto !important;
 }
-.action-link:hover { color: #ffffff; text-decoration: underline; }
+.action-link:hover { color: var(--quicksilver-bright); text-decoration: underline; }
 
 button.apply-btn {
     position: relative;
     padding: 9px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.30);
-    background: linear-gradient(180deg, rgba(30, 30, 35, 0.95) 0%, rgba(5, 5, 6, 0.98) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(20, 20, 24, 0.85);
     color: var(--quicksilver-bright);
     border-radius: 9px;
     font-size: 10px;
     font-family: 'JetBrains Mono', monospace;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     width: 100%;
     z-index: 10;
     pointer-events: auto !important;
 }
 button.apply-btn:hover {
-    background: linear-gradient(180deg, rgba(45, 45, 52, 0.98) 0%, rgba(12, 12, 15, 1) 100%);
-    border-color: rgba(255, 255, 255, 0.60);
+    background: rgba(28, 28, 34, 0.95);
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
 button.secondary-btn {
     position: relative;
     padding: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(10, 10, 12, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    background: rgba(8, 8, 10, 0.70);
     color: var(--quicksilver-silver);
     border-radius: 9px;
     font-size: 10px;
@@ -522,13 +516,14 @@ button.secondary-btn {
     pointer-events: auto !important;
 }
 button.secondary-btn:hover {
-    background: rgba(22, 22, 26, 0.95);
+    background: rgba(16, 16, 20, 0.80);
     color: var(--quicksilver-bright);
 }
 
 .orbits-scroll-area {
-    max-height: 200px;
-    overflow-y: auto;
+    max-height: 180px;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain;
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -542,7 +537,7 @@ input[type="checkbox"] {
     width: 16px;
     height: 16px;
     background: var(--chk-bg);
-    border: 1px solid rgba(255, 255, 255, 0.20);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 5px;
     cursor: pointer;
     position: relative;
@@ -551,7 +546,7 @@ input[type="checkbox"] {
 }
 input[type="checkbox"]:checked {
     background: var(--chk-checked-bg);
-    border-color: rgba(255, 255, 255, 0.8);
+    border-color: rgba(255, 255, 255, 0.20);
 }
 input[type="checkbox"]:checked::after {
     content: '✓';
@@ -573,7 +568,7 @@ input[type="checkbox"]:checked::after {
     background: var(--row-glass);
     padding: 7px 10px;
     border-radius: 9px;
-    border: 1px solid rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.03);
     position: relative;
     z-index: 10;
 }
