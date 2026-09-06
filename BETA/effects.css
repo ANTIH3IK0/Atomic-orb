@@ -60,7 +60,7 @@ body {
     -webkit-backdrop-filter: blur(28px) saturate(190%);
     border-radius: 20px;
     
-    /* Clean base state without standard solid borders */
+    /* Clean base state without disrupting box dimensions */
     border: 1px solid transparent !important;
 
     /* Deep Shadow & Base Metallic Rim */
@@ -68,10 +68,11 @@ body {
         0 30px 60px -12px rgba(0, 0, 0, 0.85),
         inset 0 0 0 1px rgba(220, 220, 220, 0.12);
 
-    transform: perspective(1200px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+    /* Subtle 3D Depth (Will-change prevents layout reflow glitches) */
+    transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
     pointer-events: auto !important;
-    overflow: hidden;
 }
 
 /* Left UI Overlay Panel - Scroll Fixed */
