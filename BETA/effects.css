@@ -59,8 +59,8 @@ body {
     background: rgba(12, 13, 17, 0.88);
     backdrop-filter: blur(28px) saturate(190%);
     -webkit-backdrop-filter: blur(28px) saturate(190%);
-    border-radius: 20px;
-    border: 1px solid transparent !important;
+    border-radius: 40px;
+    border: 1.52px solid transparent !important;
 
     /* Base Shadow & Metallic Edge Rim */
     box-shadow: 
