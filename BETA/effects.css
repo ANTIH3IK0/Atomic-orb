@@ -55,11 +55,10 @@ body {
 
 /* Executive Quicksilver Glass Panel */
 .ui-overlay, .tp-overlay, .pt-modal-window {
-    position: relative;
     background: rgba(12, 13, 17, 0.88);
     backdrop-filter: blur(28px) saturate(190%);
     -webkit-backdrop-filter: blur(28px) saturate(190%);
-    border-radius: 16px;
+    border-radius: 20px;
     
     /* Clean base state without standard solid borders */
     border: 1px solid transparent !important;
