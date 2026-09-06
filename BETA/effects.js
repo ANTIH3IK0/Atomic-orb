@@ -4,70 +4,39 @@ document.addEventListener('DOMContentLoaded', () => {
     initGroupAttributesObserver();
     initModalVisibilityHandler();
     initGSAPAnimations();
-    initGlassInteractivity();
     initSuborbitNotationObserver();
-    initLiquidGlassMetallic();
+    initQuicksilverGlassEngine();
 });
 
-/* Throttled High-Reflection WebGL LiquidGlass Engine */
-async function initLiquidGlassMetallic() {
-    try {
-        const bgCanvas = document.getElementById('renderCanvas');
-        if (bgCanvas) {
-            bgCanvas.setAttribute('data-dynamic', 'true');
-        }
+/* Unified Quicksilver Liquid Glass Engine */
+function initQuicksilverGlassEngine() {
+    const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
+    
+    panels.forEach(panel => {
+        // Track cursor for dynamic specular highlights & subtle 3D tilt
+        panel.addEventListener('mousemove', (e) => {
+            const rect = panel.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Calculate relative offset for specular light (-1 to 1)
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const tiltX = (y - centerY) / centerY * -2;
+            const tiltY = (x - centerX) / centerX * 2;
 
-        const module = await import('../__libs/liquidglass/dist/index.js').catch(() =>
-            import('https://cdn.jsdelivr.net/npm/@ybouane/liquidglass/dist/index.js')
-        );
-        const { LiquidGlass } = module;
-
-        const glassEls = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
-        
-        // Aggressive specular reflection and edge highlight setup
-        glassEls.forEach(el => {
-            el.dataset.config = JSON.stringify({
-                blurAmount: 0.08,
-                refraction: 0.55,
-                specular: 1.40,        /* Boosted light reflection */
-                edgeHighlight: 0.90,   /* Sharp metallic glass edges */
-                fresnel: 1.20,         /* Aggressive angle reflections */
-                chromAberration: 0.04,
-                opacity: 0.90,
-                cornerRadius: 20
-            });
+            panel.style.setProperty('--mouse-x', `${x}px`);
+            panel.style.setProperty('--mouse-y', `${y}px`);
+            panel.style.setProperty('--tilt-x', `${tiltX}deg`);
+            panel.style.setProperty('--tilt-y', `${tiltY}deg`);
         });
 
-        const lgInstance = await LiquidGlass.init({
-            root: document.body,
-            glassElements: glassEls
+        // Reset tilt on mouse leave
+        panel.addEventListener('mouseleave', () => {
+            panel.style.setProperty('--tilt-x', `0deg`);
+            panel.style.setProperty('--tilt-y', `0deg`);
         });
-
-        // Frame Throttler (Limits texture capturing to 30 FPS to eliminate performance lag)
-        let lastFrameTime = 0;
-        const fpsInterval = 1000 / 30;
-
-        function throttledRefractionLoop(timestamp) {
-            requestAnimationFrame(throttledRefractionLoop);
-
-            const elapsed = timestamp - lastFrameTime;
-            if (elapsed > fpsInterval) {
-                lastFrameTime = timestamp - (elapsed % fpsInterval);
-
-                if (lgInstance) {
-                    if (typeof lgInstance.update === 'function') {
-                        lgInstance.update();
-                    } else if (typeof lgInstance.markChanged === 'function' && bgCanvas) {
-                        lgInstance.markChanged(bgCanvas);
-                    }
-                }
-            }
-        }
-        requestAnimationFrame(throttledRefractionLoop);
-
-    } catch (err) {
-        console.warn('LiquidGlass WebGL initialization skipped:', err);
-    }
+    });
 }
 
 /* Format Quantum Suborbit Notation */
@@ -121,7 +90,7 @@ function initGroupAttributesObserver() {
     }
 }
 
-/* Modal Visibility Handler with smooth transition sync */
+/* Modal Visibility Handler */
 function initModalVisibilityHandler() {
     const modalBackdrop = document.querySelector('.pt-modal-backdrop');
     if (!modalBackdrop) return;
@@ -144,18 +113,6 @@ function initModalVisibilityHandler() {
     syncModalDisplay();
     const observer = new MutationObserver(syncModalDisplay);
     observer.observe(modalBackdrop, { attributes: true, attributeFilter: ['class'] });
-}
-
-/* Cursor Specular Tracking */
-function initGlassInteractivity() {
-    const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
-    panels.forEach(panel => {
-        panel.addEventListener('mousemove', (e) => {
-            const rect = panel.getBoundingClientRect();
-            panel.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
-            panel.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
-        });
-    });
 }
 
 /* Entrance Animations */
