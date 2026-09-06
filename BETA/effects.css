@@ -55,22 +55,19 @@ body {
 
 /* Executive Quicksilver Glass Panel */
 .ui-overlay, .tp-overlay, .pt-modal-window {
-    position: absolute;
-    background: rgba(13, 14, 18, 0.75);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    position: relative;
+    background: rgba(12, 13, 17, 0.88);
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
     border-radius: 16px;
-
-    /* Precision Hairline Specular Edges */
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.18) !important;
-    border-left: 1px solid rgba(255, 255, 255, 0.12) !important;
     
-    /* Layered Deep Shadow & Inset Light Rim */
+    /* Clean base state without standard solid borders */
+    border: 1px solid transparent !important;
+
+    /* Deep Shadow & Base Metallic Rim */
     box-shadow: 
-        0 24px 48px -12px rgba(0, 0, 0, 0.65),
-        inset 0 1px 0 0 rgba(255, 255, 255, 0.12),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+        0 30px 60px -12px rgba(0, 0, 0, 0.85),
+        inset 0 0 0 1px rgba(220, 220, 220, 0.12);
 
     transform: perspective(1200px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -137,32 +134,39 @@ body {
     mix-blend-mode: overlay;
 }
 
-/* Ambient Metallic Glint (Slow Linear Anamorphic Reflection) */
+/* 2. Ambient Liquid Mercury Corner Refraction */
 .ui-overlay::after, .tp-overlay::after, .pt-modal-window::after {
     content: '';
     position: absolute;
-    top: -100%;
-    left: -100%;
-    width: 300%;
-    height: 300%;
+    inset: 0;
+    border-radius: 16px;
+    padding: 1px;
+
+    /* Soft ambient liquid reflection along top/left edges */
     background: linear-gradient(
-        105deg,
-        transparent 45%,
-        rgba(255, 255, 255, 0.015) 48%,
-        rgba(255, 255, 255, 0.05) 50%,
-        rgba(255, 255, 255, 0.015) 52%,
-        transparent 55%
+        135deg,
+        #dcdcdc 0%,
+        rgba(220, 220, 220, 0.25) 20%,
+        rgba(220, 220, 220, 0.05) 50%,
+        rgba(220, 220, 220, 0.15) 100%
     );
-    mix-blend-mode: plus-lighter;
+
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+
     pointer-events: none !important;
-    z-index: 1;
-    animation: quicksilverAnamorphicGlint 14s ease-in-out infinite;
+    z-index: 5;
+    opacity: 0.6;
+    animation: quicksilverEdgeBreathe 6s ease-in-out infinite alternate, quicksilverAnamorphicGlint 14s ease-in-out infinite;
 }
 
-@keyframes quicksilverShine {
-    0%, 100% { opacity: 0.1; }
+/* @keyframes quicksilverShine {
+     0%, 100% { opacity: 0.1; }
     50% { opacity: 0.25; }
-}
+} */
 
 /* Micro Anamorphic Reflection Motion */
 @keyframes quicksilverAnamorphicGlint {
@@ -176,20 +180,45 @@ body {
     }
 }
 
-/* Dynamic Interactive Specular Sheen (Subtle Focus) */
+/* Subtle Mercury(quicksilver) Edge Reflection Pulse */
+@keyframes quicksilverEdgeBreathe {
+    0% {
+        opacity: 0.4;
+        filter: brightness(0.9);
+    }
+    100% {
+        opacity: 0.85;
+        filter: brightness(1.2);
+    }
+}
+
+/* 1. Dynamic Liquid Mercury Edge Sheen (#dcdcdc Sharp Rim Highlight) */
 .ui-overlay::before, .tp-overlay::before, .pt-modal-window::before {
     content: '';
     position: absolute;
     inset: 0;
+    border-radius: 16px;
+    padding: 1.5px; /* Edge thickness */
+
+    /* Concentrated Liquid Metal Specular Highlight */
     background: radial-gradient(
-        500px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        rgba(255, 255, 255, 0.07),
-        rgba(255, 255, 255, 0.015) 35%,
-        transparent 70%
+        220px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        #ffffff 0%,
+        #dcdcdc 30%,
+        rgba(220, 220, 220, 0.35) 60%,
+        transparent 90%
     );
-    mix-blend-mode: overlay;
+
+    /* Masking out panel interior to create a pure 1.5px metallic edge */
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+
     pointer-events: none !important;
-    z-index: 2;
+    z-index: 10;
+    filter: drop-shadow(0 0 2px rgba(220, 220, 220, 0.8));
 }
 
 .mode-switch-bar {
