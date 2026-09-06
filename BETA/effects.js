@@ -6,9 +6,43 @@ document.addEventListener('DOMContentLoaded', () => {
     initGSAPAnimations();
     initGlassInteractivity();
     initSuborbitNotationObserver();
+    initLiquidGlassMetallic();
 });
 
-/* Convert Quantum Suborbit Notation (e.g. 1s1/2 -> 1s<sub>1/2</sub>) */
+/* LiquidGlass WebGL Renderer Initialization */
+async function initLiquidGlassMetallic() {
+    try {
+        // Fallback import chain supporting local build or jsDelivr CDN
+        const module = await import('../__libs/liquidglass/dist/index.js').catch(() =>
+            import('https://cdn.jsdelivr.net/npm/@ybouane/liquidglass/dist/index.js')
+        );
+        const { LiquidGlass } = module;
+
+        const glassEls = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
+        
+        glassEls.forEach(el => {
+            el.dataset.config = JSON.stringify({
+                blurAmount: 0.12,
+                refraction: 0.25,
+                specular: 0.18,
+                edgeHighlight: 0.10,
+                fresnel: 0.75,
+                chromAberration: 0.02,
+                opacity: 0.95,
+                cornerRadius: 20
+            });
+        });
+
+        await LiquidGlass.init({
+            root: document.body,
+            glassElements: glassEls
+        });
+    } catch (err) {
+        console.warn('LiquidGlass WebGL initialization skipped:', err);
+    }
+}
+
+/* Format Quantum Suborbit Notation (e.g. 1s1/2 -> 1s<sub>1/2</sub>) */
 function formatSuborbitNotation(text) {
     if (!text) return '';
     return text.replace(/([0-9][a-zA-Z])([0-9]+\/[0-9]+)/g, '$1<sub>$2</sub>');
@@ -33,12 +67,11 @@ function processSuborbitRows() {
 
 function initSuborbitNotationObserver() {
     processSuborbitRows();
-    const container = document.body;
     const observer = new MutationObserver(() => processSuborbitRows());
-    observer.observe(container, { childList: true, subtree: true });
+    observer.observe(document.body, { childList: true, subtree: true });
 }
 
-/* Dynamic Data-Group Attribute Applicator for Periodic Table Elements */
+/* Dynamic Periodic Table Group Attributes */
 function applyGroupDataAttributes() {
     const cards = document.querySelectorAll('.pt-element-card');
     cards.forEach(card => {
@@ -61,7 +94,7 @@ function initGroupAttributesObserver() {
     }
 }
 
-/* Modal Visibility & Pointer Events Management */
+/* Modal Visibility Handler */
 function initModalVisibilityHandler() {
     const modalBackdrop = document.querySelector('.pt-modal-backdrop');
     if (!modalBackdrop) return;
@@ -77,7 +110,7 @@ function initModalVisibilityHandler() {
     observer.observe(modalBackdrop, { attributes: true, attributeFilter: ['class'] });
 }
 
-/* Dynamic Cursor Quicksilver Specular Lighting Track */
+/* Cursor Specular Tracking */
 function initGlassInteractivity() {
     const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
     panels.forEach(panel => {
@@ -89,7 +122,7 @@ function initGlassInteractivity() {
     });
 }
 
-/* GSAP Smooth Entrance Animations */
+/* Entrance Animations */
 function initGSAPAnimations() {
     if (typeof gsap === 'undefined') return;
 
