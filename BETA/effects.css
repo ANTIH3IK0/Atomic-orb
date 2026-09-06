@@ -1,46 +1,53 @@
 /* effects.css */
 
 :root {
-    --bg-dark: #000204;
+    --bg-dark: #020305;
 
-    /* Pure Solid Alpha Transparent Base */
-    --panel-glass: rgba(4, 10, 18, 0.75);
-    --card-glass: rgba(6, 12, 22, 0.65);
-    --row-glass: rgba(8, 16, 28, 0.68);
-    --input-bg: rgba(2, 6, 12, 0.75);
+    /* Deep Obsidian Quicksilver Glass Base */
+    --panel-glass: rgba(6, 10, 16, 0.88);
+    --card-glass: rgba(10, 16, 26, 0.75);
+    --row-glass: rgba(12, 20, 32, 0.72);
+    --input-bg: rgba(3, 6, 12, 0.90);
 
-    /* Quicksilver Specular Palette */
-    --quicksilver-bright: #c4dbe8;
-    --quicksilver-silver: #6a829a;
-    --quicksilver-dark: #05080e;
+    /* Liquid Chromium Specular Palette */
+    --quicksilver-bright: #f0f6fc;
+    --quicksilver-silver: #a3b8cc;
+    --quicksilver-dark: #04070d;
+    --quicksilver-chrome: rgba(220, 240, 255, 0.75);
 
-    /* Actinium Ionized Luminescence */
-    --actinium-core: rgba(198, 236, 252, 0.22);
-    --actinium-glow: rgba(146, 208, 232, 0.10);
-    --actinium-sheen: rgba(158, 214, 238, 0.06);
-    --actinium-ember: rgba(110, 185, 214, 0.16);
+    /* Ionized Liquid Core Highlights */
+    --actinium-core: rgba(210, 245, 255, 0.35);
+    --actinium-glow: rgba(120, 190, 245, 0.25);
+    --actinium-sheen: rgba(255, 255, 255, 0.15);
+    --actinium-ember: rgba(140, 210, 255, 0.40);
 
     /* Text System */
-    --text-main: #9cb1c4;
-    --text-sub: #6f869e;
-    --text-muted: #3c4c60;
-    --text-accent: #78a8cb;
+    --text-main: #b2c5d6;
+    --text-sub: #7890a8;
+    --text-muted: #485c72;
+    --text-accent: #82ccff;
 
     /* Controls */
-    --chk-bg: rgba(0, 0, 0, 0.60);
-    --chk-checked-bg: rgba(0, 0, 0, 0.85);
-    --chk-tick-color: #c4dbe8;
+    --chk-bg: rgba(2, 5, 10, 0.85);
+    --chk-checked-bg: rgba(15, 28, 45, 0.95);
+    --chk-tick-color: #f0f6fc;
 }
 
-/* Ambient Pulsing Animations */
-@keyframes actiniumBreath {
-    0%, 100% { opacity: 0.20; }
-    50%      { opacity: 0.50; }
+/* Ambient Liquid Specular Animations */
+@keyframes quicksilverGleam {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50%      { opacity: 0.7; transform: scale(1.02); }
 }
 
 @keyframes actiniumCardPulse {
-    0%, 100% { box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.9), 0 0 6px rgba(146, 208, 232, 0.03); }
-    50%      { box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.75), 0 0 14px rgba(198, 236, 252, 0.10); }
+    0%, 100% { 
+        box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.95), 0 0 8px rgba(120, 190, 245, 0.1); 
+        border-color: rgba(220, 240, 255, 0.15);
+    }
+    50% { 
+        box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.8), 0 0 20px rgba(180, 230, 255, 0.25); 
+        border-color: rgba(255, 255, 255, 0.4);
+    }
 }
 
 * {
@@ -55,7 +62,7 @@ body {
     padding: 0;
     width: 100vw;
     height: 100vh;
-    background: transparent;
+    background: var(--bg-dark);
     color: var(--text-main);
     overflow: hidden;
     display: flex;
@@ -71,7 +78,6 @@ body {
     z-index: 0;
 }
 
-/* Modal Open Target */
 body.modal-open #renderCanvas,
 body.modal-open .ui-overlay,
 body.modal-open .tp-overlay,
@@ -80,53 +86,55 @@ body.modal-open .tp-restore-btn {
     pointer-events: none;
 }
 
-/* Clean UI Panels */
+/* Quicksilver Heavy Metallic Panels */
 .ui-overlay, .tp-overlay, .pt-modal-window {
     position: absolute;
-    background: var(--panel-glass);
-    border: 1px solid rgba(198, 236, 252, 0.12) !important;
+    background: linear-gradient(145deg, rgba(14, 22, 34, 0.92) 0%, rgba(4, 7, 12, 0.95) 100%);
+    border: 1px solid rgba(220, 240, 255, 0.18) !important;
     border-radius: 20px;
 
-    /* Glass Blur Filter */
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
 
-    /* Touch & Momentum Scroll Isolation for iPad/Safari */
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y !important;
     overscroll-behavior-y: contain;
 
     box-shadow:
-        0 30px 60px rgba(0, 0, 0, 0.7),
-        0 0 30px rgba(0, 0, 0, 0.5),
-        0 0 28px rgba(110, 185, 214, 0.05),
-        inset 0 1px 1px rgba(198, 236, 252, 0.18);
+        0 35px 70px rgba(0, 0, 0, 0.85),
+        0 0 40px rgba(0, 0, 0, 0.7),
+        0 0 25px rgba(140, 210, 255, 0.08),
+        inset 0 1px 2px rgba(255, 255, 255, 0.4),
+        inset 0 -2px 6px rgba(0, 0, 0, 0.9);
     will-change: transform, opacity;
     overflow: hidden;
 }
 
+/* Liquid Light Spot Specular Surface */
 .ui-overlay::before, .tp-overlay::before, .pt-modal-window::before {
     content: '';
     position: absolute;
     inset: 0;
     background: radial-gradient(
-        800px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        rgba(198, 236, 252, 0.08),
-        rgba(146, 208, 232, 0.02) 40%,
-        transparent 80%
+        600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(255, 255, 255, 0.22),
+        rgba(160, 220, 255, 0.08) 35%,
+        transparent 70%
     );
     pointer-events: none;
     z-index: 1;
 }
 
+/* Metallic Edge Bevel Sheen */
 .ui-overlay::after, .tp-overlay::after, .pt-modal-window::after {
     content: '';
     position: absolute;
     inset: 0;
     border-radius: inherit;
     box-shadow:
-        inset 0 0 30px rgba(110, 185, 214, 0.04),
-        inset 0 -12px 24px rgba(0, 0, 0, 0.4);
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.8),
+        inset 0 0 20px rgba(180, 230, 255, 0.05);
     pointer-events: none;
     z-index: 2;
 }
@@ -136,7 +144,7 @@ body.modal-open .tp-restore-btn {
     bottom: 16px;
     left: 16px;
     width: 380px;
-    height: calc(100dvh - 32px); /* Fully expanded height */
+    height: calc(100dvh - 32px);
     padding: 24px;
     display: flex;
     flex-direction: column;
@@ -166,14 +174,14 @@ body.modal-open .tp-restore-btn {
 .mode-switch-bar {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    background: rgba(0, 0, 0, 0.45);
-    border: 1px solid rgba(198, 236, 252, 0.08);
+    background: rgba(2, 5, 10, 0.85);
+    border: 1px solid rgba(220, 240, 255, 0.12);
     border-radius: 12px;
     padding: 4px;
     gap: 4px;
     position: relative;
     z-index: 3;
-    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
 }
 
 .mode-btn {
@@ -186,17 +194,19 @@ body.modal-open .tp-restore-btn {
     font-weight: 600;
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     text-align: center;
 }
 .mode-btn:hover {
-    color: var(--text-main);
-    background: rgba(255, 255, 255, 0.04);
+    color: var(--quicksilver-bright);
+    background: rgba(255, 255, 255, 0.06);
 }
 .mode-btn.active {
-    background: rgba(10, 20, 32, 0.65);
-    color: var(--quicksilver-bright);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(198, 236, 252, 0.15);
+    background: linear-gradient(180deg, rgba(35, 55, 80, 0.8) 0%, rgba(12, 22, 35, 0.9) 100%);
+    color: #ffffff;
+    box-shadow: 
+        0 4px 14px rgba(0, 0, 0, 0.7), 
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .mode-container {
@@ -211,7 +221,7 @@ body.modal-open .tp-restore-btn {
     position: fixed;
     top: 0; left: 0;
     width: 100vw; height: 100vh;
-    background: rgba(1, 4, 8, 0.85);
+    background: rgba(1, 2, 4, 0.90);
     z-index: 1000;
     display: flex;
     align-items: center;
@@ -244,7 +254,7 @@ body.modal-open .tp-restore-btn {
     justify-content: space-between;
     align-items: center;
     padding-bottom: 14px;
-    box-shadow: 0 1px 0 rgba(158, 214, 238, 0.08);
+    border-bottom: 1px solid rgba(220, 240, 255, 0.12);
     position: relative;
     z-index: 3;
 }
@@ -261,8 +271,8 @@ body.modal-open .tp-restore-btn {
 }
 
 .close-btn {
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(198, 236, 252, 0.08);
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     color: var(--text-sub);
     width: 32px;
     height: 32px;
@@ -277,9 +287,9 @@ body.modal-open .tp-restore-btn {
     z-index: 3;
 }
 .close-btn:hover {
-    background: rgba(180, 50, 50, 0.25);
-    color: #e2a0a0;
-    box-shadow: 0 0 16px rgba(180, 50, 50, 0.2);
+    background: rgba(220, 60, 60, 0.35);
+    color: #ffffff;
+    box-shadow: 0 0 16px rgba(220, 60, 60, 0.4);
 }
 
 .pt-scroll-area {
@@ -309,20 +319,20 @@ body.modal-open .tp-restore-btn {
     justify-content: center;
 }
 
-/* Quicksilver Element Cards */
+/* Quicksilver Metallic Cards */
 .pt-element-card {
     position: relative;
     height: 58px;
     padding: 6px;
     border-radius: 10px;
-    border: 1px solid rgba(198, 236, 252, 0.05);
+    border: 1px solid rgba(220, 240, 255, 0.1);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     cursor: pointer;
-    background: rgba(4, 10, 18, 0.80);
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.4);
+    background: linear-gradient(135deg, rgba(12, 18, 28, 0.9) 0%, rgba(4, 8, 14, 0.95) 100%);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15), inset 0 0 12px rgba(0, 0, 0, 0.6);
     overflow: hidden;
 }
 
@@ -330,33 +340,33 @@ body.modal-open .tp-restore-btn {
     content: '';
     position: absolute;
     top: 0; left: -100%; width: 100%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(198, 236, 252, 0.1), transparent);
-    transition: left 0.7s ease;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+    transition: left 0.5s ease;
     pointer-events: none;
 }
 .pt-element-card:hover::before { left: 100%; }
 
 .pt-element-card:hover {
-    background: rgba(8, 18, 30, 0.95);
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.7), 0 0 14px var(--actinium-glow);
+    background: linear-gradient(135deg, rgba(25, 40, 60, 0.95) 0%, rgba(10, 18, 30, 0.98) 100%);
+    transform: translateY(-2px) scale(1.03);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.8), 0 0 18px rgba(180, 230, 255, 0.25);
     z-index: 10;
 }
 
 .pt-element-card.active {
-    background: rgba(12, 24, 40, 0.95);
-    box-shadow: 0 0 20px var(--actinium-glow), inset 0 1px 0 rgba(198, 236, 252, 0.2);
+    background: linear-gradient(135deg, rgba(30, 50, 75, 0.95) 0%, rgba(14, 24, 40, 0.98) 100%);
+    border-color: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 0 22px rgba(180, 230, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
-.pt-element-card[data-cat^="lanthanide"] {
-    box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.5), inset 0 0 8px rgba(146, 208, 232, 0.05);
-}
+.pt-element-card[data-cat^="lanthanide"],
 .pt-element-card[data-cat^="actinide"] {
-    box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(146, 208, 232, 0.08);
+    border-color: rgba(180, 225, 255, 0.2);
 }
 
 [id^="pt-card_Ac"] {
-    animation: actiniumCardPulse 5s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+    animation: actiniumCardPulse 4s cubic-bezier(0.37, 0, 0.63, 1) infinite;
 }
 
 .pt-card-top {
@@ -364,7 +374,7 @@ body.modal-open .tp-restore-btn {
     justify-content: space-between;
     align-items: center;
     font-size: 8px;
-    color: var(--text-muted);
+    color: var(--text-sub);
     font-family: 'JetBrains Mono', monospace;
     font-weight: 500;
 }
@@ -374,10 +384,11 @@ body.modal-open .tp-restore-btn {
     font-size: 13px;
     color: var(--quicksilver-bright);
     text-align: center;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
 .pt-card-name {
     font-size: 8px;
-    color: var(--text-muted);
+    color: var(--text-sub);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -402,10 +413,10 @@ body.modal-open .tp-restore-btn {
 .tp-field { display: flex; flex-direction: row; align-items: center; gap: 8px; }
 .tp-field label { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; width: 14px; }
 
-/* Inputs and Forms */
+/* Dynamic Dark Metallic Inputs */
 input[type="text"], input[type="number"] {
     background: var(--input-bg);
-    border: 1px solid rgba(198, 236, 252, 0.08);
+    border: 1px solid rgba(220, 240, 255, 0.12);
     color: var(--quicksilver-bright);
     padding: 9px 12px;
     border-radius: 10px;
@@ -413,12 +424,12 @@ input[type="text"], input[type="number"] {
     font-family: 'JetBrains Mono', monospace;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     width: 100%;
-    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.85);
 }
 input[type="text"]:focus, input[type="number"]:focus {
     outline: none;
-    border-color: rgba(198, 236, 252, 0.25);
-    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6), 0 0 10px var(--actinium-glow);
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.9), 0 0 12px rgba(180, 230, 255, 0.3);
 }
 
 .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; position: relative; z-index: 3; }
@@ -427,8 +438,8 @@ input[type="text"]:focus, input[type="number"]:focus {
     position: absolute;
     top: 16px;
     z-index: 9;
-    background: var(--panel-glass);
-    border: 1px solid rgba(198, 236, 252, 0.12);
+    background: linear-gradient(145deg, rgba(15, 25, 38, 0.92) 0%, rgba(5, 10, 18, 0.95) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     color: var(--quicksilver-bright);
     width: 40px;
     height: 40px;
@@ -438,21 +449,22 @@ input[type="text"]:focus, input[type="number"]:focus {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.4);
     transition: all 0.25s ease;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 .restore-btn:hover, .tp-restore-btn:hover {
-    transform: scale(1.04);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.8), 0 0 14px var(--actinium-glow);
+    transform: scale(1.06);
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.9), 0 0 18px rgba(180, 230, 255, 0.3);
 }
 .restore-btn { left: 16px; }
 .tp-restore-btn { right: 16px; }
 
 .ui-overlay::-webkit-scrollbar, .pt-scroll-area::-webkit-scrollbar, .orbits-scroll-area::-webkit-scrollbar { width: 4px; height: 4px; }
 .ui-overlay::-webkit-scrollbar-thumb, .pt-scroll-area::-webkit-scrollbar-thumb, .orbits-scroll-area::-webkit-scrollbar-thumb {
-    background: rgba(146, 208, 232, 0.15);
+    background: rgba(220, 240, 255, 0.25);
     border-radius: 2px;
 }
 
@@ -472,10 +484,10 @@ header h1::before {
     content: '';
     width: 7px;
     height: 7px;
-    background: var(--actinium-ember);
+    background: var(--quicksilver-bright);
     border-radius: 50%;
-    box-shadow: 0 0 10px var(--actinium-ember);
-    animation: actiniumBreath 3.5s infinite ease-in-out;
+    box-shadow: 0 0 12px #ffffff;
+    animation: quicksilverGleam 2.5s infinite ease-in-out;
 }
 
 .minimize-btn {
@@ -495,12 +507,10 @@ header h1::before {
     background: var(--card-glass);
     padding: 12px;
     border-radius: 12px;
-    border: 1px solid rgba(198, 236, 252, 0.05);
-    box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(220, 240, 255, 0.1);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1), inset 0 0 12px rgba(0, 0, 0, 0.6);
     position: relative;
     z-index: 3;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
 }
 
 .input-field { display: flex; flex-direction: column; gap: 4px; }
@@ -510,12 +520,12 @@ header h1::before {
 .action-link { font-size: 9px; color: var(--text-accent); cursor: pointer; font-family: 'JetBrains Mono', monospace; opacity: 0.85; transition: opacity 0.2s; }
 .action-link:hover { opacity: 1; text-decoration: underline; }
 
-/* Dynamic Buttons */
+/* Liquid Quicksilver Buttons */
 button.apply-btn {
     position: relative;
     padding: 10px 14px;
-    border: 1px solid rgba(198, 236, 252, 0.12);
-    background: rgba(10, 20, 32, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: linear-gradient(180deg, rgba(28, 45, 68, 0.85) 0%, rgba(10, 18, 30, 0.95) 100%);
     color: var(--quicksilver-bright);
     border-radius: 10px;
     font-size: 10px;
@@ -526,27 +536,28 @@ button.apply-btn {
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 3;
     width: 100%;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(198, 236, 252, 0.12);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 button.apply-btn::before {
     content: '';
     position: absolute;
     top: 0; left: -100%; width: 100%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(198, 236, 252, 0.12), transparent);
-    transition: left 0.7s ease;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.6s ease;
 }
 button.apply-btn:hover::before { left: 100%; }
 button.apply-btn:hover {
-    background: rgba(14, 28, 44, 0.75);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7), 0 0 14px var(--actinium-glow);
+    background: linear-gradient(180deg, rgba(38, 60, 90, 0.95) 0%, rgba(16, 28, 46, 0.98) 100%);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.8), 0 0 16px rgba(180, 230, 255, 0.3);
     transform: translateY(-1px);
 }
 
 button.secondary-btn {
     position: relative;
     padding: 9px;
-    border: 1px solid rgba(198, 236, 252, 0.05);
-    background: rgba(6, 12, 20, 0.35);
+    border: 1px solid rgba(220, 240, 255, 0.1);
+    background: rgba(10, 16, 26, 0.6);
     color: var(--quicksilver-silver);
     border-radius: 10px;
     font-size: 10px;
@@ -556,11 +567,12 @@ button.secondary-btn {
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     width: 100%;
     z-index: 3;
-    box-shadow: inset 0 1px 0 rgba(198, 236, 252, 0.06);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 button.secondary-btn:hover {
-    background: rgba(10, 20, 32, 0.55);
+    background: rgba(20, 32, 50, 0.8);
     color: var(--quicksilver-bright);
+    border-color: rgba(255, 255, 255, 0.25);
     transform: translateY(-1px);
 }
 
@@ -585,8 +597,8 @@ button.secondary-btn:hover {
     background: var(--row-glass);
     padding: 6px 8px;
     border-radius: 10px;
-    border: 1px solid rgba(198, 236, 252, 0.05);
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(220, 240, 255, 0.08);
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.5);
 }
 .orbit-row .ex-input { width: 100%; text-align: center; padding: 4px; font-size: 10px; }
 .orbit-row .orbit-label {
@@ -605,7 +617,7 @@ input[type="checkbox"] {
     width: 16px;
     height: 16px;
     background: var(--chk-bg);
-    border: 1px solid rgba(198, 236, 252, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 5px;
     cursor: pointer;
     position: relative;
@@ -614,11 +626,12 @@ input[type="checkbox"] {
     margin: 0;
     display: inline-block;
     vertical-align: middle;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
 }
 input[type="checkbox"]:checked {
     background: var(--chk-checked-bg);
-    box-shadow: 0 0 10px var(--actinium-glow), inset 0 1px 0 rgba(198, 236, 252, 0.18);
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 12px rgba(180, 230, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 input[type="checkbox"]:checked::after {
     content: '✓';
@@ -640,8 +653,8 @@ input[type="checkbox"]:checked::after {
     background: var(--row-glass);
     padding: 7px 10px;
     border-radius: 10px;
-    border: 1px solid rgba(198, 236, 252, 0.05);
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(220, 240, 255, 0.08);
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.5);
 }
 
 input[type="range"] {
