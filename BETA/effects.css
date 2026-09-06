@@ -53,29 +53,28 @@ body {
     z-index: 0;
 }
 
-/* Executive Quicksilver Glass Panel */
+/* Base Panel Glass Properties (Eliminates forced 3D stacking context layout shifts) */
 .ui-overlay, .tp-overlay, .pt-modal-window {
+    position: absolute;
     background: rgba(12, 13, 17, 0.88);
     backdrop-filter: blur(28px) saturate(190%);
     -webkit-backdrop-filter: blur(28px) saturate(190%);
     border-radius: 20px;
-    
-    /* Clean base state without disrupting box dimensions */
     border: 1px solid transparent !important;
 
-    /* Deep Shadow & Base Metallic Rim */
+    /* Base Shadow & Metallic Edge Rim */
     box-shadow: 
         0 30px 60px -12px rgba(0, 0, 0, 0.85),
         inset 0 0 0 1px rgba(220, 220, 220, 0.12);
 
-    /* Subtle 3D Depth (Will-change prevents layout reflow glitches) */
+    /* Clean tilt mapping without forced perspective overlap */
     transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     will-change: transform;
     pointer-events: auto !important;
 }
 
-/* Left UI Overlay Panel - Scroll Fixed */
+/* Left UI Overlay Panel */
 .ui-overlay {
     top: 16px;
     left: 16px;
@@ -106,6 +105,7 @@ body {
     flex-direction: column;
     gap: 14px;
     z-index: 100;
+
     overflow-y: auto !important;
     overscroll-behavior-y: contain;
     touch-action: pan-y;
@@ -323,6 +323,8 @@ body {
     pointer-events: auto;
 }
 
+
+/* Periodic Table Modal Container Fixed Overlay */
 .pt-modal-window {
     position: relative;
     width: 96vw;
@@ -335,6 +337,26 @@ body {
     flex-direction: column;
     gap: 16px;
     overflow: hidden;
+}
+
+/* Scroll Window Inner Boundaries */
+.pt-scroll-area {
+    overflow: auto;
+    flex: 1;
+    max-height: calc(92dvh - 80px);
+    padding: 4px;
+    position: relative;
+    z-index: 10;
+    overscroll-behavior: contain;
+}
+
+/* Grid Dimension Calibration */
+.pt-grid-container {
+    display: grid;
+    grid-template-columns: 28px repeat(18, minmax(56px, 1fr));
+    grid-gap: 5px;
+    min-width: 1100px;
+    width: 100%;
 }
 
 .pt-modal-header {
@@ -376,22 +398,6 @@ body {
 .close-btn:hover {
     background: rgba(140, 30, 30, 0.80);
     color: #d4d4d8;
-}
-
-.pt-scroll-area {
-    overflow: auto;
-    max-height: calc(92dvh - 80px);
-    padding: 4px;
-    position: relative;
-    z-index: 10;
-    overscroll-behavior-y: contain;
-}
-
-.pt-grid-container {
-    display: grid;
-    grid-template-columns: 28px repeat(18, minmax(56px, 1fr));
-    grid-gap: 5px;
-    min-width: 1100px;
 }
 
 .pt-element-card {
