@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initGlassInteractivity();
 });
 
-/* Official LiquidGL Initialization - Dark Extra-Blue Black Quicksilver Theme */
+/* Official LiquidGL Initialization with Balanced Refraction & High Visibility */
 function initLiquidGLQuicksilver() {
     if (typeof liquidGL !== 'function') return;
 
@@ -19,13 +19,13 @@ function initLiquidGLQuicksilver() {
             snapshot: "body",
             target: ".ui-overlay, .tp-overlay, .pt-modal-window",
             resolution: 2.0,
-            refraction: 0.015,   // Dark quicksilver refraction strength
-            aberration: 0.005,   // Clean, non-distorting specular edge tint
-            bevelDepth: 0.14,    // Deep bevel for thick liquid mercury edges
-            bevelWidth: 0.18,    // Broad metallic edge reflection
-            frost: 0,            // Pure, crystal clear reflection
-            shadow: true,        // Deep shadow beneath panels
-            specular: true,      // Enable animated high-contrast light highlights
+            refraction: 0.008,   /* Balanced refraction strength to prevent pitch-black distortion */
+            aberration: 0.002,   /* Subtle metallic edge shimmer */
+            bevelDepth: 0.08,    /* Clean bevel depth */
+            bevelWidth: 0.12,    /* Proportional edge highlights */
+            frost: 0,            /* Crystal clear semi-transparent reflection */
+            shadow: true,        /* Soft drop-shadow */
+            specular: true,      /* Light highlights on movement */
             reveal: "fade",
             tilt: false,
             tiltFactor: 5,
@@ -33,7 +33,7 @@ function initLiquidGLQuicksilver() {
             magnify: 1.0,
             on: {
                 init(instance) {
-                    console.log("Dark Extra-Blue Quicksilver LiquidGL Ready!", instance);
+                    console.log("Semi-Transparent LiquidGL Glass Ready!", instance);
                 }
             }
         });
@@ -89,7 +89,7 @@ function initModalVisibilityHandler() {
     observer.observe(modalBackdrop, { attributes: true, attributeFilter: ['class'] });
 }
 
-/* Dynamic Mouse Cursor Lighting Track for Extra Metallic Gloss */
+/* Dynamic Mouse Cursor Lighting Track for Specular Gloss */
 function initGlassInteractivity() {
     const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
     panels.forEach(panel => {
