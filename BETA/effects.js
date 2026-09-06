@@ -5,7 +5,38 @@ document.addEventListener('DOMContentLoaded', () => {
     initModalVisibilityHandler();
     initGSAPAnimations();
     initGlassInteractivity();
+    initSuborbitNotationObserver();
 });
+
+/* Convert Quantum Suborbit Notation (e.g. 1s1/2 -> 1s<sub>1/2</sub>) */
+function formatSuborbitNotation(text) {
+    if (!text) return '';
+    return text.replace(/([0-9][a-zA-Z])([0-9]+\/[0-9]+)/g, '$1<sub>$2</sub>');
+}
+
+function processSuborbitRows() {
+    const rows = document.querySelectorAll('.orbit-row');
+    rows.forEach(row => {
+        const targetSpans = row.querySelectorAll('span, label, div');
+        targetSpans.forEach(el => {
+            if (!el.dataset.suborbitFormatted && el.children.length === 0) {
+                const text = el.textContent.trim();
+                if (/^[0-9][a-zA-Z][0-9]+\/[0-9]+$/.test(text)) {
+                    el.innerHTML = formatSuborbitNotation(text);
+                    el.classList.add('suborbit-label');
+                    el.dataset.suborbitFormatted = 'true';
+                }
+            }
+        });
+    });
+}
+
+function initSuborbitNotationObserver() {
+    processSuborbitRows();
+    const container = document.body;
+    const observer = new MutationObserver(() => processSuborbitRows());
+    observer.observe(container, { childList: true, subtree: true });
+}
 
 /* Dynamic Data-Group Attribute Applicator for Periodic Table Elements */
 function applyGroupDataAttributes() {
