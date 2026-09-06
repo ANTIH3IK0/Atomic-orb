@@ -53,27 +53,27 @@ body {
     z-index: 0;
 }
 
-/* Base Panel Styling */
+/* Executive Quicksilver Glass Panel */
 .ui-overlay, .tp-overlay, .pt-modal-window {
     position: absolute;
-    background: linear-gradient(135deg, rgba(12, 12, 16, 0.82) 0%, rgba(4, 4, 6, 0.92) 100%);
-    backdrop-filter: blur(16px) saturate(140%);
-    -webkit-backdrop-filter: blur(16px) saturate(140%);
-    
-    /* Liquid Edge Refraction */
+    background: rgba(13, 14, 18, 0.75);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-radius: 16px;
+
+    /* Precision Hairline Specular Edges */
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.25) !important;
-    border-left: 1px solid rgba(255, 255, 255, 0.18) !important;
-    border-radius: 20px;
-
-    /* Deep Metallic Shadow */
+    border-top: 1px solid rgba(255, 255, 255, 0.18) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.12) !important;
+    
+    /* Layered Deep Shadow & Inset Light Rim */
     box-shadow: 
-        0 20px 40px rgba(0, 0, 0, 0.75),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.8);
+        0 24px 48px -12px rgba(0, 0, 0, 0.65),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.12),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.02);
 
-    transform: perspective(1000px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
-    transition: transform 0.15s ease-out;
+    transform: perspective(1200px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     pointer-events: auto !important;
     overflow: hidden;
 }
@@ -137,7 +137,7 @@ body {
     mix-blend-mode: overlay;
 }
 
-/* 2. Animated Ambient Liquid Sheen (Moving Reflection Wave) */
+/* Ambient Metallic Glint (Slow Linear Anamorphic Reflection) */
 .ui-overlay::after, .tp-overlay::after, .pt-modal-window::after {
     content: '';
     position: absolute;
@@ -146,18 +146,17 @@ body {
     width: 300%;
     height: 300%;
     background: linear-gradient(
-        115deg,
-        transparent 40%,
-        rgba(255, 255, 255, 0.02) 45%,
-        rgba(255, 255, 255, 0.15) 50%,
-        rgba(255, 255, 255, 0.02) 55%,
-        transparent 60%
+        105deg,
+        transparent 45%,
+        rgba(255, 255, 255, 0.015) 48%,
+        rgba(255, 255, 255, 0.05) 50%,
+        rgba(255, 255, 255, 0.015) 52%,
+        transparent 55%
     );
+    mix-blend-mode: plus-lighter;
     pointer-events: none !important;
-    z-index: 2;
-
-    /* Continuous sweeping liquid wave animation */
-    animation: quicksilverLightSweep 7s ease-in-out infinite;
+    z-index: 1;
+    animation: quicksilverAnamorphicGlint 14s ease-in-out infinite;
 }
 
 @keyframes quicksilverShine {
@@ -165,51 +164,32 @@ body {
     50% { opacity: 0.25; }
 }
 
-/* Pulsing Specular Intensity Keyframes */
-@keyframes quicksilverLightShimmer {
-    0% {
-        opacity: 0.5;
-        filter: brightness(0.9) drop-shadow(0 0 2px rgba(255, 255, 255, 0.2));
+/* Micro Anamorphic Reflection Motion */
+@keyframes quicksilverAnamorphicGlint {
+    0%, 100% {
+        transform: translate(-15%, -15%) rotate(0deg);
+        opacity: 0.3;
     }
     50% {
-        opacity: 1;
-        filter: brightness(1.3) drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
-    }
-    100% {
-        opacity: 0.6;
-        filter: brightness(1.0) drop-shadow(0 0 4px rgba(255, 255, 255, 0.3));
+        transform: translate(10%, 10%) rotate(2deg);
+        opacity: 0.8;
     }
 }
 
-/* Sweeping Liquid Sheen Keyframes */
-@keyframes quicksilverLightSweep {
-    0% {
-        transform: translate(-30%, -30%) rotate(0deg);
-    }
-    50% {
-        transform: translate(5%, 5%) rotate(180deg);
-    }
-    100% {
-        transform: translate(-30%, -30%) rotate(360deg);
-    }
-}
-
-/* 1. Animated Cursor Specular Highlight (Pulsing Glow) */
+/* Dynamic Interactive Specular Sheen (Subtle Focus) */
 .ui-overlay::before, .tp-overlay::before, .pt-modal-window::before {
     content: '';
     position: absolute;
     inset: 0;
     background: radial-gradient(
-        280px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        rgba(255, 255, 255, 0.22),
-        rgba(180, 210, 255, 0.06) 40%,
-        transparent 80%
+        500px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(255, 255, 255, 0.07),
+        rgba(255, 255, 255, 0.015) 35%,
+        transparent 70%
     );
+    mix-blend-mode: overlay;
     pointer-events: none !important;
-    z-index: 1;
-
-    /* Continuous glowing pulse animation */
-    animation: quicksilverLightShimmer 3.5s ease-in-out infinite alternate;
+    z-index: 2;
 }
 
 .mode-switch-bar {
