@@ -3,13 +3,13 @@
 :root {
     --bg-dark: #050505;
 
-    /* Obsidian Glass Panels */
-    --panel-glass: rgba(5, 5, 5, 0.88);
+    /* Glass Panels */
+    --panel-glass: rgba(12, 12, 12, 0.90);
     --card-glass: rgba(8, 8, 8, 0.85);
     --row-glass: rgba(10, 10, 10, 0.82);
     --input-bg: rgba(3, 3, 3, 0.95);
 
-    /* Quicksilver Metallic & Darkened Text Spectrum */
+    /* Text & Metallic Spectrum */
     --quicksilver-bright: #989898;
     --quicksilver-silver: #5C5C5C;
     --text-main: #4a4c4f;
@@ -42,7 +42,7 @@ body {
     font-weight: 100;
 }
 
-/* 3D Render Canvas */
+/* 3D WebGL Background Canvas */
 #renderCanvas {
     width: 100%;
     height: 100%;
@@ -53,7 +53,7 @@ body {
     z-index: 0;
 }
 
-/* Deep Obsidian Glass Overlay Panels with #050505 Base Color */
+/* Glass Panels with LiquidGlass Shader Compatibility */
 .ui-overlay, .tp-overlay, .pt-modal-window {
     position: absolute;
     background: linear-gradient(135deg, rgba(12, 12, 12, 0.90) 0%, rgba(5, 5, 5, 0.98) 100%);
@@ -72,7 +72,7 @@ body {
     overflow: hidden;
 }
 
-/* Animated Glitch-Quicksilver Metallic Backdrop Overlay */
+/* Dynamic Metallic Surface Overlay */
 .ui-overlay::after, .tp-overlay::after, .pt-modal-window::after {
     content: '';
     position: absolute;
@@ -82,62 +82,47 @@ body {
     height: 200%;
     background: radial-gradient(
         circle at center,
-        rgba(255, 255, 255, 0.10) 0%,
-        rgba(150, 150, 150, 0.04) 35%,
+        rgba(255, 255, 255, 0.06) 0%,
+        rgba(180, 180, 180, 0.02) 40%,
         rgba(5, 5, 5, 0) 70%
     );
     transform: translate(-50%, -50%);
-    animation: glitchQuicksilver 7s infinite ease-in-out;
+    animation: metallicShine 10s infinite ease-in-out;
     pointer-events: none !important;
     z-index: 1;
 }
 
-@keyframes glitchQuicksilver {
+@keyframes metallicShine {
     0% {
         transform: translate(-50%, -50%) rotate(0deg) scale(1);
-        opacity: 0.25;
-        filter: blur(8px);
-    }
-    20% {
-        transform: translate(-48%, -52%) rotate(3deg) scale(1.05);
-        opacity: 0.55;
-        filter: blur(4px) drop-shadow(0 0 12px rgba(255, 255, 255, 0.5));
-    }
-    22% {
-        transform: translate(-52%, -48%) rotate(-2deg) scale(0.98);
         opacity: 0.15;
-        filter: blur(12px);
-    }
-    50% {
-        transform: translate(-50%, -50%) rotate(0deg) scale(1);
-        opacity: 0.3;
         filter: blur(6px);
     }
-    75% {
-        transform: translate(-51%, -49%) rotate(1deg) scale(1.02);
-        opacity: 0.65;
-        filter: blur(3px) drop-shadow(0 0 15px rgba(255, 255, 255, 0.7));
+    30% {
+        transform: translate(-46%, -54%) rotate(4deg) scale(1.03);
+        opacity: 0.30;
+        filter: blur(4px) drop-shadow(0 0 8px rgba(255, 255, 255, 0.25));
     }
-    77% {
-        transform: translate(-49%, -51%) rotate(-1deg) scale(0.99);
-        opacity: 0.2;
-        filter: blur(10px);
+    60% {
+        transform: translate(-54%, -46%) rotate(-3deg) scale(0.99);
+        opacity: 0.12;
+        filter: blur(8px);
     }
     100% {
         transform: translate(-50%, -50%) rotate(0deg) scale(1);
-        opacity: 0.25;
-        filter: blur(8px);
+        opacity: 0.15;
+        filter: blur(6px);
     }
 }
 
-/* Interactive Cursor Specular Lighting Track */
+/* Mouse Specular Lighting Track */
 .ui-overlay::before, .tp-overlay::before, .pt-modal-window::before {
     content: '';
     position: absolute;
     inset: 0;
     background: radial-gradient(
         450px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        rgba(255, 255, 255, 0.12),
+        rgba(255, 255, 255, 0.08),
         transparent 70%
     );
     pointer-events: none !important;
@@ -173,7 +158,6 @@ body {
 }
 .tp-overlay.collapsed { display: none; }
 
-/* Control Mode Switcher */
 .mode-switch-bar {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -221,7 +205,6 @@ body {
 }
 .mode-container.hidden { display: none !important; }
 
-/* Quantum Suborbit Formatted Layout */
 .orbit-row {
     display: grid;
     grid-template-columns: 36px 88px 1fr;
@@ -254,7 +237,6 @@ body {
     vertical-align: sub;
 }
 
-/* Fixed Periodic Table Modal & Layout */
 .pt-modal-backdrop {
     position: fixed;
     top: 0; left: 0;
@@ -342,7 +324,6 @@ body {
     min-width: 1100px;
 }
 
-/* Strict Layout Isolation for Element Cards */
 .pt-element-card {
     position: relative;
     height: 56px;
@@ -414,7 +395,6 @@ body {
 .tp-field { display: flex; flex-direction: row; align-items: center; gap: 8px; }
 .tp-field label { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; width: 14px; }
 
-/* Inputs & Form Controls */
 input[type="text"], input[type="number"] {
     background: var(--input-bg);
     border: 1px solid rgba(255, 255, 255, 0.18);
