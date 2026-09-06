@@ -1,64 +1,11 @@
 // effects.js
 
-let liquidGLInstance = null;
-
 document.addEventListener('DOMContentLoaded', () => {
-    initLiquidGLQuicksilver();
     initGroupAttributesObserver();
     initModalVisibilityHandler();
     initGSAPAnimations();
     initGlassInteractivity();
-    enforcePointerEvents();
 });
-
-/* Initialize LiquidGL with non-blocking refraction canvas */
-function initLiquidGLQuicksilver() {
-    if (typeof liquidGL !== 'function') return;
-
-    try {
-        liquidGLInstance = liquidGL({
-            snapshot: "body",
-            target: ".ui-overlay, .tp-overlay, .pt-modal-window",
-            resolution: 1.5,
-            refraction: 0.008,
-            aberration: 0.002,
-            bevelDepth: 0.06,
-            bevelWidth: 0.10,
-            frost: 0,
-            shadow: true,
-            specular: true,
-            reveal: "fade",
-            tilt: false,
-            tiltFactor: 5,
-            tiltEase: 400,
-            magnify: 1.0,
-            on: {
-                init(instance) {
-                    console.log("Interactive Semi-Transparent Glass Ready!", instance);
-                    enforcePointerEvents();
-                }
-            }
-        });
-    } catch (err) {
-        console.warn("LiquidGL initialization fallback:", err);
-    }
-}
-
-/* Ensure LiquidGL Canvas Never Blocks Click Events */
-function enforcePointerEvents() {
-    const liquidCanvases = document.querySelectorAll('canvas:not(#renderCanvas)');
-    liquidCanvases.forEach(canvas => {
-        canvas.style.pointerEvents = 'none';
-    });
-}
-
-/* Refresh Liquid Effects without lockups */
-function refreshAllLiquid() {
-    if (liquidGLInstance && typeof liquidGLInstance.refresh === 'function') {
-        liquidGLInstance.refresh();
-    }
-    enforcePointerEvents();
-}
 
 /* Dynamic Data-Group Attribute Applicator for Periodic Table Elements */
 function applyGroupDataAttributes() {
@@ -83,7 +30,7 @@ function initGroupAttributesObserver() {
     }
 }
 
-/* Modal Synchronization */
+/* Modal Visibility & Pointer Events Management */
 function initModalVisibilityHandler() {
     const modalBackdrop = document.querySelector('.pt-modal-backdrop');
     if (!modalBackdrop) return;
@@ -92,7 +39,6 @@ function initModalVisibilityHandler() {
         const isOpen = modalBackdrop.classList.contains('open');
         modalBackdrop.style.display = isOpen ? 'flex' : 'none';
         modalBackdrop.style.pointerEvents = isOpen ? 'auto' : 'none';
-        if (isOpen) refreshAllLiquid();
     };
 
     syncModalDisplay();
@@ -100,7 +46,7 @@ function initModalVisibilityHandler() {
     observer.observe(modalBackdrop, { attributes: true, attributeFilter: ['class'] });
 }
 
-/* Mouse Lighting Track */
+/* Dynamic Cursor Quicksilver Specular Lighting Track */
 function initGlassInteractivity() {
     const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
     panels.forEach(panel => {
@@ -112,7 +58,7 @@ function initGlassInteractivity() {
     });
 }
 
-/* GSAP Animations */
+/* GSAP Smooth Entrance Animations */
 function initGSAPAnimations() {
     if (typeof gsap === 'undefined') return;
 
@@ -146,6 +92,4 @@ function switchControlMode(mode) {
             { opacity: 0, y: 6 },
             { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' });
     }
-
-    refreshAllLiquid();
 }
