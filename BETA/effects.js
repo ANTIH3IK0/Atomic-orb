@@ -151,76 +151,131 @@ function switchControlMode(mode) {
     }
 }
 
-/* Unified Quicksilver Glass Engine with Dynamic Trailing Edge Fade */
+/* Quicksilver Glass Engine: Surface Compression & Edge Light */
 function initQuicksilverGlassEngine() {
     const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
-    
+    const PROXIMITY_THRESHOLD = 90; // Distance in pixels from edge to trigger distortion
+
     panels.forEach(panel => {
         let currentX = 0, currentY = 0;
         let targetX = 0, targetY = 0;
         let opacity = 0;
+        let distOpacity = 0;
+        let intensityX = 0, intensityY = 0;
         let isHovered = false;
         let animFrame = null;
 
+        function getNearestEdgePoint(mouseX, mouseY, width, height) {
+            const leftDist = mouseX;
+            const rightDist = width - mouseX;
+            const topDist = mouseY;
+            const bottomDist = height - mouseY;
+            const minDist = Math.min(leftDist, rightDist, topDist, bottomDist);
+
+            let edgeX = mouseX;
+            let edgeY = mouseY;
+
+            if (minDist === leftDist) edgeX = 0;
+            else if (minDist === rightDist) edgeX = width;
+            else if (minDist === topDist) edgeY = 0;
+            else if (minDist === bottomDist) edgeY = height;
+
+            return { x: edgeX, y: edgeY, leftDist, rightDist, topDist, bottomDist };
+        }
+
         function update() {
-            // LERP position: Glides light smoothly along the edge
             currentX += (targetX - currentX) * 0.12;
             currentY += (targetY - currentY) * 0.12;
 
-            // Distance to destination
             const dist = Math.hypot(targetX - currentX, targetY - currentY);
             
             if (isHovered) {
-                // Brightens while moving across the edge; decays to 0 upon arrival
-                const targetOpacity = dist > 1 ? Math.min(1, dist / 30) : 0;
-                opacity += (targetOpacity - opacity) * 0.1;
+                const targetEdgeOpacity = dist > 1.5 ? Math.min(1, dist / 25) : 0;
+                opacity += (targetEdgeOpacity - opacity) * 0.12;
             } else {
-                // Fade out when cursor leaves
-                opacity += (0 - opacity) * 0.12;
+                opacity += (0 - opacity) * 0.15;
+                distOpacity += (0 - distOpacity) * 0.15;
             }
 
-            panel.style.setProperty('--mouse-x', `${currentX}px`);
-            panel.style.setProperty('--mouse-y', `${currentY}px`);
+            panel.style.setProperty('--mouse-x', `${currentX.toFixed(2)}px`);
+            panel.style.setProperty('--mouse-y', `${currentY.toFixed(2)}px`);
             panel.style.setProperty('--edge-opacity', opacity.toFixed(3));
+            panel.style.setProperty('--distortion-opacity', distOpacity.toFixed(3));
+            panel.style.setProperty('--press-intensity-x', intensityX.toFixed(3));
+            panel.style.setProperty('--press-intensity-y', intensityY.toFixed(3));
 
-            // Keep frame loop active only while animating
-            if (opacity > 0.005 || isHovered) {
+            if (opacity > 0.005 || distOpacity > 0.005 || isHovered) {
                 animFrame = requestAnimationFrame(update);
             } else {
                 panel.style.setProperty('--edge-opacity', '0');
+                panel.style.setProperty('--distortion-opacity', '0');
                 animFrame = null;
             }
         }
 
-        panel.addEventListener('mouseenter', (e) => {
-            isHovered = true;
+        function handlePointerMove(clientX, clientY) {
             const rect = panel.getBoundingClientRect();
-            currentX = targetX = e.clientX - rect.left;
-            currentY = targetY = e.clientY - rect.top;
-            if (!animFrame) animFrame = requestAnimationFrame(update);
-        });
+            const mouseX = clientX - rect.left;
+            const mouseY = clientY - rect.top;
 
-        panel.addEventListener('mousemove', (e) => {
-            const rect = panel.getBoundingClientRect();
-            targetX = e.clientX - rect.left;
-            targetY = e.clientY - rect.top;
+            const edgeData = getNearestEdgePoint(mouseX, mouseY, rect.width, rect.height);
+            targetX = edgeData.x;
+            targetY = edgeData.y;
 
-            // Subtle 3D spatial tilt
+            // Calculate proximity intensity for horizontal and vertical edges (0 = center, 1 = at edge)
+            const minX = Math.min(edgeData.leftDist, edgeData.rightDist);
+            const minY = Math.min(edgeData.topDist, edgeData.bottomDist);
+
+            const targetIntX = Math.max(0, (PROXIMITY_THRESHOLD - minX) / PROXIMITY_THRESHOLD);
+            const targetIntY = Math.max(0, (PROXIMITY_THRESHOLD - minY) / PROXIMITY_THRESHOLD);
+
+            intensityX += (targetIntX - intensityX) * 0.2;
+            intensityY += (targetIntY - intensityY) * 0.2;
+
+            // Max distortion intensity based on closest distance
+            const overallProximity = Math.max(intensityX, intensityY);
+            distOpacity = overallProximity;
+
+            // Tilt calculation
             const centerX = rect.width / 2;
             const centerY = rect.height / 2;
-            const tiltX = (targetY - centerY) / centerY * -2;
-            const tiltY = (targetX - centerX) / centerX * 2;
+            const tiltX = (mouseY - centerY) / centerY * -2;
+            const tiltY = (mouseX - centerX) / centerX * 2;
 
             panel.style.setProperty('--tilt-x', `${tiltX}deg`);
             panel.style.setProperty('--tilt-y', `${tiltY}deg`);
 
             if (!animFrame) animFrame = requestAnimationFrame(update);
+        }
+
+        panel.addEventListener('mouseenter', (e) => {
+            isHovered = true;
+            handlePointerMove(e.clientX, e.clientY);
         });
+
+        panel.addEventListener('mousemove', (e) => {
+            handlePointerMove(e.clientX, e.clientY);
+        });
+
+        // Touch input support
+        panel.addEventListener('touchstart', (e) => {
+            isHovered = true;
+            if (e.touches[0]) handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: true });
+
+        panel.addEventListener('touchmove', (e) => {
+            if (e.touches[0]) handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: true });
 
         panel.addEventListener('mouseleave', () => {
             isHovered = false;
             panel.style.setProperty('--tilt-x', `0deg`);
             panel.style.setProperty('--tilt-y', `0deg`);
+            if (!animFrame) animFrame = requestAnimationFrame(update);
+        });
+
+        panel.addEventListener('touchend', () => {
+            isHovered = false;
             if (!animFrame) animFrame = requestAnimationFrame(update);
         });
     });
