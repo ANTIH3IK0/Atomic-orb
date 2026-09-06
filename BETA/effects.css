@@ -3,23 +3,23 @@
 :root {
     --bg-dark: #010307;
 
-    /* Semi-Transparent Quicksilver Glass */
-    --panel-glass: rgba(10, 26, 50, 0.45);
-    --card-glass: rgba(14, 34, 62, 0.50);
-    --row-glass: rgba(12, 30, 56, 0.45);
-    --input-bg: rgba(6, 16, 32, 0.70);
+    /* Extra Blue-Black Glass Panels */
+    --panel-glass: rgba(2, 7, 16, 0.82);
+    --card-glass: rgba(4, 11, 24, 0.78);
+    --row-glass: rgba(3, 9, 20, 0.75);
+    --input-bg: rgba(1, 4, 10, 0.90);
 
-    /* Liquid Quicksilver Metallic Colors */
+    /* Metallic Silver & Cyan Accents */
     --quicksilver-bright: #ffffff;
-    --quicksilver-silver: #d0e4f7;
+    --quicksilver-silver: #bcd5ec;
     --text-main: #e2f0fd;
-    --text-sub: #9bc0e4;
-    --text-muted: #6a8fb8;
-    --text-accent: #6ac3ff;
+    --text-sub: #7aa3cc;
+    --text-muted: #4a7099;
+    --text-accent: #38bdf8;
 
     /* Controls */
-    --chk-bg: rgba(6, 16, 32, 0.80);
-    --chk-checked-bg: rgba(24, 60, 110, 0.90);
+    --chk-bg: rgba(2, 6, 14, 0.90);
+    --chk-checked-bg: rgba(12, 40, 80, 0.95);
     --chk-tick-color: #ffffff;
 }
 
@@ -41,7 +41,7 @@ body {
     display: flex;
 }
 
-/* 3D Engine Background Canvas */
+/* 3D Render Canvas */
 #renderCanvas {
     width: 100%;
     height: 100%;
@@ -52,34 +52,34 @@ body {
     z-index: 0;
 }
 
-/* Native Glass Panels with Dynamic Specular Lighting */
+/* Deep Blue-Black Glass Overlay Panels */
 .ui-overlay, .tp-overlay, .pt-modal-window {
     position: absolute;
-    background: linear-gradient(135deg, rgba(16, 38, 70, 0.45) 0%, rgba(6, 18, 36, 0.55) 100%);
-    border: 1px solid rgba(220, 240, 255, 0.38) !important;
+    background: linear-gradient(145deg, rgba(4, 12, 28, 0.85) 0%, rgba(1, 4, 10, 0.92) 100%);
+    border: 1px solid rgba(180, 220, 255, 0.22) !important;
     border-radius: 20px;
 
-    backdrop-filter: blur(20px) saturate(190%);
-    -webkit-backdrop-filter: blur(20px) saturate(190%);
+    backdrop-filter: blur(28px) saturate(210%);
+    -webkit-backdrop-filter: blur(28px) saturate(210%);
 
     box-shadow:
-        0 20px 50px rgba(0, 0, 0, 0.5),
-        0 0 20px rgba(100, 180, 255, 0.15),
-        inset 0 1px 2px rgba(255, 255, 255, 0.6);
+        0 25px 60px rgba(0, 0, 0, 0.85),
+        0 0 25px rgba(56, 189, 248, 0.08),
+        inset 0 1px 1px rgba(255, 255, 255, 0.35);
     
     pointer-events: auto !important;
     overflow: hidden;
 }
 
-/* Interactive Cursor Metallic Lighting Overlay */
+/* Interactive Cursor Metallic Specular Highlight */
 .ui-overlay::before, .tp-overlay::before, .pt-modal-window::before {
     content: '';
     position: absolute;
     inset: 0;
     background: radial-gradient(
-        450px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        rgba(255, 255, 255, 0.18),
-        transparent 65%
+        500px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(255, 255, 255, 0.12),
+        transparent 70%
     );
     pointer-events: none !important;
     z-index: 1;
@@ -114,12 +114,12 @@ body {
 }
 .tp-overlay.collapsed { display: none; }
 
-/* Interactive Mode Switcher */
+/* Control Mode Switcher */
 .mode-switch-bar {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    background: rgba(6, 18, 36, 0.70);
-    border: 1px solid rgba(200, 235, 255, 0.25);
+    background: rgba(2, 6, 14, 0.88);
+    border: 1px solid rgba(180, 220, 255, 0.18);
     border-radius: 12px;
     padding: 4px;
     gap: 4px;
@@ -145,12 +145,12 @@ body {
 }
 .mode-btn:hover {
     color: var(--quicksilver-bright);
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.08);
 }
 .mode-btn.active {
-    background: linear-gradient(180deg, rgba(38, 80, 138, 0.90) 0%, rgba(14, 38, 72, 0.95) 100%);
+    background: linear-gradient(180deg, rgba(20, 50, 95, 0.90) 0%, rgba(6, 20, 42, 0.95) 100%);
     color: #ffffff;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.75);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.5);
 }
 
 .mode-container {
@@ -162,19 +162,19 @@ body {
 }
 .mode-container.hidden { display: none !important; }
 
-/* Modal & Periodic Table */
+/* Fixed Periodic Table Modal & Layout */
 .pt-modal-backdrop {
     position: fixed;
     top: 0; left: 0;
     width: 100vw; height: 100vh;
-    background: rgba(1, 4, 10, 0.75);
+    background: rgba(0, 2, 5, 0.88);
     z-index: 1000;
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.25s ease;
 }
 .pt-modal-backdrop.open {
     opacity: 1;
@@ -183,15 +183,15 @@ body {
 
 .pt-modal-window {
     position: relative;
-    width: 95vw;
-    max-width: 1360px;
+    width: 96vw;
+    max-width: 1400px;
     height: calc(100dvh - 32px);
     max-height: 92dvh;
     border-radius: 24px;
-    padding: 28px;
+    padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 16px;
     overflow: hidden;
 }
 
@@ -199,8 +199,8 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 14px;
-    border-bottom: 1px solid rgba(200, 235, 255, 0.2);
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(180, 220, 255, 0.15);
     position: relative;
     z-index: 10;
 }
@@ -214,8 +214,8 @@ body {
 }
 
 .close-btn {
-    background: rgba(6, 18, 36, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(2, 6, 14, 0.90);
+    border: 1px solid rgba(255, 255, 255, 0.25);
     color: var(--text-sub);
     width: 32px;
     height: 32px;
@@ -231,7 +231,7 @@ body {
     pointer-events: auto !important;
 }
 .close-btn:hover {
-    background: rgba(230, 50, 50, 0.7);
+    background: rgba(220, 38, 38, 0.85);
     color: #ffffff;
 }
 
@@ -245,30 +245,63 @@ body {
 
 .pt-grid-container {
     display: grid;
-    grid-template-columns: 28px repeat(18, minmax(58px, 1fr));
-    grid-gap: 6px;
-    min-width: 1120px;
+    grid-template-columns: 28px repeat(18, minmax(56px, 1fr));
+    grid-gap: 5px;
+    min-width: 1100px;
 }
 
+/* Strict Layout Isolation for Element Cards to Stop Text Overlaps */
 .pt-element-card {
     position: relative;
-    height: 58px;
-    padding: 6px;
-    border-radius: 10px;
-    border: 1px solid rgba(200, 235, 255, 0.22);
+    height: 56px;
+    padding: 4px 5px;
+    border-radius: 8px;
+    border: 1px solid rgba(180, 220, 255, 0.18);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     cursor: pointer;
-    background: linear-gradient(140deg, rgba(16, 40, 75, 0.65) 0%, rgba(8, 20, 40, 0.75) 100%);
-    transition: all 0.2s ease;
+    background: linear-gradient(145deg, rgba(6, 18, 38, 0.70) 0%, rgba(2, 6, 15, 0.85) 100%);
+    transition: all 0.15s ease;
     z-index: 10;
+    overflow: hidden;
     pointer-events: auto !important;
 }
 .pt-element-card:hover {
-    background: linear-gradient(140deg, rgba(32, 72, 125, 0.88) 0%, rgba(12, 32, 60, 0.95) 100%);
+    background: linear-gradient(145deg, rgba(16, 44, 88, 0.90) 0%, rgba(4, 14, 30, 0.95) 100%);
     transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.85);
+    border-color: rgba(255, 255, 255, 0.75);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.pt-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    line-height: 1;
+    color: var(--text-muted);
+}
+
+.pt-card-symbol {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1;
+    color: var(--quicksilver-bright);
+    margin: 2px 0;
+}
+
+.pt-card-name {
+    font-size: 7.5px;
+    line-height: 1;
+    text-align: center;
+    color: var(--text-sub);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .tp-title, .section-title {
@@ -292,10 +325,10 @@ body {
 /* Real Input Controls */
 input[type="text"], input[type="number"] {
     background: var(--input-bg);
-    border: 1px solid rgba(200, 235, 255, 0.28);
+    border: 1px solid rgba(180, 220, 255, 0.22);
     color: var(--quicksilver-bright);
-    padding: 9px 12px;
-    border-radius: 10px;
+    padding: 8px 10px;
+    border-radius: 9px;
     font-size: 11px;
     font-family: 'JetBrains Mono', monospace;
     width: 100%;
@@ -305,8 +338,8 @@ input[type="text"], input[type="number"] {
 }
 input[type="text"]:focus, input[type="number"]:focus {
     outline: none;
-    border-color: rgba(255, 255, 255, 0.90);
-    box-shadow: 0 0 14px rgba(140, 215, 255, 0.45);
+    border-color: rgba(255, 255, 255, 0.80);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
 }
 
 .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; position: relative; z-index: 10; }
@@ -315,8 +348,8 @@ input[type="text"]:focus, input[type="number"]:focus {
     position: absolute;
     top: 16px;
     z-index: 150;
-    background: linear-gradient(145deg, rgba(20, 50, 90, 0.85) 0%, rgba(8, 22, 44, 0.95) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    background: linear-gradient(145deg, rgba(8, 22, 45, 0.90) 0%, rgba(2, 6, 14, 0.95) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
     color: var(--quicksilver-bright);
     width: 40px;
     height: 40px;
@@ -359,7 +392,7 @@ header h1 {
     background: var(--card-glass);
     padding: 12px;
     border-radius: 12px;
-    border: 1px solid rgba(200, 235, 255, 0.22);
+    border: 1px solid rgba(180, 220, 255, 0.18);
     position: relative;
     z-index: 10;
 }
@@ -380,11 +413,11 @@ header h1 {
 
 button.apply-btn {
     position: relative;
-    padding: 10px 14px;
-    border: 1px solid rgba(255, 255, 255, 0.50);
-    background: linear-gradient(180deg, rgba(38, 82, 140, 0.88) 0%, rgba(12, 32, 62, 0.95) 100%);
+    padding: 9px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    background: linear-gradient(180deg, rgba(20, 52, 96, 0.90) 0%, rgba(6, 20, 40, 0.95) 100%);
     color: var(--quicksilver-bright);
-    border-radius: 10px;
+    border-radius: 9px;
     font-size: 10px;
     font-family: 'JetBrains Mono', monospace;
     font-weight: 600;
@@ -394,17 +427,17 @@ button.apply-btn {
     pointer-events: auto !important;
 }
 button.apply-btn:hover {
-    background: linear-gradient(180deg, rgba(48, 100, 165, 0.95) 0%, rgba(18, 44, 82, 0.98) 100%);
-    border-color: rgba(255, 255, 255, 0.85);
+    background: linear-gradient(180deg, rgba(28, 68, 122, 0.95) 0%, rgba(8, 26, 52, 0.98) 100%);
+    border-color: rgba(255, 255, 255, 0.80);
 }
 
 button.secondary-btn {
     position: relative;
-    padding: 9px;
-    border: 1px solid rgba(200, 235, 255, 0.28);
-    background: rgba(14, 34, 62, 0.70);
+    padding: 8px;
+    border: 1px solid rgba(180, 220, 255, 0.20);
+    background: rgba(6, 18, 38, 0.75);
     color: var(--quicksilver-silver);
-    border-radius: 10px;
+    border-radius: 9px;
     font-size: 10px;
     font-family: 'JetBrains Mono', monospace;
     cursor: pointer;
@@ -413,7 +446,7 @@ button.secondary-btn {
     pointer-events: auto !important;
 }
 button.secondary-btn:hover {
-    background: rgba(26, 56, 96, 0.88);
+    background: rgba(12, 32, 64, 0.88);
     color: var(--quicksilver-bright);
 }
 
@@ -434,8 +467,8 @@ button.secondary-btn:hover {
     gap: 8px;
     background: var(--row-glass);
     padding: 6px 8px;
-    border-radius: 10px;
-    border: 1px solid rgba(200, 235, 255, 0.22);
+    border-radius: 9px;
+    border: 1px solid rgba(180, 220, 255, 0.18);
     position: relative;
     z-index: 10;
 }
@@ -446,7 +479,7 @@ input[type="checkbox"] {
     width: 16px;
     height: 16px;
     background: var(--chk-bg);
-    border: 1px solid rgba(255, 255, 255, 0.40);
+    border: 1px solid rgba(255, 255, 255, 0.30);
     border-radius: 5px;
     cursor: pointer;
     position: relative;
@@ -455,7 +488,7 @@ input[type="checkbox"] {
 }
 input[type="checkbox"]:checked {
     background: var(--chk-checked-bg);
-    border-color: rgba(255, 255, 255, 0.90);
+    border-color: rgba(255, 255, 255, 0.85);
 }
 input[type="checkbox"]:checked::after {
     content: '✓';
@@ -476,8 +509,8 @@ input[type="checkbox"]:checked::after {
     color: var(--quicksilver-silver);
     background: var(--row-glass);
     padding: 7px 10px;
-    border-radius: 10px;
-    border: 1px solid rgba(200, 235, 255, 0.22);
+    border-radius: 9px;
+    border: 1px solid rgba(180, 220, 255, 0.18);
     position: relative;
     z-index: 10;
 }
