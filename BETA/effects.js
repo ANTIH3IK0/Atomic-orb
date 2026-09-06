@@ -9,10 +9,15 @@ document.addEventListener('DOMContentLoaded', () => {
     initLiquidGlassMetallic();
 });
 
-/* LiquidGlass WebGL Renderer Initialization */
+/* Real-Time Dynamic WebGL LiquidGlass & Quicksilver Integration */
 async function initLiquidGlassMetallic() {
     try {
-        // Fallback import chain supporting local build or jsDelivr CDN
+        const bgCanvas = document.getElementById('renderCanvas');
+        if (bgCanvas) {
+            // Tell ybouane/liquidglass to capture canvas updates dynamically on every frame
+            bgCanvas.setAttribute('data-dynamic', 'true');
+        }
+
         const module = await import('../__libs/liquidglass/dist/index.js').catch(() =>
             import('https://cdn.jsdelivr.net/npm/@ybouane/liquidglass/dist/index.js')
         );
@@ -22,21 +27,30 @@ async function initLiquidGlassMetallic() {
         
         glassEls.forEach(el => {
             el.dataset.config = JSON.stringify({
-                blurAmount: 0.12,
-                refraction: 0.25,
-                specular: 0.18,
-                edgeHighlight: 0.10,
-                fresnel: 0.75,
-                chromAberration: 0.02,
-                opacity: 0.95,
+                blurAmount: 0.16,
+                refraction: 0.48,        /* Increased live refraction intensity */
+                specular: 0.70,          /* High Quicksilver specular reflections */
+                edgeHighlight: 0.35,     /* Silver metallic edge rims */
+                fresnel: 0.85,
+                chromAberration: 0.03,
+                opacity: 0.88,
                 cornerRadius: 20
             });
         });
 
-        await LiquidGlass.init({
+        const instance = await LiquidGlass.init({
             root: document.body,
             glassElements: glassEls
         });
+
+        // Continuous animation frame update loop to continuously capture background WebGL movement
+        if (bgCanvas && instance && typeof instance.markChanged === 'function') {
+            const renderLoop = () => {
+                instance.markChanged(bgCanvas);
+                requestAnimationFrame(renderLoop);
+            };
+            requestAnimationFrame(renderLoop);
+        }
     } catch (err) {
         console.warn('LiquidGlass WebGL initialization skipped:', err);
     }
