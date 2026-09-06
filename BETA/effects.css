@@ -160,7 +160,7 @@ body {
     pointer-events: none !important;
     z-index: 5;
     opacity: 0.6;
-    animation: quicksilverEdgeBreathe 6s ease-in-out infinite alternate, quicksilverAnamorphicGlint 14s ease-in-out infinite;
+    animation: /* quicksilverEdgeBreathe 6s ease-in-out infinite alternate, */ quicksilverAnamorphicGlint 14s ease-in-out infinite;
 }
 
 /* @keyframes quicksilverShine {
@@ -169,7 +169,7 @@ body {
 } */
 
 /* Micro Anamorphic Reflection Motion */
-@keyframes quicksilverAnamorphicGlint {
+/* @keyframes quicksilverAnamorphicGlint {
     0%, 100% {
         transform: translate(-15%, -15%) rotate(0deg);
         opacity: 0.3;
@@ -178,7 +178,7 @@ body {
         transform: translate(10%, 10%) rotate(2deg);
         opacity: 0.8;
     }
-}
+} */
 
 /* Subtle Mercury(quicksilver) Edge Reflection Pulse */
 @keyframes quicksilverEdgeBreathe {
@@ -192,24 +192,25 @@ body {
     }
 }
 
-/* 1. Dynamic Liquid Mercury Edge Sheen (#dcdcdc Sharp Rim Highlight) */
+/* Dynamic Liquid Mercury Edge Highlight (#dcdcdc Sharp Refraction) */
 .ui-overlay::before, .tp-overlay::before, .pt-modal-window::before {
     content: '';
     position: absolute;
     inset: 0;
-    border-radius: 16px;
-    padding: 1.5px; /* Edge thickness */
+    border-radius: 12px;
+    padding: 1px; /* 1px precision edge */
 
-    /* Concentrated Liquid Metal Specular Highlight */
+    /* Metallic Liquid Specular Gradient */
     background: radial-gradient(
         220px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
         #ffffff 0%,
-        #dcdcdc 30%,
-        rgba(220, 220, 220, 0.35) 60%,
-        transparent 90%
+        #dcdcdc 25%,
+        #8e8e93 50%,
+        rgba(220, 220, 220, 0.05) 80%,
+        transparent 100%
     );
 
-    /* Masking out panel interior to create a pure 1.5px metallic edge */
+    /* Edge Frame Mask Clip */
     -webkit-mask: 
         linear-gradient(#fff 0 0) content-box, 
         linear-gradient(#fff 0 0);
@@ -218,7 +219,10 @@ body {
 
     pointer-events: none !important;
     z-index: 10;
-    filter: drop-shadow(0 0 2px rgba(220, 220, 220, 0.8));
+
+    /* Controlled dynamically via JS physics loop */
+    opacity: var(--edge-opacity, 0);
+    will-change: opacity, transform;
 }
 
 .mode-switch-bar {
