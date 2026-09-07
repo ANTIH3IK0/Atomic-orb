@@ -88,7 +88,7 @@
                     <div class="input-card" style="margin-top:6px;">
                         <div class="input-field">
                             <label>Atomic Number (Z)</label>
-                            <input type="number" id="inputZ" value="10" onchange="rebuildQuantumModel()">
+                            <input type="number" id="inputZ" value="10" min="1" max="172" onchange="rebuildQuantumModel()">
                         </div>
 
                         <div class="input-field">
@@ -151,7 +151,7 @@
                     </div>
                     <div class="input-field">
                         <label>Elec Config (e.g., 1s2 2s2 2p2)</label>
-                        <input type="text" id="inputConfig" value="1s2 2s2 2p4" oninput="if(typeof onConfigInputChanged === 'function') onConfigInputChanged();">
+                        <input type="text" id="inputConfig" value="1s2 2s2 2p6" oninput="if(typeof onConfigInputChanged === 'function') onConfigInputChanged();">
                     </div>
                     <div class="input-field">
                         <label>Electrons Array (elec)</label>
