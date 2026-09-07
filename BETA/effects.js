@@ -341,3 +341,35 @@ function toggleSection(targetId, btn) {
         );
     }
 }
+
+/* Ultra-Low Luminosity Modern PBR Quicksilver Palette */
+const MODERN_LOW_LUM_PALETTE = [
+    { albedo: new BABYLON.Color3(0.06, 0.08, 0.12), metallic: 0.85, roughness: 0.35 }, // Slate Metallic
+    { albedo: new BABYLON.Color3(0.05, 0.09, 0.08), metallic: 0.75, roughness: 0.40 }, // Muted Oxide
+    { albedo: new BABYLON.Color3(0.08, 0.06, 0.10), metallic: 0.80, roughness: 0.30 }, // Low-Tone Mercury Violet
+    { albedo: new BABYLON.Color3(0.09, 0.08, 0.05), metallic: 0.90, roughness: 0.25 }, // Matte Titanium Bronze
+    { albedo: new BABYLON.Color3(0.07, 0.08, 0.09), metallic: 0.70, roughness: 0.45 }  // Smoked Steel
+];
+
+function applyLowLumOrbitMaterial(mesh, shellIndex, opacityMultiplier = 0.25) {
+    const style = MODERN_LOW_LUM_PALETTE[shellIndex % MODERN_LOW_LUM_PALETTE.length];
+    
+    // Switch to PBR for realistic physical reflections instead of flat emissive colors
+    const pbr = new BABYLON.PBRMaterial(`pbrOrbit_${shellIndex}`, scene);
+    
+    pbr.albedoColor = style.albedo;
+    pbr.metallic = style.metallic;
+    pbr.roughness = style.roughness;
+    
+    // Completely extinguish self-emitting light blowout
+    pbr.emissiveColor = new BABYLON.Color3(0.005, 0.005, 0.01);
+    
+    // Modern clear-coat glass sheen effect
+    pbr.alpha = (typeof currentOpacity !== 'undefined' ? currentOpacity : 1.0) * opacityMultiplier;
+    pbr.clearCoat.isEnabled = true;
+    pbr.clearCoat.intensity = 0.5;
+    pbr.clearCoat.roughness = 0.1;
+    
+    pbr.backFaceCulling = false;
+    mesh.material = pbr;
+}
