@@ -67,7 +67,9 @@
         <!-- Element Selector via Periodic Table Modal -->
         <div>
             <div class="section-title">Element Selector</div>
-            <button class="secondary-btn" style="margin-top:6px;" onclick="openPeriodicTableModal()">PERIODIC TABLE ⊞</button>
+            <button class="secondary-btn" style="margin-top:6px;" onclick="openPeriodicTableModal()">
+                PERIODIC TABLE <span id="selectedElementTag" style="color:var(--text-accent); font-size:11px;">[Z = 6 Carbon]</span>
+            </button>
         </div>
 
         <!-- Mode Switcher -->
@@ -88,12 +90,12 @@
                     <div class="input-card" style="margin-top:6px;">
                         <div class="input-field">
                             <label>Atomic Number (Z)</label>
-                            <input type="number" id="inputZ" value="10" onchange="rebuildQuantumModel()">
+                            <input type="number" id="inputZ" value="6" min="1" max="118" onchange="rebuildQuantumModel()">
                         </div>
 
                         <div class="input-field">
                             <label>Max Principal Quantum Number (n)</label>
-                            <input type="number" id="inputMaxN" value="2" min="1" max="20" onchange="generateOrbitsBuilder()">
+                            <input type="number" id="inputMaxN" value="2" min="1" max="7" onchange="generateOrbitsBuilder(true); rebuildQuantumModel();">
                         </div>
                     </div>
                 </div>
@@ -118,14 +120,14 @@
                                 <label style="font-size:10px; color:var(--text-muted); font-family:'JetBrains Mono';">Binding Energy En (eV)</label>
                                 <span class="action-link" onclick="autoCalculateSuborbitEnergiesUI()">[CALC EN]</span>
                             </div>
-                            <input type="text" id="inputEn" value="" placeholder="Calculated per split suborbit">
+                            <input type="text" id="inputEn" value="" placeholder="Calculated per split suborbit" readonly>
                             <button class="apply-btn" style="margin-top:4px;" onclick="rebuildQuantumModel()">SOLVE DIRAC MODEL</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 3. Collapsible: ORBITAL VISIBILITY FILTERS (SEPARATED) -->
+            <!-- 3. Collapsible: ORBITAL VISIBILITY FILTERS -->
             <div class="collapsible-section" style="margin-top:10px;">
                 <div class="section-title" style="cursor:pointer;" onclick="toggleSection('visibilityFiltersContent', this.querySelector('.collapse-btn'))">
                     <span>Orbital Visibility Filters</span>
@@ -147,15 +149,15 @@
                 <div class="input-card" style="margin-top:6px;">
                     <div class="input-field">
                         <label>Atomic Number (Z)</label>
-                        <input type="number" id="inputZManual" value="10">
+                        <input type="number" id="inputZManual" value="6">
                     </div>
                     <div class="input-field">
                         <label>Elec Config (e.g., 1s2 2s2 2p2)</label>
-                        <input type="text" id="inputConfig" value="1s2 2s2 2p4" oninput="if(typeof onConfigInputChanged === 'function') onConfigInputChanged();">
+                        <input type="text" id="inputConfig" value="1s2 2s2 2p2" oninput="if(typeof onConfigInputChanged === 'function') onConfigInputChanged();">
                     </div>
                     <div class="input-field">
                         <label>Electrons Array (elec)</label>
-                        <input type="text" id="inputElec" value="2, 2, 6">
+                        <input type="text" id="inputElec" value="2, 2, 2">
                     </div>
                     <div class="input-field">
                         <label>Principal Quantum (n)</label>
@@ -171,17 +173,16 @@
 
         <div>
             <div class="section-title">Global Mesh Opacity</div>
-            <input type="range" id="opacityRange" min="0.05" max="1.0" step="0.05" value="0.35" oninput="updateOpacity(this.value)" style="margin-top:6px;">
+            <input type="range" id="opacityRange" min="0.05" max="1.0" step="0.05" value="0.35" oninput="updateOpacity(this.value)" style="margin-top:6px; width: 100%;">
         </div>
     </div>
 
     <!-- Periodic Table Modal Backdrop -->
     <div class="pt-modal-backdrop" id="ptModalBackdrop" onclick="handleBackdropClick(event)">
-        <div class="pt-modal-window">
+        <div class="pt-modal-window" onclick="event.stopPropagation()">
             <div class="pt-modal-header">
                 <div class="pt-modal-title">
                     <span>PERIODIC TABLE SELECTOR</span>
-                    <span id="selectedElementTag" style="color:var(--text-accent); font-size:11px;"></span>
                 </div>
                 <button class="close-btn" onclick="closePeriodicTableModal()">✕</button>
             </div>
@@ -199,7 +200,6 @@
 
             const isCurrentlyCollapsed = target.classList.contains('collapsed');
 
-            // Close all open subpages within Auto Builder container
             const autoContainer = document.getElementById('autoModeContainer');
             if (autoContainer) {
                 const allContents = autoContainer.querySelectorAll('.collapsible-content');
@@ -209,10 +209,28 @@
                 allBtns.forEach(b => b.textContent = '+');
             }
 
-            // Expand selected subpage if it was closed
             if (isCurrentlyCollapsed) {
                 target.classList.remove('collapsed');
                 if (btn) btn.textContent = '−';
+            }
+        }
+
+        function switchControlMode(mode) {
+            const autoContainer = document.getElementById('autoModeContainer');
+            const manualContainer = document.getElementById('manualModeContainer');
+            const btnAuto = document.getElementById('btnModeAuto');
+            const btnManual = document.getElementById('btnModeManual');
+
+            if (mode === 'auto') {
+                autoContainer.classList.remove('hidden');
+                manualContainer.classList.add('hidden');
+                btnAuto.classList.add('active');
+                btnManual.classList.remove('active');
+            } else {
+                autoContainer.classList.add('hidden');
+                manualContainer.classList.remove('hidden');
+                btnAuto.classList.remove('active');
+                btnManual.classList.add('active');
             }
         }
 
