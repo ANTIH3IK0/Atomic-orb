@@ -794,8 +794,8 @@ function toggleTpPanel(collapse) {
 }
 
 /**
- * Stochastic Particle Fade System.
- * Gradually fades target vertices to 0.0 alpha and smoothly restores them back to 1.0.
+ * Stochastic Particle Fade System with Enhanced Luminance.
+ * Applies boosted brightness and elevated white baseline to vertices during fade cycles.
  */
 function setupIndividualParticleFade() {
     if (!scene) return;
@@ -817,15 +817,21 @@ function setupIndividualParticleFade() {
             const vertexCount = positionData.length / 3;
             const baseCol = mesh.material.diffuseColor || new BABYLON.Color3(1, 1, 1);
 
+            // Shift baseline color towards pure white by blending with white
+            const whiteBlendRatio = 0.45;
+            const targetR = baseCol.r * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
+            const targetG = baseCol.g * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
+            const targetB = baseCol.b * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
+
             const colors = new Float32Array(vertexCount * 4);
             // State per vertex: 0 = normal, 1 = fading out, 2 = held invisible, 3 = fading in
             const fadeStates = new Uint8Array(vertexCount);
             const holdTimers = new Int32Array(vertexCount);
 
             for (let i = 0; i < vertexCount; i++) {
-                colors[i * 4] = baseCol.r;
-                colors[i * 4 + 1] = baseCol.g;
-                colors[i * 4 + 2] = baseCol.b;
+                colors[i * 4] = Math.min(1.0, targetR * 1.3);     // Boosted R
+                colors[i * 4 + 1] = Math.min(1.0, targetG * 1.3); // Boosted G
+                colors[i * 4 + 2] = Math.min(1.0, targetB * 1.3); // Boosted B
                 colors[i * 4 + 3] = 1.0;
             }
 
@@ -863,7 +869,7 @@ function setupIndividualParticleFade() {
                 }
             }
 
-            const fadeStep = 0.08; // Adjust transition speed per frame
+            const fadeStep = 0.08; // Fade transition speed
 
             for (let i = 0; i < data.vertexCount; i++) {
                 const state = data.fadeStates[i];
@@ -873,8 +879,8 @@ function setupIndividualParticleFade() {
                     bufferNeedsUpdate = true;
                     if (data.colors[i * 4 + 3] <= 0.0) {
                         data.colors[i * 4 + 3] = 0.0;
-                        data.fadeStates[i] = 2; // Hold state
-                        data.holdTimers[i] = Math.floor(Math.random() * 10) + 5; // Hold frames
+                        data.fadeStates[i] = 2; // Hold invisible
+                        data.holdTimers[i] = Math.floor(Math.random() * 10) + 5;
                     }
                 } else if (state === 2) { // Holding invisible
                     if (data.holdTimers[i] > 0) {
@@ -887,7 +893,7 @@ function setupIndividualParticleFade() {
                     bufferNeedsUpdate = true;
                     if (data.colors[i * 4 + 3] >= 1.0) {
                         data.colors[i * 4 + 3] = 1.0;
-                        data.fadeStates[i] = 0; // Return to normal
+                        data.fadeStates[i] = 0; // Return to baseline
                     }
                 }
             }
