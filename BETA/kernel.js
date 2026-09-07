@@ -665,21 +665,68 @@ function rebuildQuantumModel() {
     reloadInitialPosition();
 }
 
+/**
+ * Creates electron orbit particle cloud mesh matrix with extra-thin grid gaps.
+ */
 function createOrbitalMesh(name, radius, n, l, j, stateKey) {
-    const sphere = BABYLON.MeshBuilder.CreateSphere(name, { diameter: radius * 2, segments: 48 }, scene);
-    const mat = new BABYLON.StandardMaterial(`${name}_mat`, scene);
+    const mesh = new BABYLON.Mesh(name, scene);
+    const positions = [];
+
+    const numTheta = 90;
+    const numPhi = 180;
     const col = getOrbitalColor(l, j);
 
+    // Grid frequencies for extra-thin gaps
+    const freqTheta = 36;
+    const freqPhi = 36;
+    const gapThreshold = -0.88;
+
+    // Multi-layer thin shells for 3D depth in the particle cloud
+    const radialLayers = [0.98, 1.0, 1.02];
+
+    for (let layer of radialLayers) {
+        const currentR = radius * layer;
+        for (let i = 0; i <= numTheta; i++) {
+            const theta = (i / numTheta) * Math.PI;
+
+            // Extra-thin gaps along latitude
+            if (Math.sin(theta * freqTheta) < gapThreshold) continue;
+
+            const sinTheta = Math.sin(theta);
+            const cosTheta = Math.cos(theta);
+
+            for (let k = 0; k < numPhi; k++) {
+                const phi = (k / numPhi) * 2 * Math.PI;
+
+                // Extra-thin gaps along longitude
+                if (Math.sin(phi * freqPhi) < gapThreshold) continue;
+
+                const x = currentR * sinTheta * Math.cos(phi);
+                const y = currentR * cosTheta;
+                const z = currentR * sinTheta * Math.sin(phi);
+
+                positions.push(x, y, z);
+            }
+        }
+    }
+
+    const vertexData = new BABYLON.VertexData();
+    vertexData.positions = positions;
+    vertexData.applyToMesh(mesh);
+
+    const mat = new BABYLON.StandardMaterial(`${name}_mat`, scene);
     mat.diffuseColor = col;
-    mat.emissiveColor = col.scale(0.35);
+    mat.emissiveColor = col;
+    mat.pointsCloud = true;
+    mat.pointSize = 2.5;
     mat.alpha = currentOpacity;
     mat.backFaceCulling = false;
     mat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
 
-    sphere.material = mat;
-    sphere.isVisible = visibilityState[stateKey] !== false;
+    mesh.material = mat;
+    mesh.isVisible = visibilityState[stateKey] !== false;
 
-    activeMeshes.push({ mesh: sphere, stateKey: stateKey });
+    activeMeshes.push({ mesh: mesh, stateKey: stateKey });
 }
 
 function refreshDynamicFilterUI() {
