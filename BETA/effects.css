@@ -10,12 +10,12 @@
     --input-bg: rgba(3, 3, 4, 0.95);
 
     /* Stealth Quicksilver Palette */
-    --quicksilver-bright: #78767a;
-    --quicksilver-silver: #565657;
+    --quicksilver-bright: #f1f5f9;
+    --quicksilver-silver: #cbd5e1;
     --text-main: #ffffff;
-    --text-sub: #b3b3b3;
-    --text-muted: #757575;
-    --text-accent: #ffffff;
+    --text-sub: #e2e8f0;
+    --text-muted: #94a3af;
+    --text-accent: #38bdf8;
     
     /* Dark Controls */
     --chk-bg: rgba(4, 4, 5, 0.95);
