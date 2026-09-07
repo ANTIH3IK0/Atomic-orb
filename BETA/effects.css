@@ -12,11 +12,11 @@
     /* Stealth Quicksilver Palette */
     --quicksilver-bright: #78767a;
     --quicksilver-silver: #565657;
-    --text-main: #474748;
-    --text-sub: #474748;
-    --text-muted: #3c3c3c;
-    --text-accent: #78767a;
-
+    --text-main: #ffffff;
+    --text-sub: #b3b3b3;
+    --text-muted: #757575;
+    --text-accent: #ffffff;
+    
     /* Dark Controls */
     --chk-bg: rgba(4, 4, 5, 0.95);
     --chk-checked-bg: rgba(30, 30, 35, 0.95);
