@@ -282,7 +282,7 @@ let selectedElementSymbol = 'Ne';
 window.addEventListener('DOMContentLoaded', () => {
     initBabylonEngine();
     renderPeriodicTableGrid();
-    selectElementBySymbol('C');
+    selectElementBySymbol('Ne');
 });
 
 /**
