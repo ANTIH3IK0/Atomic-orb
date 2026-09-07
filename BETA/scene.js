@@ -18,8 +18,8 @@ function initScene() {
     camera.lowerRadiusLimit = 4;
     camera.upperRadiusLimit = 40;
 
-    const hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
-    hemiLight.intensity = 0.35;
+    const hemiLight = new BABYLON.HemisphericLight("ambientLight", new BABYLON.Vector3(0, 1, 0), scene);
+    hemiLight.intensity = 1.5;
     hemiLight.groundColor = new BABYLON.Color3(0.02, 0.03, 0.04);
 
     createQuicksilverMistParticles(scene);
