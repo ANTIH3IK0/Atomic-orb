@@ -1,7 +1,5 @@
 // scene.js - Babylon.js Core Engine & Dynamic Neon Fog Particle System
 
-let canvas, engine, scene, camera;
-
 function initScene() {
     canvas = document.getElementById("renderCanvas");
     if (!canvas) return;
