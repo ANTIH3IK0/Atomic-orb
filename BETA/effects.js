@@ -8,37 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initQuicksilverGlassEngine();
 });
 
-/* Unified Quicksilver Liquid Glass Engine */
-function initQuicksilverGlassEngine() {
-    const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
-    
-    panels.forEach(panel => {
-        // Track cursor for dynamic specular highlights & subtle 3D tilt
-        panel.addEventListener('mousemove', (e) => {
-            const rect = panel.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            // Calculate relative offset for specular light (-1 to 1)
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-            const tiltX = (y - centerY) / centerY * -2;
-            const tiltY = (x - centerX) / centerX * 2;
-
-            panel.style.setProperty('--mouse-x', `${x}px`);
-            panel.style.setProperty('--mouse-y', `${y}px`);
-            panel.style.setProperty('--tilt-x', `${tiltX}deg`);
-            panel.style.setProperty('--tilt-y', `${tiltY}deg`);
-        });
-
-        // Reset tilt on mouse leave
-        panel.addEventListener('mouseleave', () => {
-            panel.style.setProperty('--tilt-x', `0deg`);
-            panel.style.setProperty('--tilt-y', `0deg`);
-        });
-    });
-}
-
 /* Format Quantum Suborbit Notation */
 function formatSuborbitNotation(text) {
     if (!text) return '';
@@ -151,16 +120,18 @@ function switchControlMode(mode) {
     }
 }
 
-/* Quicksilver Glass Engine: Surface Compression & Edge Light */
+/* Quicksilver Glass Engine: Touch Spotlight, Surface Compression & Edge Light */
 function initQuicksilverGlassEngine() {
     const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
-    const PROXIMITY_THRESHOLD = 90; // Distance in pixels from edge to trigger distortion
+    const PROXIMITY_THRESHOLD = 90; // Pixel distance threshold from edge
 
     panels.forEach(panel => {
         let currentX = 0, currentY = 0;
         let targetX = 0, targetY = 0;
+        let pointerX = 0, pointerY = 0;
         let opacity = 0;
         let distOpacity = 0;
+        let glowOpacity = 0;
         let intensityX = 0, intensityY = 0;
         let isHovered = false;
         let animFrame = null;
@@ -192,37 +163,43 @@ function initQuicksilverGlassEngine() {
             if (isHovered) {
                 const targetEdgeOpacity = dist > 1.5 ? Math.min(1, dist / 25) : 0;
                 opacity += (targetEdgeOpacity - opacity) * 0.12;
+                glowOpacity += (1.0 - glowOpacity) * 0.15; // Smooth touch light fade-in
             } else {
                 opacity += (0 - opacity) * 0.15;
                 distOpacity += (0 - distOpacity) * 0.15;
+                glowOpacity += (0 - glowOpacity) * 0.15; // Smooth touch light fade-out
             }
 
             panel.style.setProperty('--mouse-x', `${currentX.toFixed(2)}px`);
             panel.style.setProperty('--mouse-y', `${currentY.toFixed(2)}px`);
+            panel.style.setProperty('--pointer-x', `${pointerX.toFixed(2)}px`);
+            panel.style.setProperty('--pointer-y', `${pointerY.toFixed(2)}px`);
             panel.style.setProperty('--edge-opacity', opacity.toFixed(3));
             panel.style.setProperty('--distortion-opacity', distOpacity.toFixed(3));
+            panel.style.setProperty('--glow-opacity', glowOpacity.toFixed(3));
             panel.style.setProperty('--press-intensity-x', intensityX.toFixed(3));
             panel.style.setProperty('--press-intensity-y', intensityY.toFixed(3));
 
-            if (opacity > 0.005 || distOpacity > 0.005 || isHovered) {
+            if (opacity > 0.005 || distOpacity > 0.005 || glowOpacity > 0.005 || isHovered) {
                 animFrame = requestAnimationFrame(update);
             } else {
                 panel.style.setProperty('--edge-opacity', '0');
                 panel.style.setProperty('--distortion-opacity', '0');
+                panel.style.setProperty('--glow-opacity', '0');
                 animFrame = null;
             }
         }
 
         function handlePointerMove(clientX, clientY) {
             const rect = panel.getBoundingClientRect();
-            const mouseX = clientX - rect.left;
-            const mouseY = clientY - rect.top;
+            pointerX = clientX - rect.left;
+            pointerY = clientY - rect.top;
 
-            const edgeData = getNearestEdgePoint(mouseX, mouseY, rect.width, rect.height);
+            const edgeData = getNearestEdgePoint(pointerX, pointerY, rect.width, rect.height);
             targetX = edgeData.x;
             targetY = edgeData.y;
 
-            // Calculate proximity intensity for horizontal and vertical edges (0 = center, 1 = at edge)
+            // Proximity intensity calculation (0 at center, 1 at edge)
             const minX = Math.min(edgeData.leftDist, edgeData.rightDist);
             const minY = Math.min(edgeData.topDist, edgeData.bottomDist);
 
@@ -232,15 +209,13 @@ function initQuicksilverGlassEngine() {
             intensityX += (targetIntX - intensityX) * 0.2;
             intensityY += (targetIntY - intensityY) * 0.2;
 
-            // Max distortion intensity based on closest distance
-            const overallProximity = Math.max(intensityX, intensityY);
-            distOpacity = overallProximity;
+            distOpacity = Math.max(intensityX, intensityY);
 
-            // Tilt calculation
+            // Dynamic 3D tilt calculation
             const centerX = rect.width / 2;
             const centerY = rect.height / 2;
-            const tiltX = (mouseY - centerY) / centerY * -2;
-            const tiltY = (mouseX - centerX) / centerX * 2;
+            const tiltX = (pointerY - centerY) / centerY * -2;
+            const tiltY = (pointerX - centerX) / centerX * 2;
 
             panel.style.setProperty('--tilt-x', `${tiltX}deg`);
             panel.style.setProperty('--tilt-y', `${tiltY}deg`);
@@ -257,7 +232,7 @@ function initQuicksilverGlassEngine() {
             handlePointerMove(e.clientX, e.clientY);
         });
 
-        // Touch input support
+        // Touch input listeners
         panel.addEventListener('touchstart', (e) => {
             isHovered = true;
             if (e.touches[0]) handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
