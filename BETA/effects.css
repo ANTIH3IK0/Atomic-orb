@@ -10,12 +10,12 @@
     --input-bg: rgba(3, 3, 4, 0.95);
 
     /* Stealth Quicksilver Palette */
-    --quicksilver-bright: #f1f5f9;
-    --quicksilver-silver: #cbd5e1;
+    --quicksilver-bright: #78767a;
+    --quicksilver-silver: #565657;
     --text-main: #ffffff;
-    --text-sub: #e2e8f0;
-    --text-muted: #94a3af;
-    --text-accent: #38bdf8;
+    --text-sub: #b3b3b3;
+    --text-muted: #757575;
+    --text-accent: #ffffff;
     
     /* Dark Controls */
     --chk-bg: rgba(4, 4, 5, 0.95);
@@ -53,7 +53,7 @@ body {
     z-index: 0;
 }
 
-/* Base Panel Glass Properties */
+/* Base Panel Glass Properties (Eliminates forced 3D stacking context layout shifts) */
 .ui-overlay, .tp-overlay, .pt-modal-window {
     position: absolute;
     background: rgba(12, 13, 17, 0.88);
@@ -72,8 +72,10 @@ body {
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     will-change: transform;
     pointer-events: auto !important;
+}
 
-    /* Interactive Touch Spotlight & Glass Translucency Boost */
+/* Interactive Touch Spotlight & Glass Translucency Boost */
+.ui-overlay, .tp-overlay, .pt-modal-window {
     background-image: radial-gradient(
         220px circle at var(--pointer-x, 50%) var(--pointer-y, 50%),
         rgba(255, 255, 255, calc(0.16 * var(--glow-opacity, 0))) 0%,
@@ -87,8 +89,8 @@ body {
     top: 16px;
     left: 16px;
     width: 380px;
-    height: calc(100vh - 32px);
-    max-height: calc(100vh - 32px);
+    height: calc(100dvh - 32px);
+    max-height: calc(100dvh - 32px);
     padding: 24px;
     display: flex;
     flex-direction: column;
@@ -107,7 +109,7 @@ body {
     right: 16px;
     width: 250px;
     height: auto;
-    max-height: calc(100vh - 32px);
+    max-height: calc(100dvh - 32px);
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -151,7 +153,9 @@ body {
     pointer-events: none !important;
     z-index: 6;
 
+    /* Perpendicular physical grooves (X line parallel to vertical edge, Y line parallel to horizontal edge) */
     background: 
+        /* Vertical depression axis */
         linear-gradient(
             90deg,
             transparent calc(var(--mouse-x, 0px) - 18px),
@@ -159,6 +163,7 @@ body {
             rgba(255, 255, 255, calc(0.18 * var(--press-intensity-x, 0))) calc(var(--mouse-x, 0px) + 2px),
             transparent calc(var(--mouse-x, 0px) + 20px)
         ),
+        /* Horizontal depression axis */
         linear-gradient(
             180deg,
             transparent calc(var(--mouse-y, 0px) - 18px),
@@ -167,6 +172,7 @@ body {
             transparent calc(var(--mouse-y, 0px) + 20px)
         );
 
+    /* Localized radial compression spot around interaction point */
     -webkit-mask-image: radial-gradient(
         130px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
         rgba(0, 0, 0, 1) 0%,
@@ -185,6 +191,24 @@ body {
     transition: opacity 0.15s ease-out;
 }
 
+/* @keyframes quicksilverShine {
+     0%, 100% { opacity: 0.1; }
+    50% { opacity: 0.25; }
+} */
+
+/* Micro Anamorphic Reflection Motion */
+/* @keyframes quicksilverAnamorphicGlint {
+    0%, 100% {
+        transform: translate(-15%, -15%) rotate(0deg);
+        opacity: 0.3;
+    }
+    50% {
+        transform: translate(10%, 10%) rotate(2deg);
+        opacity: 0.8;
+    }
+} */
+
+/* Subtle Mercury(quicksilver) Edge Reflection Pulse */
 @keyframes quicksilverEdgeBreathe {
     0% {
         opacity: 0.4;
@@ -202,8 +226,9 @@ body {
     position: absolute;
     inset: 0;
     border-radius: 12px;
-    padding: 1px;
+    padding: 1px; /* 1px precision edge */
 
+    /* Metallic Liquid Specular Gradient */
     background: radial-gradient(
         220px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
         #ffffff 0%,
@@ -213,6 +238,7 @@ body {
         transparent 100%
     );
 
+    /* Edge Frame Mask Clip */
     -webkit-mask: 
         linear-gradient(#fff 0 0) content-box, 
         linear-gradient(#fff 0 0);
@@ -221,6 +247,8 @@ body {
 
     pointer-events: none !important;
     z-index: 10;
+
+    /* Controlled dynamically via JS physics loop */
     opacity: var(--edge-opacity, 0);
     will-change: opacity, transform;
 }
@@ -316,48 +344,44 @@ body {
     justify-content: center;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.25s ease;
 }
 .pt-modal-backdrop.open {
     opacity: 1;
     pointer-events: auto;
 }
 
+
+/* Periodic Table Modal Container Fixed Overlay */
 .pt-modal-window {
     position: relative;
     width: 96vw;
     max-width: 1400px;
-    height: calc(100vh - 32px);
-    max-height: 92vh;
+    height: calc(100dvh - 32px);
+    max-height: 92dvh;
     border-radius: 24px;
     padding: 24px;
     display: flex;
     flex-direction: column;
     gap: 16px;
     overflow: hidden;
-    transform: scale(0.95) translateY(12px);
-    opacity: 0;
-    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
 }
 
-.pt-modal-backdrop.open .pt-modal-window {
-    transform: scale(1) translateY(0);
-    opacity: 1;
-}
-
+/* Scroll Window Inner Boundaries */
 .pt-scroll-area {
     overflow: auto;
     flex: 1;
-    max-height: calc(92vh - 80px);
+    max-height: calc(92dvh - 80px);
     padding: 4px;
     position: relative;
     z-index: 10;
     overscroll-behavior: contain;
 }
 
+/* Grid Dimension Calibration */
 .pt-grid-container {
     display: grid;
-    grid-template-columns: repeat(18, minmax(56px, 1fr));
+    grid-template-columns: 28px repeat(18, minmax(56px, 1fr));
     grid-gap: 5px;
     min-width: 1100px;
     width: 100%;
@@ -661,8 +685,4 @@ input[type="range"] {
     position: relative;
     z-index: 10;
     pointer-events: auto !important;
-}
-
-.collapsible-content.collapsed {
-    display: none !important;
 }
