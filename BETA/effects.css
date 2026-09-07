@@ -494,6 +494,22 @@ body {
     z-index: 10;
 }
 
+/* Periodic Table Modal Window Smooth Entrance */
+.pt-modal-backdrop {
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pt-modal-window {
+    transform: scale(0.95) translateY(12px);
+    opacity: 0;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+.pt-modal-backdrop.open .pt-modal-window {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
 .tp-grid { display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 10; }
 .tp-field { display: flex; flex-direction: row; align-items: center; gap: 8px; }
 .tp-field label { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; width: 14px; }
