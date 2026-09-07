@@ -127,10 +127,10 @@ const ELEMENTS_DATA = [
     { Z: 97, sym: "Bk", name: "Berkelium", period: 7, group: 3, cat: "actinide" },
     { Z: 98, sym: "Cf", name: "Californium", period: 7, group: 3, cat: "actinide" },
     { Z: 99, sym: "Es", name: "Einsteinium", period: 7, group: 3, cat: "actinide" },
-    { Z: 100,{ sym: "Fm", name: "Fermium", period: 7, group: 3, cat: "actinide" } },
-    { Z: 101,{ sym: "Md", name: "Mendelevium", period: 7, group: 3, cat: "actinide" } },
-    { Z: 102,{ sym: "No", name: "Nobelium", period: 7, group: 3, cat: "actinide" } },
-    { Z: 103,{ sym: "Lr", name: "Lawrencium", period: 7, group: 3, cat: "actinide" } },
+    { Z: 100, sym: "Fm", name: "Fermium", period: 7, group: 3, cat: "actinide" },
+    { Z: 101, sym: "Md", name: "Mendelevium", period: 7, group: 3, cat: "actinide" },
+    { Z: 102, sym: "No", name: "Nobelium", period: 7, group: 3, cat: "actinide" },
+    { Z: 103, sym: "Lr", name: "Lawrencium", period: 7, group: 3, cat: "actinide" },
     { Z: 104, sym: "Rf", name: "Rutherfordium", period: 7, group: 4, cat: "transition-metal" },
     { Z: 105, sym: "Db", name: "Dubnium", period: 7, group: 5, cat: "transition-metal" },
     { Z: 106, sym: "Sg", name: "Seaborgium", period: 7, group: 6, cat: "transition-metal" },
@@ -612,14 +612,11 @@ function solveDiracRadialExpectationRK4(n, l, j, zEff) {
     return (0.5291772109 / (2.0 * zEff)) * (3.0 * N * N - kappa * (kappa + 1.0));
 }
 
-/**
- * Calculates a low-saturation version of the orbital base palette.
- */
 function getOrbitalColor(l, j) {
     const baseHues = [185, 280, 140, 35, 310, 50, 200];
     let hue = (l < baseHues.length) ? baseHues[l] : (l * 137.5) % 360;
-    let sat = 0.30; // Low saturation tone
-    let val = (j > l) ? 0.90 : 0.65;
+    let sat = 0.22; // Low saturation version of existing subshell hues
+    let val = (j > l) ? 0.95 : 0.70; // Tuned lightness for clear point visibility
     return BABYLON.Color3.FromHSV(hue, sat, val);
 }
 
@@ -668,47 +665,25 @@ function rebuildQuantumModel() {
     reloadInitialPosition();
 }
 
-/**
- * Creates a spherical cloud of discrete points with visible gaps between them.
- */
 function createOrbitalMesh(name, radius, n, l, j, stateKey) {
-    const pointMesh = new BABYLON.Mesh(name, scene);
-    const positions = [];
-    
-    // Sparse point distribution (Fibonacci sphere) to ensure distinct visual gaps
-    const pointCount = 160;
-    const phi = Math.PI * (3.0 - Math.sqrt(5.0)); // Golden angle
-
-    for (let i = 0; i < pointCount; i++) {
-        const y = 1.0 - (i / (pointCount - 1.0)) * 2.0;
-        const r = Math.sqrt(Math.max(0.0, 1.0 - y * y));
-        const theta = phi * i;
-
-        const x = Math.cos(theta) * r;
-        const z = Math.sin(theta) * r;
-
-        positions.push(x * radius, y * radius, z * radius);
-    }
-
-    const vertexData = new BABYLON.VertexData();
-    vertexData.positions = positions;
-    vertexData.applyToMesh(pointMesh);
-
+    // Low segment count creates sparse points with clear gaps between them
+    const segs = Math.min(14, 8 + n * 2);
+    const sphere = BABYLON.MeshBuilder.CreateSphere(name, { diameter: radius * 2, segments: segs }, scene);
     const mat = new BABYLON.StandardMaterial(`${name}_mat`, scene);
     const col = getOrbitalColor(l, j);
 
-    mat.diffuseColor = col;
-    mat.emissiveColor = col;
     mat.pointsCloud = true;
-    mat.pointSize = 7.0; // Render distinct points clearly visible on screen
+    mat.pointSize = 6.0; // Prominent, clearly visible point size on screen
+    mat.diffuseColor = col;
+    mat.emissiveColor = col.scale(0.85); // High emissive intensity for low-saturation glow
     mat.alpha = currentOpacity;
     mat.backFaceCulling = false;
     mat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
 
-    pointMesh.material = mat;
-    pointMesh.isVisible = visibilityState[stateKey] !== false;
+    sphere.material = mat;
+    sphere.isVisible = visibilityState[stateKey] !== false;
 
-    activeMeshes.push({ mesh: pointMesh, stateKey: stateKey });
+    activeMeshes.push({ mesh: sphere, stateKey: stateKey });
 }
 
 function refreshDynamicFilterUI() {
