@@ -12,13 +12,6 @@
     <!-- Stylesheets -->
     <link rel="stylesheet" href="effects.css">
 
-    <!-- Embedded CSS for folding functionality -->
-    <style>
-        .collapsible-content.collapsed {
-            display: none !important;
-        }
-    </style>
-
     <!-- External UI & Effect APIs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
@@ -28,7 +21,6 @@
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="effects.js" defer></script>
     <script src="kernel.js" defer></script>
-    <script src="scene.js" defer></script>
 </head>
 <body>
 
@@ -90,12 +82,12 @@
                     <div class="input-card" style="margin-top:6px;">
                         <div class="input-field">
                             <label>Atomic Number (Z)</label>
-                            <input type="number" id="inputZ" value="6" min="1" max="118" onchange="rebuildQuantumModel()">
+                            <input type="number" id="inputZ" value="6" min="1" max="172" onchange="rebuildQuantumModel()">
                         </div>
 
                         <div class="input-field">
                             <label>Max Principal Quantum Number (n)</label>
-                            <input type="number" id="inputMaxN" value="2" min="1" max="7" onchange="generateOrbitsBuilder(true); rebuildQuantumModel();">
+                            <input type="number" id="inputMaxN" value="2" min="1" max="24" onchange="generateOrbitsBuilder(true); rebuildQuantumModel();">
                         </div>
                     </div>
                 </div>
@@ -134,7 +126,6 @@
                     <button class="minimize-btn collapse-btn" type="button" onclick="event.stopPropagation(); toggleSection('visibilityFiltersContent', this)">+</button>
                 </div>
                 <div id="visibilityFiltersContent" class="collapsible-content collapsed">
-                    <!-- Framed Scroll Area -->
                     <div class="orbits-scroll-area" style="margin-top:6px;">
                         <div class="filter-list" id="dynamicFilterContainer"></div>
                     </div>
@@ -192,51 +183,5 @@
         </div>
     </div>
 
-    <script>
-        /* Exclusive Subpage Accordion Switcher */
-        function toggleSection(targetId, btn) {
-            const target = document.getElementById(targetId);
-            if (!target) return;
-
-            const isCurrentlyCollapsed = target.classList.contains('collapsed');
-
-            const autoContainer = document.getElementById('autoModeContainer');
-            if (autoContainer) {
-                const allContents = autoContainer.querySelectorAll('.collapsible-content');
-                allContents.forEach(content => content.classList.add('collapsed'));
-
-                const allBtns = autoContainer.querySelectorAll('.collapse-btn');
-                allBtns.forEach(b => b.textContent = '+');
-            }
-
-            if (isCurrentlyCollapsed) {
-                target.classList.remove('collapsed');
-                if (btn) btn.textContent = '−';
-            }
-        }
-
-        function switchControlMode(mode) {
-            const autoContainer = document.getElementById('autoModeContainer');
-            const manualContainer = document.getElementById('manualModeContainer');
-            const btnAuto = document.getElementById('btnModeAuto');
-            const btnManual = document.getElementById('btnModeManual');
-
-            if (mode === 'auto') {
-                autoContainer.classList.remove('hidden');
-                manualContainer.classList.add('hidden');
-                btnAuto.classList.add('active');
-                btnManual.classList.remove('active');
-            } else {
-                autoContainer.classList.add('hidden');
-                manualContainer.classList.remove('hidden');
-                btnAuto.classList.remove('active');
-                btnManual.classList.add('active');
-            }
-        }
-
-        function onConfigInputChanged() {
-            // Optional hook for custom manual configuration parsing
-        }
-    </script>
 </body>
 </html>
