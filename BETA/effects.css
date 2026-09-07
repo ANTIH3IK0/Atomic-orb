@@ -11,10 +11,10 @@
 
     /* Stealth Quicksilver Palette */
     --quicksilver-bright: #78767a;
-    --quicksilver-silver: #565657;
+    --quicksilver-silver: #8c8c8c;
     --text-main: #ffffff;
-    --text-sub: #b3b3b3;
-    --text-muted: #757575;
+    --text-sub: #d4d4d4;
+    --text-muted: #b6b6b6;
     --text-accent: #ffffff;
     
     /* Dark Controls */
@@ -59,7 +59,7 @@ body {
     background: rgba(12, 13, 17, 0.88);
     backdrop-filter: blur(28px) saturate(190%);
     -webkit-backdrop-filter: blur(28px) saturate(190%);
-    border-radius: 20px;
+    border-radius: 10px;
     border: 1px solid transparent !important;
 
     /* Base Shadow & Metallic Edge Rim */
