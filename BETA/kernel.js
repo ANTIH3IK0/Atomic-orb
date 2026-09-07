@@ -24,7 +24,6 @@ const HARTREE_TO_EV = 27.211386245988;
 const ELEMENTS_DATA = [
     { Z: 1, sym: "H", name: "Hydrogen", period: 1, group: 1, cat: "reactive-nonmetal" },
     { Z: 2, sym: "He", name: "Helium", period: 1, group: 18, cat: "noble-gas" },
-    
     { Z: 3, sym: "Li", name: "Lithium", period: 2, group: 1, cat: "alkali-metal" },
     { Z: 4, sym: "Be", name: "Beryllium", period: 2, group: 2, cat: "alkaline-earth" },
     { Z: 5, sym: "B", name: "Boron", period: 2, group: 13, cat: "metalloid" },
@@ -33,7 +32,6 @@ const ELEMENTS_DATA = [
     { Z: 8, sym: "O", name: "Oxygen", period: 2, group: 16, cat: "reactive-nonmetal" },
     { Z: 9, sym: "F", name: "Fluorine", period: 2, group: 17, cat: "reactive-nonmetal" },
     { Z: 10, sym: "Ne", name: "Neon", period: 2, group: 18, cat: "noble-gas" },
-
     { Z: 11, sym: "Na", name: "Sodium", period: 3, group: 1, cat: "alkali-metal" },
     { Z: 12, sym: "Mg", name: "Magnesium", period: 3, group: 2, cat: "alkaline-earth" },
     { Z: 13, sym: "Al", name: "Aluminium", period: 3, group: 13, cat: "post-transition" },
@@ -291,7 +289,7 @@ function init3DEngine() {
 
     engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
     scene = new BABYLON.Scene(engine);
-    scene.clearColor = new BABYLON.Color4(0, 0, 0, 1);
+    scene.clearColor = new BABYLON.Color4(0.04, 0.05, 0.07, 1);
 
     camera = new BABYLON.ArcRotateCamera("camera", initialAlpha, initialBeta, initialRadius, initialTarget, scene);
     camera.attachControl(canvas, true);
@@ -300,10 +298,10 @@ function init3DEngine() {
     camera.upperRadiusLimit = 200;
 
     const hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
-    hemiLight.intensity = 0.6;
+    hemiLight.intensity = 0.8;
 
     const dirLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(-1, -2, -1), scene);
-    dirLight.intensity = 0.8;
+    dirLight.intensity = 1.0;
 
     engine.runRenderLoop(() => {
         if (scene) scene.render();
@@ -326,6 +324,61 @@ function solveDiracEnergy(n, l, j, Z) {
     return (1.0 - energyHartree) * HARTREE_TO_EV * 13.605693;
 }
 
+/* Populate Periodic Table Grid */
+function populatePeriodicTableGrid() {
+    const container = document.getElementById('ptGridContainer');
+    if (!container) return;
+    container.innerHTML = '';
+
+    ELEMENTS_DATA.forEach(elem => {
+        const card = document.createElement('div');
+        card.className = 'pt-element-card';
+        card.dataset.group = elem.group;
+        card.onclick = () => selectElement(elem.Z);
+
+        card.innerHTML = `
+            <div class="pt-card-top">
+                <span>${elem.Z}</span>
+                <span>G${elem.group}</span>
+            </div>
+            <div class="pt-card-symbol">${elem.sym}</div>
+            <div class="pt-card-name">${elem.name}</div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function selectElement(Z) {
+    const elem = ELEMENTS_DATA.find(e => e.Z === Z);
+    if (!elem) return;
+
+    const inputZ = document.getElementById('inputZ');
+    if (inputZ) inputZ.value = Z;
+
+    const tag = document.getElementById('selectedElementTag');
+    if (tag) tag.textContent = `[Z = ${Z} ${elem.name}]`;
+
+    closePeriodicTableModal();
+    generateOrbitsBuilder(true);
+    rebuildQuantumModel();
+}
+
+function openPeriodicTableModal() {
+    const modal = document.getElementById('ptModalBackdrop');
+    if (modal) modal.classList.add('open');
+}
+
+function closePeriodicTableModal() {
+    const modal = document.getElementById('ptModalBackdrop');
+    if (modal) modal.classList.remove('open');
+}
+
+function handleBackdropClick(event) {
+    if (event.target.id === 'ptModalBackdrop') {
+        closePeriodicTableModal();
+    }
+}
+
 /* Suborbit Builder UI Generator */
 function generateOrbitsBuilder(reset = false) {
     const container = document.getElementById('orbitsBuilderContainer');
@@ -340,7 +393,6 @@ function generateOrbitsBuilder(reset = false) {
         filterContainer.innerHTML = '';
     }
 
-    let idx = 0;
     for (const [subshell, count] of Object.entries(config)) {
         const rowId = `orbitRow_${subshell}`;
         if (!document.getElementById(rowId)) {
@@ -350,7 +402,7 @@ function generateOrbitsBuilder(reset = false) {
             orbitRow.innerHTML = `
                 <input type="checkbox" id="chk_${subshell}" checked onchange="toggleOrbitalVisibility('${subshell}', this.checked)">
                 <span>${subshell}</span>
-                <span style="font-size:10px; color:var(--text-sub);">${count} e⁻</span>
+                <span style="font-size:10px; color:var(--text-sub); font-weight:500;">${count} e⁻</span>
             `;
             container.appendChild(orbitRow);
         }
@@ -370,7 +422,6 @@ function generateOrbitsBuilder(reset = false) {
         if (visibilityState[subshell] === undefined) {
             visibilityState[subshell] = true;
         }
-        idx++;
     }
 }
 
@@ -379,25 +430,26 @@ function autoCalculateSuborbitEnergiesUI() {
     const inputZ = parseInt(document.getElementById('inputZ')?.value || '6', 10);
     const config = HARDCODED_ELECTRON_CONFIGS[inputZ] || { "1s": 2, "2s": 2, "2p": 2 };
     
-    let resultTexts = [];
-    for (const subshell of Object.keys(config)) {
-        const n = parseInt(subshell[0], 10);
-        const type = subshell[1];
-        let l = 0;
-        if (type === 'p') l = 1;
-        else if (type === 'd') l = 2;
-        else if (type === 'f') l = 3;
+    let totalEnergy = 0;
+    const lMap = { 's': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4 };
 
-        const j = l === 0 ? 0.5 : l - 0.5;
-        const eVal = solveDiracEnergy(n, l, j, inputZ);
-        resultTexts.push(`${subshell}:${eVal.toFixed(1)}eV`);
+    for (const [subshell, count] of Object.entries(config)) {
+        const n = parseInt(subshell[0], 10);
+        const lChar = subshell[1];
+        const l = lMap[lChar] || 0;
+        const j = l === 0 ? 0.5 : l + 0.5;
+        
+        const subshellEnergy = solveDiracEnergy(n, l, j, inputZ);
+        totalEnergy += subshellEnergy * count;
     }
 
     const inputEn = document.getElementById('inputEn');
-    if (inputEn) inputEn.value = resultTexts.join(', ');
+    if (inputEn) {
+        inputEn.value = `${totalEnergy.toFixed(2)} eV (Total Shell)`;
+    }
 }
 
-/* Rebuild 3D Quantum Orbital Models */
+/* Rebuild 3D Quantum Model Meshes */
 function rebuildQuantumModel() {
     if (!scene) return;
 
@@ -407,136 +459,62 @@ function rebuildQuantumModel() {
     const inputZ = parseInt(document.getElementById('inputZ')?.value || '6', 10);
     const config = HARDCODED_ELECTRON_CONFIGS[inputZ] || { "1s": 2, "2s": 2, "2p": 2 };
 
-    const element = ELEMENTS_DATA.find(e => e.Z === inputZ) || { name: "Carbon", sym: "C" };
-    const tag = document.getElementById('selectedElementTag');
-    if (tag) tag.textContent = `[Z = ${inputZ} ${element.name}]`;
+    const nucleus = BABYLON.MeshBuilder.CreateSphere("nucleus", { diameter: 1.2 }, scene);
+    const nucMat = new BABYLON.StandardMaterial("nucMat", scene);
+    nucMat.emissiveColor = new BABYLON.Color3(0.9, 0.2, 0.2);
+    nucleus.material = nucMat;
+    activeMeshes.push(nucleus);
 
-    let shellIndex = 0;
-    for (const [subshell, count] of Object.entries(config)) {
-        if (visibilityState[subshell] === false) continue;
-
+    let shellIdx = 0;
+    for (const [subshell] of Object.entries(config)) {
         const n = parseInt(subshell[0], 10);
-        const type = subshell[1];
-        const radius = (n * n * 2.2) / Math.pow(inputZ, 0.35);
+        const radius = n * 2.8 + (shellIdx * 0.4);
 
-        if (type === 's') {
-            const sphere = BABYLON.MeshBuilder.CreateSphere(`mesh_${subshell}`, { diameter: radius * 2, segments: 32 }, scene);
-            if (typeof applyLowLumOrbitMaterial === 'function') {
-                applyLowLumOrbitMaterial(sphere, shellIndex, 0.35);
-            }
-            activeMeshes.push(sphere);
-        } else if (type === 'p') {
-            const torusX = BABYLON.MeshBuilder.CreateTorus(`mesh_${subshell}_x`, { diameter: radius * 2, thickness: 0.4, tessellation: 32 }, scene);
-            torusX.rotation.z = Math.PI / 2;
+        const shellMesh = BABYLON.MeshBuilder.CreateSphere(`orbit_${subshell}`, { diameter: radius * 2, segments: 32 }, scene);
+        shellMesh.subshell = subshell;
 
-            const torusY = BABYLON.MeshBuilder.CreateTorus(`mesh_${subshell}_y`, { diameter: radius * 2, thickness: 0.4, tessellation: 32 }, scene);
-
-            if (typeof applyLowLumOrbitMaterial === 'function') {
-                applyLowLumOrbitMaterial(torusX, shellIndex, 0.4);
-                applyLowLumOrbitMaterial(torusY, shellIndex, 0.4);
-            }
-            activeMeshes.push(torusX, torusY);
-        } else {
-            const torus = BABYLON.MeshBuilder.CreateTorus(`mesh_${subshell}`, { diameter: radius * 2.2, thickness: 0.5, tessellation: 32 }, scene);
-            torus.rotation.x = Math.PI / 4;
-            if (typeof applyLowLumOrbitMaterial === 'function') {
-                applyLowLumOrbitMaterial(torus, shellIndex, 0.45);
-            }
-            activeMeshes.push(torus);
+        if (typeof applyLowLumOrbitMaterial === 'function') {
+            applyLowLumOrbitMaterial(shellMesh, shellIdx, currentOpacity);
         }
-        shellIndex++;
+
+        const isVisible = visibilityState[subshell] !== false;
+        shellMesh.isVisible = isVisible;
+        activeMeshes.push(shellMesh);
+
+        shellIdx++;
     }
 }
 
-/* Visibility Filter Switch */
 function toggleOrbitalVisibility(subshell, isVisible) {
     visibilityState[subshell] = isVisible;
-    const chk1 = document.getElementById(`chk_${subshell}`);
-    const chk2 = document.getElementById(`vis_${subshell}`);
-    if (chk1) chk1.checked = isVisible;
-    if (chk2) chk2.checked = isVisible;
-    rebuildQuantumModel();
+    activeMeshes.forEach(mesh => {
+        if (mesh.subshell === subshell) {
+            mesh.isVisible = isVisible;
+        }
+    });
+
+    const chk = document.getElementById(`chk_${subshell}`);
+    const vis = document.getElementById(`vis_${subshell}`);
+    if (chk) chk.checked = isVisible;
+    if (vis) vis.checked = isVisible;
 }
 
-/* Periodic Table Modal Renderer */
-function populatePeriodicTableGrid() {
-    const grid = document.getElementById('ptGridContainer');
-    if (!grid) return;
-
-    grid.innerHTML = '';
-    ELEMENTS_DATA.forEach(elem => {
-        const card = document.createElement('div');
-        card.className = 'pt-element-card';
-        card.dataset.group = elem.group;
-        card.onclick = () => selectElement(elem.Z);
-
-        let col = elem.group;
-        let row = elem.period;
-
-        if (elem.Z >= 57 && elem.Z <= 71) {
-            row = 9;
-            col = elem.Z - 57 + 3;
-        } else if (elem.Z >= 89 && elem.Z <= 103) {
-            row = 10;
-            col = elem.Z - 89 + 3;
+function updateOpacity(val) {
+    currentOpacity = parseFloat(val);
+    activeMeshes.forEach((mesh) => {
+        if (mesh.name !== "nucleus" && mesh.material) {
+            mesh.material.alpha = currentOpacity;
         }
-
-        card.style.gridColumn = col;
-        card.style.gridRow = row;
-
-        card.innerHTML = `
-            <div class="pt-card-top">
-                <span>${elem.Z}</span>
-                <span>G${elem.group}</span>
-            </div>
-            <div class="pt-card-symbol">${elem.sym}</div>
-            <div class="pt-card-name">${elem.name}</div>
-        `;
-        grid.appendChild(card);
     });
 }
 
-function openPeriodicTableModal() {
-    const modal = document.getElementById('ptModalBackdrop');
-    if (modal) modal.classList.add('open');
-}
-
-function closePeriodicTableModal() {
-    const modal = document.getElementById('ptModalBackdrop');
-    if (modal) modal.classList.remove('open');
-}
-
-function handleBackdropClick(event) {
-    if (event.target.id === 'ptModalBackdrop') closePeriodicTableModal();
-}
-
-function selectElement(z) {
-    const inputZ = document.getElementById('inputZ');
-    if (inputZ) inputZ.value = z;
-    closePeriodicTableModal();
-    generateOrbitsBuilder(true);
-    rebuildQuantumModel();
-}
-
-/* Camera & Position Utilities */
-function updateCameraPosUI() {
-    if (!camera) return;
-    const xInput = document.getElementById('tpX');
-    const yInput = document.getElementById('tpY');
-    const zInput = document.getElementById('tpZ');
-
-    if (xInput && document.activeElement !== xInput) xInput.value = camera.position.x.toFixed(2);
-    if (yInput && document.activeElement !== yInput) yInput.value = camera.position.y.toFixed(2);
-    if (zInput && document.activeElement !== zInput) zInput.value = camera.position.z.toFixed(2);
-}
-
+/* Camera Teleport & Sync */
 function teleportCamera() {
     if (!camera) return;
-    const x = parseFloat(document.getElementById('tpX')?.value || '0');
-    const y = parseFloat(document.getElementById('tpY')?.value || '0');
-    const z = parseFloat(document.getElementById('tpZ')?.value || '0');
-
-    camera.setPosition(new BABYLON.Vector3(x, y, z));
+    const x = parseFloat(document.getElementById('tpX')?.value) || 0;
+    const y = parseFloat(document.getElementById('tpY')?.value) || 0;
+    const z = parseFloat(document.getElementById('tpZ')?.value) || 0;
+    camera.setTarget(new BABYLON.Vector3(x, y, z));
 }
 
 function setInitialPosition() {
@@ -550,14 +528,23 @@ function setInitialPosition() {
 
 function reloadInitialPosition() {
     if (!camera) return;
-    camera.target = initialTarget.clone();
+    camera.setTarget(initialTarget.clone());
     camera.alpha = initialAlpha;
     camera.beta = initialBeta;
     camera.radius = initialRadius;
 }
 
-/* Opacity Controller */
-function updateOpacity(val) {
-    currentOpacity = parseFloat(val);
+function updateCameraPosUI() {
+    if (!camera) return;
+    const tpX = document.getElementById('tpX');
+    const tpY = document.getElementById('tpY');
+    const tpZ = document.getElementById('tpZ');
+    
+    if (tpX && document.activeElement !== tpX) tpX.value = camera.target.x.toFixed(2);
+    if (tpY && document.activeElement !== tpY) tpY.value = camera.target.y.toFixed(2);
+    if (tpZ && document.activeElement !== tpZ) tpZ.value = camera.target.z.toFixed(2);
+}
+
+function onConfigInputChanged() {
     rebuildQuantumModel();
 }
