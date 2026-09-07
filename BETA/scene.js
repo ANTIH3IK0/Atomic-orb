@@ -1,4 +1,4 @@
-// scene.js - Babylon.js Core Engine & Dynamic Neon Fog Particle System
+// scene.js - Babylon.js Core Engine & Low-Luminosity Quicksilver Haze System
 
 function initScene() {
     canvas = document.getElementById("renderCanvas");
@@ -12,7 +12,7 @@ function initScene() {
     });
 
     scene = new BABYLON.Scene(engine);
-    scene.clearColor = new BABYLON.Color4(0.02, 0.02, 0.03, 1.0); // Deep obsidian background
+    scene.clearColor = new BABYLON.Color4(0.015, 0.02, 0.025, 1.0); // Obsidian quicksilver backdrop
 
     // Camera setup for 3D Quantum Space
     camera = new BABYLON.ArcRotateCamera("Camera", -Math.PI / 2, Math.PI / 2.5, 12, BABYLON.Vector3.Zero(), scene);
@@ -20,12 +20,13 @@ function initScene() {
     camera.lowerRadiusLimit = 4;
     camera.upperRadiusLimit = 40;
 
-    // Ambient Lighting
+    // Subdued ambient lighting to match dark PBR materials
     const hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
-    hemiLight.intensity = 0.6;
+    hemiLight.intensity = 0.35;
+    hemiLight.groundColor = new BABYLON.Color3(0.02, 0.03, 0.04);
 
-    // Initialize Particle Systems
-    createNeonFogParticles(scene);
+    // Initialize Low-Luminosity Mist System
+    createQuicksilverMistParticles(scene);
 
     // Render Loop
     engine.runRenderLoop(() => {
@@ -38,51 +39,50 @@ function initScene() {
     });
 }
 
-/* Dynamic Volumetric Neon Fog Particle System */
-function createNeonFogParticles(scene) {
-    // Particle Capacity for smooth performance
-    const fogSystem = new BABYLON.ParticleSystem("neonFog", 250, scene);
+/* Low-Luminosity Ambient Quicksilver Mist System */
+function createQuicksilverMistParticles(scene) {
+    const mistSystem = new BABYLON.ParticleSystem("quicksilverMist", 180, scene);
 
     // Procedurally generated soft radial blur texture
-    fogSystem.particleTexture = createSoftGlowTexture(scene);
+    mistSystem.particleTexture = createSoftGlowTexture(scene);
 
     // Emitter volume spanning behind the UI layer
-    fogSystem.emitter = new BABYLON.Vector3(0, 0, 0);
-    fogSystem.minEmitBox = new BABYLON.Vector3(-15, -10, -6);
-    fogSystem.maxEmitBox = new BABYLON.Vector3(15, 10, 2);
+    mistSystem.emitter = new BABYLON.Vector3(0, 0, 0);
+    mistSystem.minEmitBox = new BABYLON.Vector3(-15, -10, -6);
+    mistSystem.maxEmitBox = new BABYLON.Vector3(15, 10, 2);
 
-    // Additive blending for vivid glass refraction
-    fogSystem.blendMode = BABYLON.ParticleSystem.BLENDMODE_ONEONE;
+    // Standard alpha blending to prevent additive light blowout
+    mistSystem.blendMode = BABYLON.ParticleSystem.BLENDMODE_STANDARD;
     
-    // Color Gradients Over Lifetime (Cyan -> Deep Violet -> Magenta -> Fade Out)
-    fogSystem.addColorGradient(0.0, new BABYLON.Color4(0.0, 0.8, 1.0, 0.0));
-    fogSystem.addColorGradient(0.2, new BABYLON.Color4(0.0, 0.5, 1.0, 0.22));
-    fogSystem.addColorGradient(0.5, new BABYLON.Color4(0.5, 0.0, 0.9, 0.30));
-    fogSystem.addColorGradient(0.8, new BABYLON.Color4(1.0, 0.0, 0.5, 0.18));
-    fogSystem.addColorGradient(1.0, new BABYLON.Color4(0.05, 0.0, 0.15, 0.0));
+    // Low-Luminosity Color Gradients (Muted Steel -> Slate Grey -> Smoked Quicksilver -> Fade Out)
+    mistSystem.addColorGradient(0.0, new BABYLON.Color4(0.08, 0.10, 0.14, 0.0));
+    mistSystem.addColorGradient(0.25, new BABYLON.Color4(0.12, 0.15, 0.20, 0.08));
+    mistSystem.addColorGradient(0.60, new BABYLON.Color4(0.15, 0.17, 0.22, 0.09));
+    mistSystem.addColorGradient(0.85, new BABYLON.Color4(0.09, 0.11, 0.14, 0.04));
+    mistSystem.addColorGradient(1.0, new BABYLON.Color4(0.02, 0.03, 0.04, 0.0));
 
-    // Fog Scale & Lifetime
-    fogSystem.minSize = 8.0;
-    fogSystem.maxSize = 16.0;
-    fogSystem.minLifeTime = 10.0;
-    fogSystem.maxLifeTime = 20.0;
+    // Mist Scale & Lifetime
+    mistSystem.minSize = 10.0;
+    mistSystem.maxSize = 22.0;
+    mistSystem.minLifeTime = 12.0;
+    mistSystem.maxLifeTime = 24.0;
 
-    // Emission Parameters
-    fogSystem.emitRate = 15;
-    fogSystem.minEmitPower = 0.02;
-    fogSystem.maxEmitPower = 0.1;
-    fogSystem.updateSpeed = 0.005;
+    // Low Emission Parameters
+    mistSystem.emitRate = 8;
+    mistSystem.minEmitPower = 0.01;
+    mistSystem.maxEmitPower = 0.04;
+    mistSystem.updateSpeed = 0.003;
 
-    // Gentle Organic Motion
-    fogSystem.direction1 = new BABYLON.Vector3(-0.5, -0.2, -0.2);
-    fogSystem.direction2 = new BABYLON.Vector3(0.5, 0.2, 0.2);
-    fogSystem.minAngularSpeed = -0.02;
-    fogSystem.maxAngularSpeed = 0.02;
+    // Gentle Motion
+    mistSystem.direction1 = new BABYLON.Vector3(-0.3, -0.1, -0.1);
+    mistSystem.direction2 = new BABYLON.Vector3(0.3, 0.1, 0.1);
+    mistSystem.minAngularSpeed = -0.01;
+    mistSystem.maxAngularSpeed = 0.01;
 
-    fogSystem.start();
+    mistSystem.start();
 }
 
-/* Procedural Texture Generator for Soft Neon Orbs */
+/* Procedural Texture Generator for Low-Luminance Quicksilver Haze */
 function createSoftGlowTexture(scene) {
     const texCanvas = document.createElement("canvas");
     texCanvas.width = 256;
@@ -90,10 +90,10 @@ function createSoftGlowTexture(scene) {
     const ctx = texCanvas.getContext("2d");
 
     const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
-    gradient.addColorStop(0, "rgba(255, 255, 255, 1.0)");
-    gradient.addColorStop(0.25, "rgba(255, 255, 255, 0.5)");
-    gradient.addColorStop(0.65, "rgba(255, 255, 255, 0.08)");
-    gradient.addColorStop(1, "rgba(255, 255, 255, 0.0)");
+    gradient.addColorStop(0, "rgba(180, 195, 210, 0.45)");
+    gradient.addColorStop(0.3, "rgba(100, 115, 135, 0.20)");
+    gradient.addColorStop(0.7, "rgba(35, 45, 55, 0.04)");
+    gradient.addColorStop(1, "rgba(0, 0, 0, 0.0)");
 
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, 256, 256);
