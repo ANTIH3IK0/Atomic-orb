@@ -731,6 +731,9 @@ function initBabylonEngine() {
     scene = new BABYLON.Scene(engine);
     scene.clearColor = new BABYLON.Color4(0.01, 0.02, 0.04, 1.0);
 
+    // Attach dynamic particle fade effect
+    setupIndividualParticleFade();
+
     camera = new BABYLON.ArcRotateCamera("Camera", initialAlpha, initialBeta, initialRadius, initialTarget.clone(), scene);
     camera.attachControl(canvas, true);
     camera.lowerRadiusLimit = 0.01;
@@ -788,4 +791,110 @@ function togglePanel(collapse) {
 function toggleTpPanel(collapse) {
     document.getElementById('tpOverlay').classList.toggle('collapsed', collapse);
     document.getElementById('tpRestoreBtn').style.display = collapse ? 'flex' : 'none';
+}
+
+/**
+ * Stochastic Particle Fade System.
+ * Gradually fades target vertices to 0.0 alpha and smoothly restores them back to 1.0.
+ */
+function setupIndividualParticleFade() {
+    if (!scene) return;
+
+    function initMeshAlphaColors() {
+        activeMeshes.forEach(item => {
+            const mesh = item.mesh;
+            if (!mesh || mesh._vertexFadeData) return;
+
+            if (mesh.material) {
+                mesh.material.useVertexColors = true;
+                mesh.material.hasVertexAlpha = true;
+                mesh.material.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
+            }
+
+            const positionData = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+            if (!positionData) return;
+
+            const vertexCount = positionData.length / 3;
+            const baseCol = mesh.material.diffuseColor || new BABYLON.Color3(1, 1, 1);
+
+            const colors = new Float32Array(vertexCount * 4);
+            // State per vertex: 0 = normal, 1 = fading out, 2 = held invisible, 3 = fading in
+            const fadeStates = new Uint8Array(vertexCount);
+            const holdTimers = new Int32Array(vertexCount);
+
+            for (let i = 0; i < vertexCount; i++) {
+                colors[i * 4] = baseCol.r;
+                colors[i * 4 + 1] = baseCol.g;
+                colors[i * 4 + 2] = baseCol.b;
+                colors[i * 4 + 3] = 1.0;
+            }
+
+            mesh.setVerticesData(BABYLON.VertexBuffer.ColorKind, colors, true);
+
+            mesh._vertexFadeData = {
+                vertexCount,
+                colors,
+                fadeStates,
+                holdTimers
+            };
+        });
+    }
+
+    initMeshAlphaColors();
+
+    scene.onBeforeRenderObservable.add(() => {
+        initMeshAlphaColors();
+
+        activeMeshes.forEach(item => {
+            const mesh = item.mesh;
+            const data = mesh ? mesh._vertexFadeData : null;
+            if (!mesh || !mesh.isVisible || !data) return;
+
+            let bufferNeedsUpdate = false;
+
+            // Low probability trigger to initiate fade out
+            if (Math.random() < 0.05) {
+                const count = Math.floor(Math.random() * 2) + 1;
+                for (let k = 0; k < count; k++) {
+                    const targetIdx = Math.floor(Math.random() * data.vertexCount);
+                    if (data.fadeStates[targetIdx] === 0) {
+                        data.fadeStates[targetIdx] = 1; // Start fade-out
+                    }
+                }
+            }
+
+            const fadeStep = 0.08; // Adjust transition speed per frame
+
+            for (let i = 0; i < data.vertexCount; i++) {
+                const state = data.fadeStates[i];
+
+                if (state === 1) { // Fading out
+                    data.colors[i * 4 + 3] -= fadeStep;
+                    bufferNeedsUpdate = true;
+                    if (data.colors[i * 4 + 3] <= 0.0) {
+                        data.colors[i * 4 + 3] = 0.0;
+                        data.fadeStates[i] = 2; // Hold state
+                        data.holdTimers[i] = Math.floor(Math.random() * 10) + 5; // Hold frames
+                    }
+                } else if (state === 2) { // Holding invisible
+                    if (data.holdTimers[i] > 0) {
+                        data.holdTimers[i]--;
+                    } else {
+                        data.fadeStates[i] = 3; // Start fade-in
+                    }
+                } else if (state === 3) { // Fading in
+                    data.colors[i * 4 + 3] += fadeStep;
+                    bufferNeedsUpdate = true;
+                    if (data.colors[i * 4 + 3] >= 1.0) {
+                        data.colors[i * 4 + 3] = 1.0;
+                        data.fadeStates[i] = 0; // Return to normal
+                    }
+                }
+            }
+
+            if (bufferNeedsUpdate) {
+                mesh.updateVerticesData(BABYLON.VertexBuffer.ColorKind, data.colors);
+            }
+        });
+    });
 }
