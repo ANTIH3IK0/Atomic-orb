@@ -219,28 +219,6 @@
         function onConfigInputChanged() {
             // Optional hook for custom manual configuration parsing
         }
-
-        /* Low-Luminosity Quicksilver Palette for Babylon.js Orbital Meshes */
-        const LOW_LUM_ORBIT_PALETTE = [
-            { color: new BABYLON.Color4(0.28, 0.32, 0.40, 0.28), emissive: new BABYLON.Color3(0.06, 0.08, 0.12) }, // Deep Slate Blue
-            { color: new BABYLON.Color4(0.25, 0.35, 0.32, 0.25), emissive: new BABYLON.Color3(0.05, 0.09, 0.07) }, // Muted Oxide Teal
-            { color: new BABYLON.Color4(0.35, 0.28, 0.38, 0.28), emissive: new BABYLON.Color3(0.08, 0.05, 0.10) }, // Dusk Quicksilver Violet
-            { color: new BABYLON.Color4(0.38, 0.33, 0.25, 0.25), emissive: new BABYLON.Color3(0.09, 0.07, 0.04) }, // Low-Luminance Amber Bronze
-            { color: new BABYLON.Color4(0.30, 0.35, 0.38, 0.28), emissive: new BABYLON.Color3(0.06, 0.08, 0.10) }  // Cold Steel Grey
-        ];
-
-        function applyLowLumOrbitMaterial(mesh, shellIndex, opacityMultiplier = 0.35) {
-            const palette = LOW_LUM_ORBIT_PALETTE[shellIndex % LOW_LUM_ORBIT_PALETTE.length];
-            const mat = new BABYLON.StandardMaterial(`orbitMat_${shellIndex}`, scene);
-    
-            mat.diffuseColor = new BABYLON.Color3(palette.color.r, palette.color.g, palette.color.b);
-            mat.emissiveColor = palette.emissive;
-            mat.alpha = currentOpacity * opacityMultiplier;
-            mat.backFaceCulling = false;
-            mat.useAlphaFromDiffuseTexture = false;
-    
-            mesh.material = mat;
-        }
     </script>
 </body>
 </html>
