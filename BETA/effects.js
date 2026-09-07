@@ -120,10 +120,10 @@ function switchControlMode(mode) {
     }
 }
 
-/* Quicksilver Glass Engine: Touch Spotlight, Surface Compression & Edge Light */
+/* Quicksilver Glass Engine */
 function initQuicksilverGlassEngine() {
     const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
-    const PROXIMITY_THRESHOLD = 90; // Pixel distance threshold from edge
+    const PROXIMITY_THRESHOLD = 90;
 
     panels.forEach(panel => {
         let currentX = 0, currentY = 0;
@@ -163,11 +163,11 @@ function initQuicksilverGlassEngine() {
             if (isHovered) {
                 const targetEdgeOpacity = dist > 1.5 ? Math.min(1, dist / 25) : 0;
                 opacity += (targetEdgeOpacity - opacity) * 0.12;
-                glowOpacity += (1.0 - glowOpacity) * 0.15; // Smooth touch light fade-in
+                glowOpacity += (1.0 - glowOpacity) * 0.15;
             } else {
                 opacity += (0 - opacity) * 0.15;
                 distOpacity += (0 - distOpacity) * 0.15;
-                glowOpacity += (0 - glowOpacity) * 0.15; // Smooth touch light fade-out
+                glowOpacity += (0 - glowOpacity) * 0.15;
             }
 
             panel.style.setProperty('--mouse-x', `${currentX.toFixed(2)}px`);
@@ -199,7 +199,6 @@ function initQuicksilverGlassEngine() {
             targetX = edgeData.x;
             targetY = edgeData.y;
 
-            // Proximity intensity calculation (0 at center, 1 at edge)
             const minX = Math.min(edgeData.leftDist, edgeData.rightDist);
             const minY = Math.min(edgeData.topDist, edgeData.bottomDist);
 
@@ -211,7 +210,6 @@ function initQuicksilverGlassEngine() {
 
             distOpacity = Math.max(intensityX, intensityY);
 
-            // Dynamic 3D tilt calculation
             const centerX = rect.width / 2;
             const centerY = rect.height / 2;
             const tiltX = (pointerY - centerY) / centerY * -2;
@@ -232,7 +230,6 @@ function initQuicksilverGlassEngine() {
             handlePointerMove(e.clientX, e.clientY);
         });
 
-        // Touch input listeners
         panel.addEventListener('touchstart', (e) => {
             isHovered = true;
             if (e.touches[0]) handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
@@ -263,21 +260,28 @@ function togglePanel(minimize) {
     if (!overlay || !restoreBtn) return;
 
     if (minimize) {
-        gsap.to(overlay, {
-            opacity: 0, scale: 0.94, y: -10, duration: 0.28, ease: 'power2.in',
-            onComplete: () => {
-                overlay.classList.add('collapsed');
-                restoreBtn.style.display = 'flex';
-                gsap.fromTo(restoreBtn, { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.2 });
-            }
-        });
+        if (typeof gsap !== 'undefined') {
+            gsap.to(overlay, {
+                opacity: 0, scale: 0.94, y: -10, duration: 0.28, ease: 'power2.in',
+                onComplete: () => {
+                    overlay.classList.add('collapsed');
+                    restoreBtn.style.display = 'flex';
+                    gsap.fromTo(restoreBtn, { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.2 });
+                }
+            });
+        } else {
+            overlay.classList.add('collapsed');
+            restoreBtn.style.display = 'flex';
+        }
     } else {
         restoreBtn.style.display = 'none';
         overlay.classList.remove('collapsed');
-        gsap.fromTo(overlay, 
-            { opacity: 0, scale: 0.94, y: -10 },
-            { opacity: 1, scale: 1, y: 0, duration: 0.35, ease: 'power2.out' }
-        );
+        if (typeof gsap !== 'undefined') {
+            gsap.fromTo(overlay, 
+                { opacity: 0, scale: 0.94, y: -10 },
+                { opacity: 1, scale: 1, y: 0, duration: 0.35, ease: 'power2.out' }
+            );
+        }
     }
 }
 
@@ -287,25 +291,32 @@ function toggleTpPanel(minimize) {
     if (!overlay || !restoreBtn) return;
 
     if (minimize) {
-        gsap.to(overlay, {
-            opacity: 0, scale: 0.94, y: -10, duration: 0.28, ease: 'power2.in',
-            onComplete: () => {
-                overlay.classList.add('collapsed');
-                restoreBtn.style.display = 'flex';
-                gsap.fromTo(restoreBtn, { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.2 });
-            }
-        });
+        if (typeof gsap !== 'undefined') {
+            gsap.to(overlay, {
+                opacity: 0, scale: 0.94, y: -10, duration: 0.28, ease: 'power2.in',
+                onComplete: () => {
+                    overlay.classList.add('collapsed');
+                    restoreBtn.style.display = 'flex';
+                    gsap.fromTo(restoreBtn, { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.2 });
+                }
+            });
+        } else {
+            overlay.classList.add('collapsed');
+            restoreBtn.style.display = 'flex';
+        }
     } else {
         restoreBtn.style.display = 'none';
         overlay.classList.remove('collapsed');
-        gsap.fromTo(overlay, 
-            { opacity: 0, scale: 0.94, y: -10 },
-            { opacity: 1, scale: 1, y: 0, duration: 0.35, ease: 'power2.out' }
-        );
+        if (typeof gsap !== 'undefined') {
+            gsap.fromTo(overlay, 
+                { opacity: 0, scale: 0.94, y: -10 },
+                { opacity: 1, scale: 1, y: 0, duration: 0.35, ease: 'power2.out' }
+            );
+        }
     }
 }
 
-/* Accordion Subpage Animated Transitions */
+/* Accordion Subpage Transitions */
 function toggleSection(targetId, btn) {
     const target = document.getElementById(targetId);
     if (!target) return;
@@ -316,56 +327,58 @@ function toggleSection(targetId, btn) {
 
     const isCollapsed = target.classList.contains('collapsed');
 
-    // Smooth collapse open subpages
     allContents.forEach(content => {
         if (!content.classList.contains('collapsed')) {
-            gsap.to(content, {
-                height: 0, opacity: 0, duration: 0.22, ease: 'power2.in',
-                onComplete: () => {
-                    content.classList.add('collapsed');
-                    gsap.set(content, { clearProps: 'all' });
-                }
-            });
+            if (typeof gsap !== 'undefined') {
+                gsap.to(content, {
+                    height: 0, opacity: 0, duration: 0.22, ease: 'power2.in',
+                    onComplete: () => {
+                        content.classList.add('collapsed');
+                        gsap.set(content, { clearProps: 'all' });
+                    }
+                });
+            } else {
+                content.classList.add('collapsed');
+            }
         }
     });
     allBtns.forEach(b => b.textContent = '+');
 
-    // Smooth expand selected subpage
     if (isCollapsed) {
         target.classList.remove('collapsed');
         if (btn) btn.textContent = '−';
         
-        gsap.fromTo(target, 
-            { height: 0, opacity: 0, overflow: 'hidden' },
-            { height: 'auto', opacity: 1, duration: 0.3, ease: 'power2.out', onComplete: () => gsap.set(target, { clearProps: 'overflow' }) }
-        );
+        if (typeof gsap !== 'undefined') {
+            gsap.fromTo(target, 
+                { height: 0, opacity: 0, overflow: 'hidden' },
+                { height: 'auto', opacity: 1, duration: 0.3, ease: 'power2.out', onComplete: () => gsap.set(target, { clearProps: 'overflow' }) }
+            );
+        }
     }
 }
 
-/* Ultra-Low Luminosity Modern PBR Quicksilver Palette */
+/* Modern PBR Quicksilver Palette */
 const MODERN_LOW_LUM_PALETTE = [
-    { albedo: new BABYLON.Color3(0.06, 0.08, 0.12), metallic: 0.85, roughness: 0.35 }, // Slate Metallic
-    { albedo: new BABYLON.Color3(0.05, 0.09, 0.08), metallic: 0.75, roughness: 0.40 }, // Muted Oxide
-    { albedo: new BABYLON.Color3(0.08, 0.06, 0.10), metallic: 0.80, roughness: 0.30 }, // Low-Tone Mercury Violet
-    { albedo: new BABYLON.Color3(0.09, 0.08, 0.05), metallic: 0.90, roughness: 0.25 }, // Matte Titanium Bronze
-    { albedo: new BABYLON.Color3(0.07, 0.08, 0.09), metallic: 0.70, roughness: 0.45 }  // Smoked Steel
+    { albedo: [0.06, 0.08, 0.12], metallic: 0.85, roughness: 0.35 },
+    { albedo: [0.05, 0.09, 0.08], metallic: 0.75, roughness: 0.40 },
+    { albedo: [0.08, 0.06, 0.10], metallic: 0.80, roughness: 0.30 },
+    { albedo: [0.09, 0.08, 0.05], metallic: 0.90, roughness: 0.25 },
+    { albedo: [0.07, 0.08, 0.09], metallic: 0.70, roughness: 0.45 }
 ];
 
 function applyLowLumOrbitMaterial(mesh, shellIndex, opacityMultiplier = 0.25) {
+    if (typeof BABYLON === 'undefined' || !mesh || !mesh.getScene()) return;
+    const sceneInstance = mesh.getScene();
     const style = MODERN_LOW_LUM_PALETTE[shellIndex % MODERN_LOW_LUM_PALETTE.length];
     
-    // Switch to PBR for realistic physical reflections instead of flat emissive colors
-    const pbr = new BABYLON.PBRMaterial(`pbrOrbit_${shellIndex}`, scene);
-    
-    pbr.albedoColor = style.albedo;
+    const pbr = new BABYLON.PBRMaterial(`pbrOrbit_${shellIndex}_${Date.now()}`, sceneInstance);
+    pbr.albedoColor = new BABYLON.Color3(...style.albedo);
     pbr.metallic = style.metallic;
     pbr.roughness = style.roughness;
-    
-    // Completely extinguish self-emitting light blowout
     pbr.emissiveColor = new BABYLON.Color3(0.005, 0.005, 0.01);
     
-    // Modern clear-coat glass sheen effect
-    pbr.alpha = (typeof currentOpacity !== 'undefined' ? currentOpacity : 1.0) * opacityMultiplier;
+    const opacityBase = typeof currentOpacity !== 'undefined' ? currentOpacity : 0.35;
+    pbr.alpha = opacityBase * opacityMultiplier;
     pbr.clearCoat.isEnabled = true;
     pbr.clearCoat.intensity = 0.5;
     pbr.clearCoat.roughness = 0.1;
