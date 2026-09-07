@@ -24,6 +24,7 @@ const HARTREE_TO_EV = 27.211386245988;
 const ELEMENTS_DATA = [
     { Z: 1, sym: "H", name: "Hydrogen", period: 1, group: 1, cat: "reactive-nonmetal" },
     { Z: 2, sym: "He", name: "Helium", period: 1, group: 18, cat: "noble-gas" },
+    
     { Z: 3, sym: "Li", name: "Lithium", period: 2, group: 1, cat: "alkali-metal" },
     { Z: 4, sym: "Be", name: "Beryllium", period: 2, group: 2, cat: "alkaline-earth" },
     { Z: 5, sym: "B", name: "Boron", period: 2, group: 13, cat: "metalloid" },
@@ -32,6 +33,7 @@ const ELEMENTS_DATA = [
     { Z: 8, sym: "O", name: "Oxygen", period: 2, group: 16, cat: "reactive-nonmetal" },
     { Z: 9, sym: "F", name: "Fluorine", period: 2, group: 17, cat: "reactive-nonmetal" },
     { Z: 10, sym: "Ne", name: "Neon", period: 2, group: 18, cat: "noble-gas" },
+
     { Z: 11, sym: "Na", name: "Sodium", period: 3, group: 1, cat: "alkali-metal" },
     { Z: 12, sym: "Mg", name: "Magnesium", period: 3, group: 2, cat: "alkaline-earth" },
     { Z: 13, sym: "Al", name: "Aluminium", period: 3, group: 13, cat: "post-transition" },
@@ -147,7 +149,7 @@ const ELEMENTS_DATA = [
 ];
 
 /**
- * Ground-State Subshell Electron Counts (Z = 1 to 118)
+ * Hardcoded Ground-State Subshell Electron Counts (Z = 1 to 118)
  */
 const HARDCODED_ELECTRON_CONFIGS = {
     1:  { "1s": 1 },
@@ -275,276 +277,511 @@ const HARDCODED_ELECTRON_CONFIGS = {
     118:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "6s": 2, "6p": 6, "6d": 10, "7s": 2, "7p": 6 }
 };
 
-/* Application Initialization */
+let selectedElementSymbol = 'C';
+
 window.addEventListener('DOMContentLoaded', () => {
-    init3DEngine();
-    populatePeriodicTableGrid();
-    generateOrbitsBuilder(true);
-    rebuildQuantumModel();
+    initBabylonEngine();
+    renderPeriodicTableGrid();
+    selectElementBySymbol('C');
 });
 
-function init3DEngine() {
-    canvas = document.getElementById('renderCanvas');
-    if (!canvas) return;
+/**
+ * Maps subshell ground state electron occupations to relativistic Dirac j-suborbitals.
+ */
+function getElectronConfigForZ(Z) {
+    const counts = HARDCODED_ELECTRON_CONFIGS[Z] || HARDCODED_ELECTRON_CONFIGS[1];
+    const subConfig = {};
+    let maxN = 1;
 
-    engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
-    scene = new BABYLON.Scene(engine);
-    scene.clearColor = new BABYLON.Color4(0.04, 0.05, 0.07, 1);
+    for (const [subshell, count] of Object.entries(counts)) {
+        if (!count || count <= 0) continue;
+        const n = parseInt(subshell[0]);
+        const type = subshell[1];
+        if (n > maxN) maxN = n;
 
-    camera = new BABYLON.ArcRotateCamera("camera", initialAlpha, initialBeta, initialRadius, initialTarget, scene);
-    camera.attachControl(canvas, true);
-    camera.wheelPrecision = 15;
-    camera.lowerRadiusLimit = 2;
-    camera.upperRadiusLimit = 200;
+        if (type === 's') {
+            subConfig[`${n}s1/2`] = count;
+        } else if (type === 'p') {
+            subConfig[`${n}p1/2`] = Math.min(count, 2);
+            if (count > 2) subConfig[`${n}p3/2`] = count - 2;
+        } else if (type === 'd') {
+            subConfig[`${n}d3/2`] = Math.min(count, 4);
+            if (count > 4) subConfig[`${n}d5/2`] = count - 4;
+        } else if (type === 'f') {
+            subConfig[`${n}f5/2`] = Math.min(count, 6);
+            if (count > 6) subConfig[`${n}f7/2`] = count - 6;
+        }
+    }
 
-    const hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
-    hemiLight.intensity = 0.8;
-
-    const dirLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(-1, -2, -1), scene);
-    dirLight.intensity = 1.0;
-
-    engine.runRenderLoop(() => {
-        if (scene) scene.render();
-        updateCameraPosUI();
-    });
-
-    window.addEventListener('resize', () => {
-        if (engine) engine.resize();
-    });
+    return { subConfig, maxN };
 }
 
-/* Dirac Relativistic Radial Energy Integrator */
-function solveDiracEnergy(n, l, j, Z) {
-    const k = j + 0.5;
-    const za = Z * FINE_ALPHA;
-    const za2 = za * za;
-    const gamma = Math.sqrt(k * k - za2);
-    const denominator = Math.sqrt((n - k + gamma) * (n - k + gamma) + za2);
-    const energyHartree = 1.0 / Math.sqrt(1.0 + za2 / (denominator * denominator));
-    return (1.0 - energyHartree) * HARTREE_TO_EV * 13.605693;
-}
-
-/* Populate Periodic Table Grid */
-function populatePeriodicTableGrid() {
+/**
+ * Builds standard 18-column Periodic Table with Lanthanides & Actinides
+ */
+function renderPeriodicTableGrid() {
     const container = document.getElementById('ptGridContainer');
     if (!container) return;
+
     container.innerHTML = '';
 
-    ELEMENTS_DATA.forEach(elem => {
-        const card = document.createElement('div');
-        card.className = 'pt-element-card';
-        card.dataset.group = elem.group;
-        card.onclick = () => selectElement(elem.Z);
+    const emptyTopCorner = document.createElement('div');
+    emptyTopCorner.className = 'pt-header-cell';
+    emptyTopCorner.innerText = '';
+    container.appendChild(emptyTopCorner);
 
-        card.innerHTML = `
-            <div class="pt-card-top">
-                <span>${elem.Z}</span>
-                <span>G${elem.group}</span>
-            </div>
-            <div class="pt-card-symbol">${elem.sym}</div>
-            <div class="pt-card-name">${elem.name}</div>
-        `;
+    for (let g = 1; g <= 18; g++) {
+        const groupHeader = document.createElement('div');
+        groupHeader.className = 'pt-header-cell';
+        groupHeader.innerText = g;
+        container.appendChild(groupHeader);
+    }
+
+    ELEMENTS_DATA.forEach(elem => {
+        let gridRow = elem.period;
+        let gridCol = elem.group;
+
+        if (elem.Z >= 57 && elem.Z <= 71) {
+            gridRow = 9;
+            gridCol = elem.Z - 57 + 4;
+        } else if (elem.Z >= 89 && elem.Z <= 103) {
+            gridRow = 10;
+            gridCol = elem.Z - 89 + 4;
+        }
+
+        elem._gridRow = gridRow;
+        elem._gridCol = gridCol;
+    });
+
+    for (let p = 1; p <= 7; p++) {
+        const periodHeader = document.createElement('div');
+        periodHeader.className = 'pt-period-cell';
+        periodHeader.innerText = p;
+        periodHeader.style.gridRow = p + 1;
+        periodHeader.style.gridColumn = 1;
+        container.appendChild(periodHeader);
+
+        const periodElems = ELEMENTS_DATA.filter(e => e._gridRow === p);
+        periodElems.forEach(elem => {
+            const card = createPeriodicCard(elem);
+            card.style.gridRow = p + 1;
+            card.style.gridColumn = elem._gridCol + 1;
+            container.appendChild(card);
+        });
+    }
+
+    const gapSpacer = document.createElement('div');
+    gapSpacer.style.gridRow = 9;
+    gapSpacer.style.gridColumn = '1 / span 19';
+    gapSpacer.style.height = '12px';
+    container.appendChild(gapSpacer);
+
+    const laLabel = document.createElement('div');
+    laLabel.className = 'pt-period-cell';
+    laLabel.innerText = '57-71';
+    laLabel.style.gridRow = 10;
+    laLabel.style.gridColumn = 1;
+    laLabel.style.fontSize = '8px';
+    container.appendChild(laLabel);
+
+    const acLabel = document.createElement('div');
+    acLabel.className = 'pt-period-cell';
+    acLabel.innerText = '89-103';
+    acLabel.style.gridRow = 11;
+    acLabel.style.gridColumn = 1;
+    acLabel.style.fontSize = '8px';
+    container.appendChild(acLabel);
+
+    const fBlockElems = ELEMENTS_DATA.filter(e => e._gridRow === 9 || e._gridRow === 10);
+    fBlockElems.forEach(elem => {
+        const card = createPeriodicCard(elem);
+        card.style.gridRow = elem._gridRow === 9 ? 10 : 11;
+        card.style.gridColumn = elem._gridCol + 1;
         container.appendChild(card);
     });
 }
 
-function selectElement(Z) {
-    const elem = ELEMENTS_DATA.find(e => e.Z === Z);
+function createPeriodicCard(elem) {
+    const card = document.createElement('div');
+    card.className = `pt-element-card ${elem.sym === selectedElementSymbol ? 'active' : ''}`;
+    card.id = `pt_card_${elem.sym}`;
+    card.dataset.cat = elem.cat;
+    card.onclick = () => {
+        selectElementBySymbol(elem.sym);
+        closePeriodicTableModal();
+    };
+
+    card.innerHTML = `
+        <div class="pt-card-top">
+            <span>${elem.Z}</span>
+            <span>G${elem.group}</span>
+        </div>
+        <div class="pt-card-symbol">${elem.sym}</div>
+        <div class="pt-card-name">${elem.name}</div>
+    `;
+
+    return card;
+}
+
+/**
+ * Cleanly switches elements and purges residual orbital input states.
+ */
+function selectElementBySymbol(symbol) {
+    const elem = ELEMENTS_DATA.find(e => e.sym === symbol);
     if (!elem) return;
 
-    const inputZ = document.getElementById('inputZ');
-    if (inputZ) inputZ.value = Z;
+    selectedElementSymbol = symbol;
+
+    document.querySelectorAll('.pt-element-card').forEach(c => c.classList.remove('active'));
+    const activeCard = document.getElementById(`pt_card_${symbol}`);
+    if (activeCard) activeCard.classList.add('active');
+
+    const configData = getElectronConfigForZ(elem.Z);
+
+    document.getElementById('inputZ').value = elem.Z;
+    document.getElementById('inputMaxN').value = configData.maxN;
+
+    // Pass false to rebuild clean rows without copying stale DOM inputs from previous elements
+    generateOrbitsBuilder(false);
+
+    // Apply exact subshell electron counts and reset excitations
+    document.querySelectorAll('.orbit-row').forEach(row => {
+        const label = row.querySelector('.orbit-label').innerText;
+        const eInput = row.querySelector('.e-input');
+        const exInput = row.querySelector('.ex-input');
+
+        exInput.value = '0';
+        if (configData.subConfig[label] !== undefined) {
+            eInput.value = configData.subConfig[label];
+        } else {
+            eInput.value = '';
+        }
+    });
 
     const tag = document.getElementById('selectedElementTag');
-    if (tag) tag.textContent = `[Z = ${Z} ${elem.name}]`;
+    if (tag) tag.innerText = `[Z = ${elem.Z} ${elem.name}]`;
 
-    closePeriodicTableModal();
-    generateOrbitsBuilder(true);
+    // Clear visibility overrides for removed orbitals
+    visibilityState = {};
+
     rebuildQuantumModel();
 }
 
 function openPeriodicTableModal() {
-    const modal = document.getElementById('ptModalBackdrop');
-    if (modal) modal.classList.add('open');
+    const backdrop = document.getElementById('ptModalBackdrop');
+    if (backdrop) {
+        backdrop.classList.add('open');
+        document.body.classList.add('modal-open');
+    }
 }
 
 function closePeriodicTableModal() {
-    const modal = document.getElementById('ptModalBackdrop');
-    if (modal) modal.classList.remove('open');
+    const backdrop = document.getElementById('ptModalBackdrop');
+    if (backdrop) {
+        backdrop.classList.remove('open');
+        document.body.classList.remove('modal-open');
+    }
 }
 
-function handleBackdropClick(event) {
-    if (event.target.id === 'ptModalBackdrop') {
+function handleBackdropClick(e) {
+    if (e.target.id === 'ptModalBackdrop') {
         closePeriodicTableModal();
     }
 }
 
-/* Suborbit Builder UI Generator */
-function generateOrbitsBuilder(reset = false) {
-    const container = document.getElementById('orbitsBuilderContainer');
-    const filterContainer = document.getElementById('dynamicFilterContainer');
-    if (!container || !filterContainer) return;
-
-    const inputZ = parseInt(document.getElementById('inputZ')?.value || '6', 10);
-    const config = HARDCODED_ELECTRON_CONFIGS[inputZ] || { "1s": 2, "2s": 2, "2p": 2 };
-
-    if (reset) {
-        container.innerHTML = '';
-        filterContainer.innerHTML = '';
-    }
-
-    for (const [subshell, count] of Object.entries(config)) {
-        const rowId = `orbitRow_${subshell}`;
-        if (!document.getElementById(rowId)) {
-            const orbitRow = document.createElement('div');
-            orbitRow.className = 'orbit-row';
-            orbitRow.id = rowId;
-            orbitRow.innerHTML = `
-                <input type="checkbox" id="chk_${subshell}" checked onchange="toggleOrbitalVisibility('${subshell}', this.checked)">
-                <span>${subshell}</span>
-                <span style="font-size:10px; color:var(--text-sub); font-weight:500;">${count} e⁻</span>
-            `;
-            container.appendChild(orbitRow);
-        }
-
-        const filterId = `filterItem_${subshell}`;
-        if (!document.getElementById(filterId)) {
-            const filterItem = document.createElement('div');
-            filterItem.className = 'filter-item';
-            filterItem.id = filterId;
-            filterItem.innerHTML = `
-                <span>${subshell}</span>
-                <input type="checkbox" id="vis_${subshell}" checked onchange="toggleOrbitalVisibility('${subshell}', this.checked)">
-            `;
-            filterContainer.appendChild(filterItem);
-        }
-
-        if (visibilityState[subshell] === undefined) {
-            visibilityState[subshell] = true;
-        }
-    }
-}
-
-/* Calculate Dirac Suborbit Energies */
-function autoCalculateSuborbitEnergiesUI() {
-    const inputZ = parseInt(document.getElementById('inputZ')?.value || '6', 10);
-    const config = HARDCODED_ELECTRON_CONFIGS[inputZ] || { "1s": 2, "2s": 2, "2p": 2 };
+function getOrbitalLabel(n, l, j) {
+    const symbols = ['s', 'p', 'd', 'f', 'g', 'h', 'i', 'k', 'l', 'm', 'n', 'o'];
+    let name = (l < symbols.length) ? `${n}${symbols[l]}` : `${n}[${l + 1}]`;
     
-    let totalEnergy = 0;
-    const lMap = { 's': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4 };
+    if (j === 0.5) name += '1/2';
+    else if (j === 1.5) name += '3/2';
+    else if (j === 2.5) name += '5/2';
+    else if (j === 3.5) name += '7/2';
+    else if (j === 4.5) name += '9/2';
+    else if (j === 5.5) name += '11/2';
+    else name += `${Math.round(j * 2)}/2`;
 
-    for (const [subshell, count] of Object.entries(config)) {
-        const n = parseInt(subshell[0], 10);
-        const lChar = subshell[1];
-        const l = lMap[lChar] || 0;
-        const j = l === 0 ? 0.5 : l + 0.5;
-        
-        const subshellEnergy = solveDiracEnergy(n, l, j, inputZ);
-        totalEnergy += subshellEnergy * count;
-    }
-
-    const inputEn = document.getElementById('inputEn');
-    if (inputEn) {
-        inputEn.value = `${totalEnergy.toFixed(2)} eV (Total Shell)`;
-    }
+    return name;
 }
 
-/* Rebuild 3D Quantum Model Meshes */
-function rebuildQuantumModel() {
-    if (!scene) return;
+function getSuborbitCapacity(l, j) {
+    return Math.round(2 * j + 1);
+}
 
-    activeMeshes.forEach(mesh => mesh.dispose());
-    activeMeshes = [];
+/**
+ * Generates quantum orbit UI elements.
+ * @param {boolean} preserveExisting - Whether to retain existing UI text values.
+ */
+function generateOrbitsBuilder(preserveExisting = true) {
+    const maxN = parseInt(document.getElementById('inputMaxN').value) || 1;
+    const container = document.getElementById('orbitsBuilderContainer');
+    
+    const existingElec = {};
+    const existingEx = {};
 
-    const inputZ = parseInt(document.getElementById('inputZ')?.value || '6', 10);
-    const config = HARDCODED_ELECTRON_CONFIGS[inputZ] || { "1s": 2, "2s": 2, "2p": 2 };
+    if (preserveExisting) {
+        document.querySelectorAll('.orbit-row').forEach(row => {
+            const key = row.dataset.key;
+            existingElec[key] = row.querySelector('.e-input').value;
+            existingEx[key] = row.querySelector('.ex-input').value;
+        });
+    }
 
-    const nucleus = BABYLON.MeshBuilder.CreateSphere("nucleus", { diameter: 1.2 }, scene);
-    const nucMat = new BABYLON.StandardMaterial("nucMat", scene);
-    nucMat.emissiveColor = new BABYLON.Color3(0.9, 0.2, 0.2);
-    nucleus.material = nucMat;
-    activeMeshes.push(nucleus);
+    container.innerHTML = '';
 
-    let shellIdx = 0;
-    for (const [subshell] of Object.entries(config)) {
-        const n = parseInt(subshell[0], 10);
-        const radius = n * 2.8 + (shellIdx * 0.4);
+    for (let n = 1; n <= maxN; n++) {
+        for (let l = 0; l < n; l++) {
+            const jValues = (l === 0) ? [0.5] : [l - 0.5, l + 0.5];
 
-        const shellMesh = BABYLON.MeshBuilder.CreateSphere(`orbit_${subshell}`, { diameter: radius * 2, segments: 32 }, scene);
-        shellMesh.subshell = subshell;
+            jValues.forEach(j => {
+                const label = getOrbitalLabel(n, l, j);
+                const cap = getSuborbitCapacity(l, j);
+                const key = `${n}_${l}_${j}`;
 
-        if (typeof applyLowLumOrbitMaterial === 'function') {
-            applyLowLumOrbitMaterial(shellMesh, shellIdx, currentOpacity);
+                const row = document.createElement('div');
+                row.className = 'orbit-row';
+                row.dataset.key = key;
+                row.dataset.n = n;
+                row.dataset.l = l;
+                row.dataset.j = j;
+
+                const exVal = (preserveExisting && existingEx[key] !== undefined) ? existingEx[key] : '0';
+                const elecVal = (preserveExisting && existingElec[key] !== undefined) ? existingElec[key] : '';
+
+                row.innerHTML = `
+                    <input type="number" class="ex-input" value="${exVal}" min="0" placeholder="0" title="Excited state shift Δn">
+                    <span class="orbit-label">${label}</span>
+                    <input type="number" class="e-input" value="${elecVal}" min="0" max="${cap}" placeholder="Max ${cap}" title="Max capacity: ${cap}">
+                `;
+                container.appendChild(row);
+            });
         }
-
-        const isVisible = visibilityState[subshell] !== false;
-        shellMesh.isVisible = isVisible;
-        activeMeshes.push(shellMesh);
-
-        shellIdx++;
     }
 }
 
-function toggleOrbitalVisibility(subshell, isVisible) {
-    visibilityState[subshell] = isVisible;
-    activeMeshes.forEach(mesh => {
-        if (mesh.subshell === subshell) {
-            mesh.isVisible = isVisible;
+function solveDiracExactEnergy(n, l, j, zEff) {
+    const kappa = (j > l) ? -(l + 1) : l;
+    const absKappa = Math.abs(kappa);
+    const zAlpha = zEff * FINE_ALPHA;
+    
+    if (zAlpha >= absKappa) return -13.6057 * Math.pow(zEff / n, 2);
+
+    const gamma = Math.sqrt(absKappa * absKappa - zAlpha * zAlpha);
+    const nr = n - absKappa;
+    
+    const energyHartree = (1.0 / (FINE_ALPHA * FINE_ALPHA)) * (1.0 / Math.sqrt(1.0 + Math.pow(zAlpha / (nr + gamma), 2)) - 1.0);
+    return energyHartree * HARTREE_TO_EV;
+}
+
+function autoCalculateSuborbitEnergiesUI() {
+    const Z = parseInt(document.getElementById('inputZ').value) || 1;
+    const rows = document.querySelectorAll('.orbit-row');
+    const suborbitEnergies = [];
+
+    let cumElec = 0;
+    rows.forEach(row => {
+        const eCount = parseInt(row.querySelector('.e-input').value) || 0;
+        if (eCount > 0) {
+            const baseN = parseInt(row.dataset.n);
+            const exLevel = parseInt(row.querySelector('.ex-input').value) || 0;
+            const effectiveN = baseN + exLevel;
+            const l = parseInt(row.dataset.l);
+            const j = parseFloat(row.dataset.j);
+
+            let S = cumElec * 0.85;
+            // Ensure Z_eff never drops below 1.0 for physical atomic orbits
+            let zEff = Math.max(1.0, Z - S);
+
+            let energy = solveDiracExactEnergy(effectiveN, l, j, zEff);
+            suborbitEnergies.push(`${row.querySelector('.orbit-label').innerText}: ${energy.toFixed(1)}eV`);
+            cumElec += eCount;
         }
     });
 
-    const chk = document.getElementById(`chk_${subshell}`);
-    const vis = document.getElementById(`vis_${subshell}`);
-    if (chk) chk.checked = isVisible;
-    if (vis) vis.checked = isVisible;
+    document.getElementById('inputEn').value = suborbitEnergies.join(', ');
+}
+
+function solveDiracRadialExpectationRK4(n, l, j, zEff) {
+    const kappa = (j > l) ? -(l + 1) : l;
+    const absKappa = Math.abs(kappa);
+    const zAlpha = Math.min(zEff * FINE_ALPHA, absKappa - 1e-5);
+
+    const gamma = (absKappa * absKappa > zAlpha * zAlpha) ? Math.sqrt(absKappa * absKappa - zAlpha * zAlpha) : absKappa;
+    const N = Math.sqrt(n * n - 2 * (n - absKappa) * (absKappa - gamma));
+
+    return (0.5291772109 / (2.0 * zEff)) * (3.0 * N * N - kappa * (kappa + 1.0));
+}
+
+function getOrbitalColor(l, j) {
+    const baseHues = [185, 280, 140, 35, 310, 50, 200];
+    let hue = (l < baseHues.length) ? baseHues[l] : (l * 137.5) % 360;
+    let sat = 0.85;
+    let val = (j > l) ? 0.95 : 0.60;
+    return BABYLON.Color3.FromHSV(hue, sat, val);
+}
+
+function rebuildQuantumModel() {
+    activeMeshes.forEach(item => {
+        if (item.mesh.material) item.mesh.material.dispose();
+        item.mesh.dispose();
+    });
+    activeMeshes = [];
+
+    const Z = parseInt(document.getElementById('inputZ').value) || 1;
+    const rows = document.querySelectorAll('.orbit-row');
+    let maxRadius = 0;
+    let cumElec = 0;
+
+    rows.forEach(row => {
+        const eCount = parseInt(row.querySelector('.e-input').value) || 0;
+        if (eCount > 0) {
+            const baseN = parseInt(row.dataset.n);
+            const exLevel = parseInt(row.querySelector('.ex-input').value) || 0;
+            const effectiveN = baseN + exLevel;
+            const l = parseInt(row.dataset.l);
+            const j = parseFloat(row.dataset.j);
+
+            // Realistic Slater shielding lower-bound constraint
+            let S = cumElec * 0.85;
+            let zEff = Math.max(1.0, Z - S);
+
+            let rDirac = solveDiracRadialExpectationRK4(effectiveN, l, j, zEff);
+
+            if (rDirac > maxRadius) maxRadius = rDirac;
+            const stateKey = getOrbitalLabel(effectiveN, l, j);
+
+            createOrbitalMesh(`orb_${stateKey}`, rDirac, effectiveN, l, j, stateKey);
+            cumElec += eCount;
+        }
+    });
+
+    refreshDynamicFilterUI();
+
+    if (!userHasCustomInit) {
+        initialTarget = BABYLON.Vector3.Zero();
+        if (maxRadius > 0) initialRadius = maxRadius * 3.2;
+    }
+
+    reloadInitialPosition();
+}
+
+function createOrbitalMesh(name, radius, n, l, j, stateKey) {
+    const sphere = BABYLON.MeshBuilder.CreateSphere(name, { diameter: radius * 2, segments: 48 }, scene);
+    const mat = new BABYLON.StandardMaterial(`${name}_mat`, scene);
+    const col = getOrbitalColor(l, j);
+
+    mat.diffuseColor = col;
+    mat.emissiveColor = col.scale(0.35);
+    mat.alpha = currentOpacity;
+    mat.backFaceCulling = false;
+    mat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
+
+    sphere.material = mat;
+    sphere.isVisible = visibilityState[stateKey] !== false;
+
+    activeMeshes.push({ mesh: sphere, stateKey: stateKey });
+}
+
+function refreshDynamicFilterUI() {
+    const container = document.getElementById('dynamicFilterContainer');
+    if (!container) return;
+    container.innerHTML = '';
+
+    activeMeshes.forEach(item => {
+        if (visibilityState[item.stateKey] === undefined) {
+            visibilityState[item.stateKey] = true;
+        }
+
+        const label = document.createElement('label');
+        label.className = 'filter-item';
+        label.innerHTML = `
+            <span><b>${item.stateKey}</b></span>
+            <input type="checkbox" ${visibilityState[item.stateKey] ? 'checked' : ''} onchange="toggleOrbitalVisibility('${item.stateKey}', this.checked)">
+        `;
+        container.appendChild(label);
+    });
+}
+
+function toggleOrbitalVisibility(stateKey, isChecked) {
+    visibilityState[stateKey] = isChecked;
+    activeMeshes.forEach(item => {
+        if (item.stateKey === stateKey) {
+            item.mesh.isVisible = isChecked;
+        }
+    });
 }
 
 function updateOpacity(val) {
     currentOpacity = parseFloat(val);
-    activeMeshes.forEach((mesh) => {
-        if (mesh.name !== "nucleus" && mesh.material) {
-            mesh.material.alpha = currentOpacity;
+    activeMeshes.forEach(item => {
+        if (item.mesh && item.mesh.material) {
+            item.mesh.material.alpha = currentOpacity;
         }
     });
 }
 
-/* Camera Teleport & Sync */
+function initBabylonEngine() {
+    canvas = document.getElementById("renderCanvas");
+    engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
+    
+    scene = new BABYLON.Scene(engine);
+    scene.clearColor = new BABYLON.Color4(0.01, 0.02, 0.04, 1.0);
+
+    camera = new BABYLON.ArcRotateCamera("Camera", initialAlpha, initialBeta, initialRadius, initialTarget.clone(), scene);
+    camera.attachControl(canvas, true);
+    camera.lowerRadiusLimit = 0.01;
+    camera.upperRadiusLimit = 10000;
+
+    const hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(1, 1, 0), scene);
+    hemiLight.intensity = 0.9;
+
+    engine.runRenderLoop(() => { scene.render(); });
+    window.addEventListener("resize", () => engine.resize());
+}
+
+function parseCoordinate(inputVal, currentVal) {
+    if (!inputVal) return currentVal;
+    let str = inputVal.trim();
+    if (str.startsWith('~')) {
+        const offset = parseFloat(str.slice(1));
+        return isNaN(offset) ? currentVal : currentVal + offset;
+    }
+    const val = parseFloat(str);
+    return isNaN(val) ? currentVal : val;
+}
+
 function teleportCamera() {
     if (!camera) return;
-    const x = parseFloat(document.getElementById('tpX')?.value) || 0;
-    const y = parseFloat(document.getElementById('tpY')?.value) || 0;
-    const z = parseFloat(document.getElementById('tpZ')?.value) || 0;
-    camera.setTarget(new BABYLON.Vector3(x, y, z));
+    const currentTarget = camera.target;
+    const newX = parseCoordinate(document.getElementById('tpX').value, currentTarget.x);
+    const newY = parseCoordinate(document.getElementById('tpY').value, currentTarget.y);
+    const newZ = parseCoordinate(document.getElementById('tpZ').value, currentTarget.z);
+    camera.setTarget(new BABYLON.Vector3(newX, newY, newZ));
 }
 
 function setInitialPosition() {
     if (!camera) return;
     initialTarget = camera.target.clone();
+    initialRadius = camera.radius;
     initialAlpha = camera.alpha;
     initialBeta = camera.beta;
-    initialRadius = camera.radius;
     userHasCustomInit = true;
 }
 
 function reloadInitialPosition() {
     if (!camera) return;
     camera.setTarget(initialTarget.clone());
+    camera.radius = initialRadius;
     camera.alpha = initialAlpha;
     camera.beta = initialBeta;
-    camera.radius = initialRadius;
 }
 
-function updateCameraPosUI() {
-    if (!camera) return;
-    const tpX = document.getElementById('tpX');
-    const tpY = document.getElementById('tpY');
-    const tpZ = document.getElementById('tpZ');
-    
-    if (tpX && document.activeElement !== tpX) tpX.value = camera.target.x.toFixed(2);
-    if (tpY && document.activeElement !== tpY) tpY.value = camera.target.y.toFixed(2);
-    if (tpZ && document.activeElement !== tpZ) tpZ.value = camera.target.z.toFixed(2);
+function togglePanel(collapse) {
+    document.getElementById('uiOverlay').classList.toggle('collapsed', collapse);
+    document.getElementById('restoreBtn').style.display = collapse ? 'flex' : 'none';
 }
 
-function onConfigInputChanged() {
-    rebuildQuantumModel();
+function toggleTpPanel(collapse) {
+    document.getElementById('tpOverlay').classList.toggle('collapsed', collapse);
+    document.getElementById('tpRestoreBtn').style.display = collapse ? 'flex' : 'none';
 }
