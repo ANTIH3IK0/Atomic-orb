@@ -74,6 +74,16 @@ body {
     pointer-events: auto !important;
 }
 
+/* Interactive Touch Spotlight & Glass Translucency Boost */
+.ui-overlay, .tp-overlay, .pt-modal-window {
+    background-image: radial-gradient(
+        220px circle at var(--pointer-x, 50%) var(--pointer-y, 50%),
+        rgba(255, 255, 255, calc(0.16 * var(--glow-opacity, 0))) 0%,
+        rgba(210, 220, 240, calc(0.07 * var(--glow-opacity, 0))) 45%,
+        transparent 80%
+    ) !important;
+}
+
 /* Left UI Overlay Panel */
 .ui-overlay {
     top: 16px;
