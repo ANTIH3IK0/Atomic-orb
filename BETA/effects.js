@@ -255,3 +255,89 @@ function initQuicksilverGlassEngine() {
         });
     });
 }
+
+/* Animated Panel Minimize / Restore */
+function togglePanel(minimize) {
+    const overlay = document.getElementById('uiOverlay');
+    const restoreBtn = document.getElementById('restoreBtn');
+    if (!overlay || !restoreBtn) return;
+
+    if (minimize) {
+        gsap.to(overlay, {
+            opacity: 0, scale: 0.94, y: -10, duration: 0.28, ease: 'power2.in',
+            onComplete: () => {
+                overlay.classList.add('collapsed');
+                restoreBtn.style.display = 'flex';
+                gsap.fromTo(restoreBtn, { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.2 });
+            }
+        });
+    } else {
+        restoreBtn.style.display = 'none';
+        overlay.classList.remove('collapsed');
+        gsap.fromTo(overlay, 
+            { opacity: 0, scale: 0.94, y: -10 },
+            { opacity: 1, scale: 1, y: 0, duration: 0.35, ease: 'power2.out' }
+        );
+    }
+}
+
+function toggleTpPanel(minimize) {
+    const overlay = document.getElementById('tpOverlay');
+    const restoreBtn = document.getElementById('tpRestoreBtn');
+    if (!overlay || !restoreBtn) return;
+
+    if (minimize) {
+        gsap.to(overlay, {
+            opacity: 0, scale: 0.94, y: -10, duration: 0.28, ease: 'power2.in',
+            onComplete: () => {
+                overlay.classList.add('collapsed');
+                restoreBtn.style.display = 'flex';
+                gsap.fromTo(restoreBtn, { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.2 });
+            }
+        });
+    } else {
+        restoreBtn.style.display = 'none';
+        overlay.classList.remove('collapsed');
+        gsap.fromTo(overlay, 
+            { opacity: 0, scale: 0.94, y: -10 },
+            { opacity: 1, scale: 1, y: 0, duration: 0.35, ease: 'power2.out' }
+        );
+    }
+}
+
+/* Accordion Subpage Animated Transitions */
+function toggleSection(targetId, btn) {
+    const target = document.getElementById(targetId);
+    if (!target) return;
+
+    const autoContainer = document.getElementById('autoModeContainer');
+    const allContents = autoContainer ? autoContainer.querySelectorAll('.collapsible-content') : [];
+    const allBtns = autoContainer ? autoContainer.querySelectorAll('.collapse-btn') : [];
+
+    const isCollapsed = target.classList.contains('collapsed');
+
+    // Smooth collapse open subpages
+    allContents.forEach(content => {
+        if (!content.classList.contains('collapsed')) {
+            gsap.to(content, {
+                height: 0, opacity: 0, duration: 0.22, ease: 'power2.in',
+                onComplete: () => {
+                    content.classList.add('collapsed');
+                    gsap.set(content, { clearProps: 'all' });
+                }
+            });
+        }
+    });
+    allBtns.forEach(b => b.textContent = '+');
+
+    // Smooth expand selected subpage
+    if (isCollapsed) {
+        target.classList.remove('collapsed');
+        if (btn) btn.textContent = '−';
+        
+        gsap.fromTo(target, 
+            { height: 0, opacity: 0, overflow: 'hidden' },
+            { height: 'auto', opacity: 1, duration: 0.3, ease: 'power2.out', onComplete: () => gsap.set(target, { clearProps: 'overflow' }) }
+        );
+    }
+}
