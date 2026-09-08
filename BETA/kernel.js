@@ -859,7 +859,7 @@ function setupIndividualParticleFade() {
             let bufferNeedsUpdate = false;
 
             // Low probability trigger to initiate fade out
-            if (Math.random() < 0.05) {
+            if (Math.random() < 0.35) {
                 const count = Math.floor(Math.random() * 2) + 1;
                 for (let k = 0; k < count; k++) {
                     const targetIdx = Math.floor(Math.random() * data.vertexCount);
