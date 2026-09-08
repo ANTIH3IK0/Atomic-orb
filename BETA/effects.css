@@ -10,12 +10,14 @@
     --input-bg: rgba(3, 3, 4, 0.95);
 
     /* Stealth Quicksilver Palette */
-    --quicksilver-bright: #d3d3d3;
+    --quicksilver-bright: #e8e8e8;
     --quicksilver-silver: #8c8c8c;
-    --text-main: #ffffff;
-    --text-sub: #d4d4d4;
-    --text-muted: #b6b6b6;
-    --text-accent: #ffffff;
+    
+    /* Structured Text Hierarchy */
+    --text-main: #ffffff;      /* Pure white for primary headings & main readability */
+    --text-sub: #a1a1aa;       /* Muted grey for subheadings, captions, and secondary text */
+    --text-muted: #6b7280;     /* Darker grey for disabled states, timestamps, or placeholders */
+    --text-accent: #38bdf8;    /* A distinct pop color (e.g., icy blue) for links, highlights, or active states */
     
     /* Dark Controls */
     --chk-bg: rgba(4, 4, 5, 0.95);
