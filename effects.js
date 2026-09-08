@@ -1,17 +1,42 @@
-/**
- * effects.js
- * Dark Refractive Liquid Optics & Interactivity Controls
- */
+// effects.js
+
 document.addEventListener('DOMContentLoaded', () => {
     initGroupAttributesObserver();
-    initLiquidGLEffects();
+    initModalVisibilityHandler();
     initGSAPAnimations();
-    initGlassInteractivity();
+    initSuborbitNotationObserver();
+    initQuicksilverGlassEngine();
 });
 
-/**
- * Automatically attaches data-group attributes to elements created by kernel.js
- */
+/* Format Quantum Suborbit Notation */
+function formatSuborbitNotation(text) {
+    if (!text) return '';
+    return text.replace(/([0-9][a-zA-Z])([0-9]+\/[0-9]+)/g, '$1<sub>$2</sub>');
+}
+
+function processSuborbitRows() {
+    const targets = document.querySelectorAll('.orbit-row span, .filter-item span');
+    targets.forEach(el => {
+        if (!el.dataset.suborbitFormatted && el.children.length === 0) {
+            const text = el.textContent.trim();
+            if (/^[0-9][a-zA-Z][0-9]+\/[0-9]+$/.test(text)) {
+                el.innerHTML = formatSuborbitNotation(text);
+                el.classList.add('suborbit-label');
+                el.dataset.suborbitFormatted = 'true';
+            }
+        }
+    });
+}
+
+/* Scoped Mutation Observer for UI suborbit labels */
+function initSuborbitNotationObserver() {
+    processSuborbitRows();
+    const container = document.getElementById('uiOverlay') || document.body;
+    const observer = new MutationObserver(() => processSuborbitRows());
+    observer.observe(container, { childList: true, subtree: true });
+}
+
+/* Dynamic Periodic Table Group Attributes */
 function applyGroupDataAttributes() {
     const cards = document.querySelectorAll('.pt-element-card');
     cards.forEach(card => {
@@ -20,152 +45,213 @@ function applyGroupDataAttributes() {
         if (groupSpan) {
             const groupText = groupSpan.textContent.trim();
             const groupNum = groupText.replace('G', '');
-            if (groupNum) {
-                card.dataset.group = groupNum;
-            }
+            if (groupNum) card.dataset.group = groupNum;
         }
     });
 }
 
 function initGroupAttributesObserver() {
     applyGroupDataAttributes();
-
     const container = document.getElementById('ptGridContainer');
     if (container) {
-        const observer = new MutationObserver(() => {
-            applyGroupDataAttributes();
-        });
+        const observer = new MutationObserver(() => applyGroupDataAttributes());
         observer.observe(container, { childList: true, subtree: true });
     }
 }
 
-/**
- * Initialize Dark Smoked Optics via LiquidGL
- */
-function initLiquidGLEffects() {
-    if (typeof LiquidGL === 'undefined') return;
+/* Modal Visibility Handler */
+function initModalVisibilityHandler() {
+    const modalBackdrop = document.querySelector('.pt-modal-backdrop');
+    if (!modalBackdrop) return;
 
-    // Attach dark liquid WebGL shaders to main overlays
-    const glassPanels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
-    glassPanels.forEach(panel => {
-        new LiquidGL(panel, {
-            refraction: 0.045,      // Controlled refractive index for dark lens distortion
-            reflection: 0.18,       // Muted specular edge highlights
-            liquidColor: '#050811',
-            glassColor: 'rgba(10, 14, 22, 0.72)',
-            dispersion: 0.0,        // Zero rainbow chromatic dispersion
-            interactive: true,
-            intensity: 0.35,        // Smooth liquid ripple response on pointer hover
-            viscosity: 0.88         // Heavy liquid feel
-        });
-    });
+    const syncModalDisplay = () => {
+        const isOpen = modalBackdrop.classList.contains('open');
+        if (isOpen) {
+            modalBackdrop.style.display = 'flex';
+            modalBackdrop.style.pointerEvents = 'auto';
+        } else {
+            modalBackdrop.style.pointerEvents = 'none';
+            setTimeout(() => {
+                if (!modalBackdrop.classList.contains('open')) {
+                    modalBackdrop.style.display = 'none';
+                }
+            }, 250);
+        }
+    };
 
-    // Attach subtle liquid feedback to interactive buttons
-    const liquidButtons = document.querySelectorAll('button.apply-btn, button.secondary-btn, .close-btn');
-    liquidButtons.forEach(btn => {
-        new LiquidGL(btn, {
-            refraction: 0.02,
-            reflection: 0.1,
-            liquidColor: '#090d18',
-            dispersion: 0.0,
-            interactive: true,
-            intensity: 0.2
-        });
-    });
+    syncModalDisplay();
+    const observer = new MutationObserver(syncModalDisplay);
+    observer.observe(modalBackdrop, { attributes: true, attributeFilter: ['class'] });
 }
 
-/**
- * GSAP Micro-Interactions
- */
+/* Entrance Animations */
 function initGSAPAnimations() {
     if (typeof gsap === 'undefined') return;
 
-    // Smooth UI Panel Entrance Sequence
-    gsap.from('#uiOverlay', {
-        x: -40,
-        opacity: 0,
-        duration: 0.6,
-        ease: 'power3.out',
-        delay: 0.15
-    });
-
-    gsap.from('#tpOverlay', {
-        x: 40,
-        opacity: 0,
-        duration: 0.6,
-        ease: 'power3.out',
-        delay: 0.25
-    });
-
-    // Button Hover Spring Micro-Animations
-    const buttons = document.querySelectorAll('button');
-    buttons.forEach(btn => {
-        btn.addEventListener('mouseenter', () => {
-            gsap.to(btn, {
-                scale: 1.02,
-                duration: 0.18,
-                ease: 'power1.out'
-            });
-        });
-
-        btn.addEventListener('mouseleave', () => {
-            gsap.to(btn, {
-                scale: 1.0,
-                duration: 0.18,
-                ease: 'power1.out'
-            });
-        });
-
-        btn.addEventListener('mousedown', () => {
-            gsap.to(btn, {
-                scale: 0.97,
-                duration: 0.08,
-                ease: 'power1.inOut'
-            });
-        });
-    });
+    gsap.from('#uiOverlay', { x: -30, opacity: 0, duration: 0.5, ease: 'power2.out', delay: 0.1 });
+    gsap.from('#tpOverlay', { x: 30,  opacity: 0, duration: 0.5, ease: 'power2.out', delay: 0.2 });
 }
 
-/**
- * Cursor Tracking & Subtle Tilt
- */
-function initGlassInteractivity() {
-    const glassPanels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
+/* Control Mode Switcher */
+function switchControlMode(mode) {
+    const autoContainer = document.getElementById('autoModeContainer');
+    const manualContainer = document.getElementById('manualModeContainer');
+    const btnAuto = document.getElementById('btnModeAuto');
+    const btnManual = document.getElementById('btnModeManual');
+    if (!autoContainer || !manualContainer || !btnAuto || !btnManual) return;
 
-    glassPanels.forEach(panel => {
-        panel.addEventListener('mousemove', (e) => {
-            const rect = panel.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+    if (mode === 'auto') {
+        autoContainer.classList.remove('hidden');
+        manualContainer.classList.add('hidden');
+        btnAuto.classList.add('active');
+        btnManual.classList.remove('active');
+    } else {
+        autoContainer.classList.add('hidden');
+        manualContainer.classList.remove('hidden');
+        btnAuto.classList.remove('active');
+        btnManual.classList.add('active');
+    }
 
-            panel.style.setProperty('--mouse-x', `${x}px`);
-            panel.style.setProperty('--mouse-y', `${y}px`);
+    if (typeof gsap !== 'undefined') {
+        const activeContainer = mode === 'auto' ? autoContainer : manualContainer;
+        gsap.fromTo(activeContainer,
+            { opacity: 0, y: 6 },
+            { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' });
+    }
+}
 
-            if (typeof gsap !== 'undefined' && !panel.classList.contains('pt-modal-window')) {
-                const centerX = rect.left + rect.width / 2;
-                const centerY = rect.top + rect.height / 2;
-                const rotateX = ((e.clientY - centerY) / (rect.height / 2)) * -2.0;
-                const rotateY = ((e.clientX - centerX) / (rect.width / 2)) * 2.0;
+/* Quicksilver Glass Engine: Touch Spotlight, Surface Compression & Edge Light */
+function initQuicksilverGlassEngine() {
+    const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
+    const PROXIMITY_THRESHOLD = 90; // Pixel distance threshold from edge
 
-                gsap.to(panel, {
-                    rotateX: rotateX,
-                    rotateY: rotateY,
-                    transformPerspective: 1000,
-                    duration: 0.3,
-                    ease: 'power1.out'
-                });
+    panels.forEach(panel => {
+        let currentX = 0, currentY = 0;
+        let targetX = 0, targetY = 0;
+        let pointerX = 0, pointerY = 0;
+        let opacity = 0;
+        let distOpacity = 0;
+        let glowOpacity = 0;
+        let intensityX = 0, intensityY = 0;
+        let isHovered = false;
+        let animFrame = null;
+
+        function getNearestEdgePoint(mouseX, mouseY, width, height) {
+            const leftDist = mouseX;
+            const rightDist = width - mouseX;
+            const topDist = mouseY;
+            const bottomDist = height - mouseY;
+            const minDist = Math.min(leftDist, rightDist, topDist, bottomDist);
+
+            let edgeX = mouseX;
+            let edgeY = mouseY;
+
+            if (minDist === leftDist) edgeX = 0;
+            else if (minDist === rightDist) edgeX = width;
+            else if (minDist === topDist) edgeY = 0;
+            else if (minDist === bottomDist) edgeY = height;
+
+            return { x: edgeX, y: edgeY, leftDist, rightDist, topDist, bottomDist };
+        }
+
+        function update() {
+            currentX += (targetX - currentX) * 0.12;
+            currentY += (targetY - currentY) * 0.12;
+
+            const dist = Math.hypot(targetX - currentX, targetY - currentY);
+            
+            if (isHovered) {
+                const targetEdgeOpacity = dist > 1.5 ? Math.min(1, dist / 25) : 0;
+                opacity += (targetEdgeOpacity - opacity) * 0.12;
+                glowOpacity += (1.0 - glowOpacity) * 0.15; // Smooth touch light fade-in
+            } else {
+                opacity += (0 - opacity) * 0.15;
+                distOpacity += (0 - distOpacity) * 0.15;
+                glowOpacity += (0 - glowOpacity) * 0.15; // Smooth touch light fade-out
             }
+
+            panel.style.setProperty('--mouse-x', `${currentX.toFixed(2)}px`);
+            panel.style.setProperty('--mouse-y', `${currentY.toFixed(2)}px`);
+            panel.style.setProperty('--pointer-x', `${pointerX.toFixed(2)}px`);
+            panel.style.setProperty('--pointer-y', `${pointerY.toFixed(2)}px`);
+            panel.style.setProperty('--edge-opacity', opacity.toFixed(3));
+            panel.style.setProperty('--distortion-opacity', distOpacity.toFixed(3));
+            panel.style.setProperty('--glow-opacity', glowOpacity.toFixed(3));
+            panel.style.setProperty('--press-intensity-x', intensityX.toFixed(3));
+            panel.style.setProperty('--press-intensity-y', intensityY.toFixed(3));
+
+            if (opacity > 0.005 || distOpacity > 0.005 || glowOpacity > 0.005 || isHovered) {
+                animFrame = requestAnimationFrame(update);
+            } else {
+                panel.style.setProperty('--edge-opacity', '0');
+                panel.style.setProperty('--distortion-opacity', '0');
+                panel.style.setProperty('--glow-opacity', '0');
+                animFrame = null;
+            }
+        }
+
+        function handlePointerMove(clientX, clientY) {
+            const rect = panel.getBoundingClientRect();
+            pointerX = clientX - rect.left;
+            pointerY = clientY - rect.top;
+
+            const edgeData = getNearestEdgePoint(pointerX, pointerY, rect.width, rect.height);
+            targetX = edgeData.x;
+            targetY = edgeData.y;
+
+            // Proximity intensity calculation (0 at center, 1 at edge)
+            const minX = Math.min(edgeData.leftDist, edgeData.rightDist);
+            const minY = Math.min(edgeData.topDist, edgeData.bottomDist);
+
+            const targetIntX = Math.max(0, (PROXIMITY_THRESHOLD - minX) / PROXIMITY_THRESHOLD);
+            const targetIntY = Math.max(0, (PROXIMITY_THRESHOLD - minY) / PROXIMITY_THRESHOLD);
+
+            intensityX += (targetIntX - intensityX) * 0.2;
+            intensityY += (targetIntY - intensityY) * 0.2;
+
+            distOpacity = Math.max(intensityX, intensityY);
+
+            // Dynamic 3D tilt calculation
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const tiltX = (pointerY - centerY) / centerY * -2;
+            const tiltY = (pointerX - centerX) / centerX * 2;
+
+            panel.style.setProperty('--tilt-x', `${tiltX}deg`);
+            panel.style.setProperty('--tilt-y', `${tiltY}deg`);
+
+            if (!animFrame) animFrame = requestAnimationFrame(update);
+        }
+
+        panel.addEventListener('mouseenter', (e) => {
+            isHovered = true;
+            handlePointerMove(e.clientX, e.clientY);
         });
 
+        panel.addEventListener('mousemove', (e) => {
+            handlePointerMove(e.clientX, e.clientY);
+        });
+
+        // Touch input listeners
+        panel.addEventListener('touchstart', (e) => {
+            isHovered = true;
+            if (e.touches[0]) handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: true });
+
+        panel.addEventListener('touchmove', (e) => {
+            if (e.touches[0]) handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: true });
+
         panel.addEventListener('mouseleave', () => {
-            if (typeof gsap !== 'undefined' && !panel.classList.contains('pt-modal-window')) {
-                gsap.to(panel, {
-                    rotateX: 0,
-                    rotateY: 0,
-                    duration: 0.5,
-                    ease: 'power2.out'
-                });
-            }
+            isHovered = false;
+            panel.style.setProperty('--tilt-x', `0deg`);
+            panel.style.setProperty('--tilt-y', `0deg`);
+            if (!animFrame) animFrame = requestAnimationFrame(update);
+        });
+
+        panel.addEventListener('touchend', () => {
+            isHovered = false;
+            if (!animFrame) animFrame = requestAnimationFrame(update);
         });
     });
 }
