@@ -10,19 +10,20 @@
     --input-bg: rgba(3, 3, 4, 0.95);
 
     /* Stealth Quicksilver Palette */
-    --quicksilver-bright: #d3d3d3;
+    --quicksilver-bright: #e8e8e8;
     --quicksilver-silver: #8c8c8c;
-    --text-main: #ffffff;
-    --text-sub: #d4d4d4;
-    --text-muted: #b6b6b6;
-    --text-accent: #ffffff;
-
+    
+    /* Strict Monochrome Text Hierarchy */
+    --text-main: #ffffff;      /* Pure white for primary body & key headers */
+    --text-sub: #a3a3a3;       /* Balanced mid-grey for secondary details */
+    --text-muted: #525252;     /* Dark charcoal grey for subtle/disabled text */
+    --text-accent: #f5f5f7;    /* Ultra-bright metallic white for focused/active states */
+    
     /* Dark Controls */
     --chk-bg: rgba(4, 4, 5, 0.95);
     --chk-checked-bg: rgba(30, 30, 35, 0.95);
     --chk-tick-color: #78767a;
 }
-
 * {
     box-sizing: border-box;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
