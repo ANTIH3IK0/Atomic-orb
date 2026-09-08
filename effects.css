@@ -1,0 +1,689 @@
+/* effects.css */
+
+:root {
+    --bg-dark: #000000;
+
+    /* Total Dark Obsidian Translucency */
+    --panel-glass: rgba(5, 5, 6, 0.86);
+    --card-glass: rgba(10, 10, 12, 0.88);
+    --row-glass: rgba(8, 8, 10, 0.85);
+    --input-bg: rgba(3, 3, 4, 0.95);
+
+    /* Stealth Quicksilver Palette */
+    --quicksilver-bright: #e8e8e8;
+    --quicksilver-silver: #8c8c8c;
+    
+    /* Strict Monochrome Text Hierarchy */
+    --text-main: #ffffff;      /* Pure white for primary body & key headers */
+    --text-sub: #a3a3a3;       /* Balanced mid-grey for secondary details */
+    --text-muted: #525252;     /* Dark charcoal grey for subtle/disabled text */
+    --text-accent: #f5f5f7;    /* Ultra-bright metallic white for focused/active states */
+    
+    /* Dark Controls */
+    --chk-bg: rgba(4, 4, 5, 0.95);
+    --chk-checked-bg: rgba(30, 30, 35, 0.95);
+    --chk-tick-color: #78767a;
+}
+* {
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--bg-dark);
+    color: var(--text-main);
+    overflow: hidden;
+    display: flex;
+    font-weight: 100;
+}
+
+/* 3D WebGL Background Canvas */
+#renderCanvas {
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+    outline: none;
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+/* Base Panel Glass Properties (Eliminates forced 3D stacking context layout shifts) */
+.ui-overlay, .tp-overlay, .pt-modal-window {
+    position: absolute;
+    background: rgba(12, 13, 17, 0.88);
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    border-radius: 10px;
+    border: 1px solid transparent !important;
+
+    /* Base Shadow & Metallic Edge Rim */
+    box-shadow: 
+        0 30px 60px -12px rgba(0, 0, 0, 0.85),
+        inset 0 0 0 1px rgba(220, 220, 220, 0.12);
+
+    /* Clean tilt mapping without forced perspective overlap */
+    transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+    pointer-events: auto !important;
+}
+
+/* Interactive Touch Spotlight & Glass Translucency Boost */
+.ui-overlay, .tp-overlay, .pt-modal-window {
+    background-image: radial-gradient(
+        220px circle at var(--pointer-x, 50%) var(--pointer-y, 50%),
+        rgba(255, 255, 255, calc(0.16 * var(--glow-opacity, 0))) 0%,
+        rgba(210, 220, 240, calc(0.07 * var(--glow-opacity, 0))) 45%,
+        transparent 80%
+    ) !important;
+}
+
+/* Left UI Overlay Panel */
+.ui-overlay {
+    top: 16px;
+    left: 16px;
+    width: 380px;
+    height: calc(100dvh - 32px);
+    max-height: calc(100dvh - 32px);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    z-index: 100;
+
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
+}
+.ui-overlay.collapsed { display: none; }
+
+/* Right Overlay Panel */
+.tp-overlay {
+    top: 16px;
+    right: 16px;
+    width: 250px;
+    height: auto;
+    max-height: calc(100dvh - 32px);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    z-index: 100;
+
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
+}
+.tp-overlay.collapsed { display: none; }
+
+/* Periodic Table Grid Headers & Period Indicators */
+.pt-header-cell, .pt-period-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--text-muted);
+    user-select: none;
+}
+
+/* LiquidGlass Shader Canvas Layer */
+.ui-overlay > canvas, .tp-overlay > canvas, .pt-modal-window > canvas {
+    position: absolute;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 0;
+    pointer-events: none !important;
+    mix-blend-mode: overlay;
+}
+
+/* Liquid Metal Surface Depression Layer */
+.ui-overlay::after, .tp-overlay::after, .pt-modal-window::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    pointer-events: none !important;
+    z-index: 6;
+
+    /* Perpendicular physical grooves (X line parallel to vertical edge, Y line parallel to horizontal edge) */
+    background: 
+        /* Vertical depression axis */
+        linear-gradient(
+            90deg,
+            transparent calc(var(--mouse-x, 0px) - 18px),
+            rgba(0, 0, 0, calc(0.95 * var(--press-intensity-x, 0))) var(--mouse-x, 0px),
+            rgba(255, 255, 255, calc(0.18 * var(--press-intensity-x, 0))) calc(var(--mouse-x, 0px) + 2px),
+            transparent calc(var(--mouse-x, 0px) + 20px)
+        ),
+        /* Horizontal depression axis */
+        linear-gradient(
+            180deg,
+            transparent calc(var(--mouse-y, 0px) - 18px),
+            rgba(0, 0, 0, calc(0.95 * var(--press-intensity-y, 0))) var(--mouse-y, 0px),
+            rgba(255, 255, 255, calc(0.18 * var(--press-intensity-y, 0))) calc(var(--mouse-y, 0px) + 2px),
+            transparent calc(var(--mouse-y, 0px) + 20px)
+        );
+
+    /* Localized radial compression spot around interaction point */
+    -webkit-mask-image: radial-gradient(
+        130px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(0, 0, 0, 1) 0%,
+        rgba(0, 0, 0, 0.4) 60%,
+        transparent 100%
+    );
+    mask-image: radial-gradient(
+        130px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(0, 0, 0, 1) 0%,
+        rgba(0, 0, 0, 0.4) 60%,
+        transparent 100%
+    );
+
+    opacity: var(--distortion-opacity, 0);
+    mix-blend-mode: multiply;
+    transition: opacity 0.15s ease-out;
+}
+
+/* @keyframes quicksilverShine {
+     0%, 100% { opacity: 0.1; }
+    50% { opacity: 0.25; }
+} */
+
+/* Micro Anamorphic Reflection Motion */
+/* @keyframes quicksilverAnamorphicGlint {
+    0%, 100% {
+        transform: translate(-15%, -15%) rotate(0deg);
+        opacity: 0.3;
+    }
+    50% {
+        transform: translate(10%, 10%) rotate(2deg);
+        opacity: 0.8;
+    }
+} */
+
+/* Subtle Mercury(quicksilver) Edge Reflection Pulse */
+@keyframes quicksilverEdgeBreathe {
+    0% {
+        opacity: 0.4;
+        filter: brightness(0.9);
+    }
+    100% {
+        opacity: 0.85;
+        filter: brightness(1.2);
+    }
+}
+
+/* Dynamic Liquid Mercury Edge Highlight (#dcdcdc Sharp Refraction) */
+.ui-overlay::before, .tp-overlay::before, .pt-modal-window::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    padding: 1px; /* 1px precision edge */
+
+    /* Metallic Liquid Specular Gradient */
+    background: radial-gradient(
+        220px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        #ffffff 0%,
+        #dcdcdc 25%,
+        #8e8e93 50%,
+        rgba(220, 220, 220, 0.05) 80%,
+        transparent 100%
+    );
+
+    /* Edge Frame Mask Clip */
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+
+    pointer-events: none !important;
+    z-index: 10;
+
+    /* Controlled dynamically via JS physics loop */
+    opacity: var(--edge-opacity, 0);
+    will-change: opacity, transform;
+}
+
+.mode-switch-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: rgba(6, 6, 8, 0.90);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
+    position: relative;
+    z-index: 10;
+    flex-shrink: 0;
+}
+
+.mode-btn {
+    background: transparent;
+    border: none;
+    color: var(--quicksilver-silver);
+    padding: 8px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    position: relative;
+    z-index: 10;
+    pointer-events: auto !important;
+}
+.mode-btn:hover {
+    color: var(--quicksilver-bright);
+    background: rgba(255, 255, 255, 0.03);
+}
+.mode-btn.active {
+    background: rgba(24, 24, 28, 0.90);
+    color: var(--quicksilver-bright);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05);
+}
+
+.mode-container {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: relative;
+    z-index: 10;
+}
+.mode-container.hidden { display: none !important; }
+
+.orbit-row {
+    display: grid;
+    grid-template-columns: 36px 88px 1fr;
+    align-items: center;
+    gap: 8px;
+    background: var(--row-glass);
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    position: relative;
+    z-index: 10;
+}
+
+.suborbit-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--quicksilver-bright);
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: baseline;
+    justify-content: flex-start;
+}
+
+.suborbit-label sub {
+    font-size: 10px;
+    color: var(--text-sub);
+    margin-left: 2px;
+    font-weight: 400;
+    vertical-align: sub;
+}
+
+.pt-modal-backdrop {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(2, 2, 3, 0.92);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+.pt-modal-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+
+/* Periodic Table Modal Container Fixed Overlay */
+.pt-modal-window {
+    position: relative;
+    width: 96vw;
+    max-width: 1400px;
+    height: calc(100dvh - 32px);
+    max-height: 92dvh;
+    border-radius: 24px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow: hidden;
+}
+
+/* Scroll Window Inner Boundaries */
+.pt-scroll-area {
+    overflow: auto;
+    flex: 1;
+    max-height: calc(92dvh - 80px);
+    padding: 4px;
+    position: relative;
+    z-index: 10;
+    overscroll-behavior: contain;
+}
+
+/* Grid Dimension Calibration */
+.pt-grid-container {
+    display: grid;
+    grid-template-columns: 28px repeat(18, minmax(56px, 1fr));
+    grid-gap: 5px;
+    min-width: 1100px;
+    width: 100%;
+}
+
+.pt-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    position: relative;
+    z-index: 10;
+    flex-shrink: 0;
+}
+
+.pt-modal-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    color: var(--quicksilver-bright);
+}
+
+.close-btn {
+    background: rgba(5, 5, 6, 0.90);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-sub);
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    position: relative;
+    z-index: 10;
+    pointer-events: auto !important;
+}
+.close-btn:hover {
+    background: rgba(140, 30, 30, 0.80);
+    color: #d4d4d8;
+}
+
+.pt-element-card {
+    position: relative;
+    height: 56px;
+    padding: 4px 5px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    background: rgba(12, 12, 15, 0.80);
+    transition: all 0.15s ease;
+    z-index: 10;
+    overflow: hidden;
+    pointer-events: auto !important;
+}
+.pt-element-card:hover {
+    background: rgba(20, 20, 25, 0.90);
+    transform: translateY(-1px);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.pt-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    line-height: 1;
+    color: var(--text-muted);
+}
+
+.pt-card-symbol {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1;
+    color: var(--quicksilver-bright);
+    margin: 2px 0;
+}
+
+.pt-card-name {
+    font-size: 7.5px;
+    line-height: 1;
+    text-align: center;
+    color: var(--text-sub);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tp-title, .section-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--quicksilver-silver);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 10;
+}
+
+.tp-grid { display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 10; }
+.tp-field { display: flex; flex-direction: row; align-items: center; gap: 8px; }
+.tp-field label { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; width: 14px; }
+
+input[type="text"], input[type="number"] {
+    background: var(--input-bg);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    color: var(--quicksilver-bright);
+    padding: 8px 10px;
+    border-radius: 9px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    width: 100%;
+    position: relative;
+    z-index: 10;
+    pointer-events: auto !important;
+}
+input[type="text"]:focus, input[type="number"]:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+.btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; position: relative; z-index: 10; }
+
+.restore-btn, .tp-restore-btn {
+    position: absolute;
+    top: 16px;
+    z-index: 150;
+    background: rgba(10, 10, 12, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--quicksilver-bright);
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto !important;
+}
+.restore-btn { left: 16px; }
+.tp-restore-btn { right: 16px; }
+
+header h1 {
+    margin: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    color: var(--quicksilver-bright);
+}
+
+.minimize-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 14px;
+    position: relative;
+    z-index: 10;
+    pointer-events: auto !important;
+}
+.minimize-btn:hover { color: var(--quicksilver-bright); }
+
+.input-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--card-glass);
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    position: relative;
+    z-index: 10;
+}
+
+.input-field { display: flex; flex-direction: column; gap: 4px; position: relative; z-index: 10; }
+.input-header { display: flex; justify-content: space-between; align-items: center; }
+.input-field label { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+
+.action-link {
+    font-size: 9px;
+    color: var(--quicksilver-silver);
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    position: relative;
+    z-index: 10;
+    pointer-events: auto !important;
+}
+.action-link:hover { color: var(--quicksilver-bright); text-decoration: underline; }
+
+button.apply-btn {
+    position: relative;
+    padding: 9px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(20, 20, 24, 0.85);
+    color: var(--quicksilver-bright);
+    border-radius: 9px;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    cursor: pointer;
+    width: 100%;
+    z-index: 10;
+    pointer-events: auto !important;
+}
+button.apply-btn:hover {
+    background: rgba(28, 28, 34, 0.95);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+button.secondary-btn {
+    position: relative;
+    padding: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    background: rgba(8, 8, 10, 0.70);
+    color: var(--quicksilver-silver);
+    border-radius: 9px;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+    width: 100%;
+    z-index: 10;
+    pointer-events: auto !important;
+}
+button.secondary-btn:hover {
+    background: rgba(16, 16, 20, 0.80);
+    color: var(--quicksilver-bright);
+}
+
+.orbits-scroll-area {
+    max-height: 180px;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+    z-index: 10;
+}
+
+input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--chk-bg);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 5px;
+    cursor: pointer;
+    position: relative;
+    z-index: 10;
+    pointer-events: auto !important;
+}
+input[type="checkbox"]:checked {
+    background: var(--chk-checked-bg);
+    border-color: rgba(255, 255, 255, 0.20);
+}
+input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: -2px;
+    left: 3px;
+    font-size: 10px;
+    font-weight: bold;
+    color: var(--chk-tick-color);
+}
+
+.filter-list { display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 10; }
+.filter-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--quicksilver-silver);
+    background: var(--row-glass);
+    padding: 7px 10px;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    position: relative;
+    z-index: 10;
+}
+
+input[type="range"] {
+    width: 100%;
+    accent-color: var(--quicksilver-bright);
+    cursor: pointer;
+    position: relative;
+    z-index: 10;
+    pointer-events: auto !important;
+}
