@@ -7,7 +7,7 @@ window.activeParticleColor = { r: 0.85, g: 0.85, b: 0.9 }; // Stark neutral quan
 /* Theme Palettes */
 const DEFCSS = Object.freeze({
     '--bg-dark': '#000000',
-    '--panel-glass': 'rgba(12, 13, 17, 0.88)',
+    '--panel-glass': 'rgba(5, 5, 6, 0.86)',
     '--card-glass': 'rgba(10, 10, 12, 0.88)',
     '--row-glass': 'rgba(8, 8, 10, 0.85)',
     '--input-bg': 'rgba(3, 3, 4, 0.95)',
