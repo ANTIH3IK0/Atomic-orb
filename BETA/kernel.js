@@ -743,7 +743,7 @@ function initBabylonEngine() {
     hemiLight.intensity = 0.725;
 
     engine.runRenderLoop(() => { scene.render(); });
-    window.addEventListener("resize", () => engine.resize());
+    window.addEventListener("resize", () => { engine.resize(); });
 }
 
 function parseCoordinate(inputVal, currentVal) {
