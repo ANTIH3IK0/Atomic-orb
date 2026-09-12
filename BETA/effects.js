@@ -1,42 +1,52 @@
-// effects.js - Self-contained UI effects & idle theme engine
+// effects.js - Self-contained UI effects, dynamic glass engine & idle theme controller
 
-/* Global Theme Definitions */
+/* Global Theme & Particle State Hooks */
 window.isRedFilterActive = false;
+window.activeParticleColor = { r: 0.2, g: 0.8, b: 1.0 }; // Read by 3D Babylon kernel
 
+/* High-Contrast Theme Palettes */
 const DEFCSS = Object.freeze({
     '--bg-dark': '#000000',
     '--panel-glass': 'rgba(12, 13, 17, 0.88)',
     '--card-glass': 'rgba(10, 10, 12, 0.88)',
     '--row-glass': 'rgba(8, 8, 10, 0.85)',
     '--input-bg': 'rgba(3, 3, 4, 0.95)',
-    '--quicksilver-bright': '#e8e8e8',
-    '--quicksilver-silver': '#8c8c8c',
-    '--text-main': '#ffffff',
-    '--text-sub': '#a3a3a3',
-    '--text-muted': '#525252',
-    '--text-accent': '#f5f5f7',
-    '--edge-color-1': '#ffffff',
-    '--edge-color-2': '#dcdcdc',
-    '--edge-color-3': '#8e8e93',
-    '--glow-color': 'rgba(210, 220, 240, 0.07)'
+    '--quicksilver-bright': '#ffffff',
+    '--quicksilver-silver': '#a0a0a0',
+    '--text-main': '#e8e8e8',
+    '--text-sub': '#b0b0b0',
+    '--text-muted': '#666666',
+    '--text-accent': '#00e5ff',
+    '--edge-color-1': 'rgba(255, 255, 255, 0.6)',
+    '--edge-color-2': 'rgba(200, 220, 255, 0.2)',
+    '--edge-color-3': 'rgba(100, 150, 255, 0.05)',
+    '--glow-color': 'rgba(0, 229, 255, 0.3)',
+    '--text-glow': '0 0 8px rgba(0, 229, 255, 0.3)',
+    '--panel-border': '1px solid rgba(255, 255, 255, 0.12)',
+    '--slider-thumb': '#00e5ff',
+    '--slider-track': 'rgba(255, 255, 255, 0.2)'
 });
 
 const REDCSS = Object.freeze({
-    '--bg-dark': '#050102',
-    '--panel-glass': 'rgba(38, 6, 10, 0.92)',
-    '--card-glass': 'rgba(48, 8, 14, 0.90)',
-    '--row-glass': 'rgba(30, 5, 8, 0.88)',
-    '--input-bg': 'rgba(20, 3, 5, 0.95)',
-    '--quicksilver-bright': '#a81c1c',
-    '--quicksilver-silver': '#7a1414',
-    '--text-main': '#8b0000',
-    '--text-sub': '#660b0b',
-    '--text-muted': '#4a0808',
-    '--text-accent': '#c41e1e',
-    '--edge-color-1': '#8b0000',
-    '--edge-color-2': '#5e0000',
-    '--edge-color-3': '#3b0000',
-    '--glow-color': 'rgba(139, 0, 0, 0.15)'
+    '--bg-dark': '#060102',
+    '--panel-glass': 'rgba(26, 4, 8, 0.92)',
+    '--card-glass': 'rgba(38, 5, 12, 0.90)',
+    '--row-glass': 'rgba(18, 2, 5, 0.88)',
+    '--input-bg': 'rgba(12, 1, 3, 0.95)',
+    '--quicksilver-bright': '#ff3355',      /* Radiant Neon Crimson Header */
+    '--quicksilver-silver': '#ff5570',      /* High-Contrast Readable Labels */
+    '--text-main': '#ff2a4b',              /* Bright Primary Text */
+    '--text-sub': '#ff6680',               /* Crisp Subtext */
+    '--text-muted': '#c4203b',             /* Distinct Secondary Text */
+    '--text-accent': '#ff0033',            /* High-Intensity Accent */
+    '--edge-color-1': '#ff1a3d',           /* Edge Specular Match */
+    '--edge-color-2': '#b30024',
+    '--edge-color-3': '#4d000f',
+    '--glow-color': 'rgba(255, 0, 51, 0.4)',
+    '--text-glow': '0 0 10px rgba(255, 42, 75, 0.65)',
+    '--panel-border': '1px solid rgba(255, 42, 75, 0.35)',
+    '--slider-thumb': '#ff2a4b',           /* Overrides WebKit White Thumb */
+    '--slider-track': 'rgba(255, 42, 75, 0.35)'
 });
 
 function applyCSSTheme(theme) {
@@ -49,8 +59,16 @@ function applyCSSTheme(theme) {
 function setRedFilterMode(enable) {
     if (window.isRedFilterActive === enable) return;
     window.isRedFilterActive = Boolean(enable);
+    
+    // 1. Mutate CSS Custom Properties
     applyCSSTheme(window.isRedFilterActive ? REDCSS : DEFCSS);
 
+    // 2. Synchronize 3D Atomic Particle Cloud Colors
+    window.activeParticleColor = window.isRedFilterActive 
+        ? { r: 1.0, g: 0.08, b: 0.22 } 
+        : { r: 0.2, g: 0.8, b: 1.0 };
+
+    // 3. Trigger 3D Kernel Re-render Hook
     if (typeof window.rebuildQuantumModel === 'function') {
         window.rebuildQuantumModel();
     }
@@ -61,6 +79,7 @@ window.applyCSSTheme = applyCSSTheme;
 
 /* DOM Lifecycle Entry Point */
 document.addEventListener('DOMContentLoaded', () => {
+    injectGlobalThemeStyles();
     initGroupAttributesObserver();
     initModalVisibilityHandler();
     initGSAPAnimations();
@@ -68,6 +87,48 @@ document.addEventListener('DOMContentLoaded', () => {
     initQuicksilverGlassEngine();
     initIdleRedFilter();
 });
+
+/* Dynamic WebKit Control & Contrast Injection */
+function injectGlobalThemeStyles() {
+    const styleTag = document.createElement('style');
+    styleTag.id = 'themeDynamicOverrides';
+    styleTag.textContent = `
+        /* Synchronize all headers and text with vibrant neon custom properties */
+        .ui-overlay *, .tp-overlay *, .pt-modal-window * {
+            color: var(--text-main) !important;
+            text-shadow: var(--text-glow, none) !important;
+        }
+
+        /* Glass Panel Borders & Edge Glow */
+        .ui-overlay, .tp-overlay, .pt-modal-window {
+            border: var(--panel-border) !important;
+            box-shadow: 0 0 25px var(--glow-color) !important;
+        }
+
+        /* Style WebKit Range Slider Thumbs across mobile & desktop browsers */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: var(--slider-thumb) !important;
+            box-shadow: 0 0 12px var(--glow-color) !important;
+            cursor: pointer;
+            margin-top: -6px;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            background: var(--slider-track) !important;
+            border-radius: 3px;
+        }
+    `;
+    document.head.appendChild(styleTag);
+}
 
 /* Format Quantum Suborbit Notation */
 function formatSuborbitNotation(text) {
