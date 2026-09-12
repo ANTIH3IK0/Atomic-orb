@@ -64,6 +64,7 @@ body {
     -webkit-backdrop-filter: blur(28px) saturate(190%);
     border-radius: 10px;
     border: 1px solid transparent !important;
+    z-index: 1;
 
     /* Base Shadow & Metallic Edge Rim */
     box-shadow: 
