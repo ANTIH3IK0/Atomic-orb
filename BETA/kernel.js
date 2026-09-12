@@ -819,7 +819,7 @@ function setupIndividualParticleFade() {
 
             // Shift baseline color towards pure white by blending with white
             // 1. Elevate blend ratio to strip away raw orbital colors and establish a uniform white base
-            const whiteBlendRatio = 0.725; 
+            const whiteBlendRatio = 0.9;
             const targetR = baseCol.r * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
             const targetG = baseCol.g * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
             const targetB = baseCol.b * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
