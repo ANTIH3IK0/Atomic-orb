@@ -10,14 +10,14 @@
     --input-bg: rgba(3, 3, 4, 0.95);
 
     /* Stealth Quicksilver Palette */
-    --quicksilver-bright: #e8e8e8;
-    --quicksilver-silver: #8c8c8c;
+    --quicksilver-bright: #cacaca;
+    --quicksilver-silver: #686868;
     
     /* Strict Monochrome Text Hierarchy */
-    --text-main: #ffffff;      /* Pure white for primary body & key headers */
-    --text-sub: #a3a3a3;       /* Balanced mid-grey for secondary details */
-    --text-muted: #525252;     /* Dark charcoal grey for subtle/disabled text */
-    --text-accent: #f5f5f7;    /* Ultra-bright metallic white for focused/active states */
+    --text-main: #b3b3b3;      /* Pure white for primary body & key headers */
+    --text-sub: #7a7a7a;       /* Balanced mid-grey for secondary details */
+    --text-muted: #424242;     /* Dark charcoal grey for subtle/disabled text */
+    --text-accent: #cacaca;    /* Ultra-bright metallic white for focused/active states */
     
     /* Dark Controls */
     --chk-bg: rgba(4, 4, 5, 0.95);
