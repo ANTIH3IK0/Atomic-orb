@@ -4,6 +4,7 @@
     --bg-dark: #000000;
 
     /* Total Dark Obsidian Translucency */
+    --ui-bg: rgba(12, 13, 17, 0.88);
     --panel-glass: rgba(5, 5, 6, 0.86);
     --card-glass: rgba(10, 10, 12, 0.88);
     --row-glass: rgba(8, 8, 10, 0.85);
@@ -57,7 +58,7 @@ body {
 /* Base Panel Glass Properties (Eliminates forced 3D stacking context layout shifts) */
 .ui-overlay, .tp-overlay, .pt-modal-window {
     position: absolute;
-    background: rgba(12, 13, 17, 0.88);
+    background: var(--ui-bg);
     backdrop-filter: blur(28px) saturate(190%);
     -webkit-backdrop-filter: blur(28px) saturate(190%);
     border-radius: 10px;
