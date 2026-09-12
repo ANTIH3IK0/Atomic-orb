@@ -99,12 +99,12 @@ function injectGlobalThemeStyles() {
     styleTag.id = 'themeDynamicOverrides';
     styleTag.textContent = `
         .ui-overlay *, .tp-overlay *, .pt-modal-window * {
-            background: var(--ui-bg);
             color: var(--text-main) !important;
             text-shadow: var(--text-glow, none) !important;
         }
 
         .ui-overlay, .tp-overlay, .pt-modal-window {
+            background: var(--ui-bg);
             border: var(--panel-border) !important;
             box-shadow: 0 0 20px var(--glow-color) !important;
         }
