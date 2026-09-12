@@ -818,22 +818,24 @@ function setupIndividualParticleFade() {
             const baseCol = mesh.material.diffuseColor || new BABYLON.Color3(1, 1, 1);
 
             // Shift baseline color towards pure white by blending with white
-            const whiteBlendRatio = 0.45;
+            // 1. Elevate blend ratio to strip away raw orbital colors and establish a uniform white base
+            const whiteBlendRatio = 0.725; 
             const targetR = baseCol.r * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
             const targetG = baseCol.g * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
             const targetB = baseCol.b * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
 
             const colors = new Float32Array(vertexCount * 4);
-            // State per vertex: 0 = normal, 1 = fading out, 2 = held invisible, 3 = fading in
             const fadeStates = new Uint8Array(vertexCount);
             const holdTimers = new Int32Array(vertexCount);
 
             for (let i = 0; i < vertexCount; i++) {
-                colors[i * 4] = Math.min(1.0, targetR * 1.3);     // Boosted R
-                colors[i * 4 + 1] = Math.min(1.0, targetG * 1.3); // Boosted G
-                colors[i * 4 + 2] = Math.min(1.0, targetB * 1.3); // Boosted B
+                // 2. Compress the original 1.3 multiplier down to 0.25 to aggressively dim the particles
+                colors[i * 4] = Math.min(1.0, targetR * 0.25);     // Renders as a dark gray
+                colors[i * 4 + 1] = Math.min(1.0, targetG * 0.25); // Renders as a dark gray
+                colors[i * 4 + 2] = Math.min(1.0, targetB * 0.25); // Renders as a dark gray
                 colors[i * 4 + 3] = 1.0;
             }
+
 
             mesh.setVerticesData(BABYLON.VertexBuffer.ColorKind, colors, true);
 
