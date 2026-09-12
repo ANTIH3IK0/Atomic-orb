@@ -10,7 +10,7 @@ let currentOpacity = 0.35;
 let visibilityState = {};
 let userHasCustomInit = false;
 
-let initialTarget = new BABYLON.Vector3(0, 0, 0);
+let initialTarget = null;
 let initialRadius = 25;
 let initialAlpha = -Math.PI / 3;
 let initialBeta = Math.PI / 2.5;
@@ -438,23 +438,30 @@ function selectElementBySymbol(symbol) {
 
     const configData = getElectronConfigForZ(elem.Z);
 
-    document.getElementById('inputZ').value = elem.Z;
-    document.getElementById('inputMaxN').value = configData.maxN;
+    const inputZ = document.getElementById('inputZ');
+    if (inputZ) inputZ.value = elem.Z;
+
+    const inputMaxN = document.getElementById('inputMaxN');
+    if (inputMaxN) inputMaxN.value = configData.maxN;
 
     // Pass false to rebuild clean rows without copying stale DOM inputs from previous elements
     generateOrbitsBuilder(false);
 
     // Apply exact subshell electron counts and reset excitations
     document.querySelectorAll('.orbit-row').forEach(row => {
-        const label = row.querySelector('.orbit-label').innerText;
+        const labelEl = row.querySelector('.orbit-label');
+        if (!labelEl) return;
+        const label = labelEl.innerText;
         const eInput = row.querySelector('.e-input');
         const exInput = row.querySelector('.ex-input');
 
-        exInput.value = '0';
-        if (configData.subConfig[label] !== undefined) {
-            eInput.value = configData.subConfig[label];
-        } else {
-            eInput.value = '';
+        if (exInput) exInput.value = '0';
+        if (eInput) {
+            if (configData.subConfig[label] !== undefined) {
+                eInput.value = configData.subConfig[label];
+            } else {
+                eInput.value = '';
+            }
         }
     });
 
@@ -464,6 +471,26 @@ function selectElementBySymbol(symbol) {
     // Clear visibility overrides for removed orbitals
     visibilityState = {};
 
+    rebuildQuantumModel();
+}
+
+/**
+ * Select element by Atomic Number Z
+ */
+function selectElementByZ(z) {
+    const targetZ = parseInt(z);
+    const elem = ELEMENTS_DATA.find(e => e.Z === targetZ);
+    if (elem) {
+        selectElementBySymbol(elem.sym);
+    }
+}
+
+function onZChange(val) {
+    selectElementByZ(val);
+}
+
+function onMaxNChange() {
+    generateOrbitsBuilder(true);
     rebuildQuantumModel();
 }
 
@@ -484,7 +511,7 @@ function closePeriodicTableModal() {
 }
 
 function handleBackdropClick(e) {
-    if (e.target.id === 'ptModalBackdrop') {
+    if (e.target && e.target.id === 'ptModalBackdrop') {
         closePeriodicTableModal();
     }
 }
@@ -513,8 +540,10 @@ function getSuborbitCapacity(l, j) {
  * @param {boolean} preserveExisting - Whether to retain existing UI text values.
  */
 function generateOrbitsBuilder(preserveExisting = true) {
-    const maxN = parseInt(document.getElementById('inputMaxN').value) || 1;
+    const inputMaxN = document.getElementById('inputMaxN');
+    const maxN = inputMaxN ? (parseInt(inputMaxN.value) || 1) : 1;
     const container = document.getElementById('orbitsBuilderContainer');
+    if (!container) return;
     
     const existingElec = {};
     const existingEx = {};
@@ -522,8 +551,10 @@ function generateOrbitsBuilder(preserveExisting = true) {
     if (preserveExisting) {
         document.querySelectorAll('.orbit-row').forEach(row => {
             const key = row.dataset.key;
-            existingElec[key] = row.querySelector('.e-input').value;
-            existingEx[key] = row.querySelector('.ex-input').value;
+            const eIn = row.querySelector('.e-input');
+            const exIn = row.querySelector('.ex-input');
+            if (eIn) existingElec[key] = eIn.value;
+            if (exIn) existingEx[key] = exIn.value;
         });
     }
 
@@ -574,16 +605,20 @@ function solveDiracExactEnergy(n, l, j, zEff) {
 }
 
 function autoCalculateSuborbitEnergiesUI() {
-    const Z = parseInt(document.getElementById('inputZ').value) || 1;
+    const inputZ = document.getElementById('inputZ');
+    const Z = inputZ ? (parseInt(inputZ.value) || 1) : 1;
     const rows = document.querySelectorAll('.orbit-row');
     const suborbitEnergies = [];
 
     let cumElec = 0;
     rows.forEach(row => {
-        const eCount = parseInt(row.querySelector('.e-input').value) || 0;
+        const eInput = row.querySelector('.e-input');
+        const exInput = row.querySelector('.ex-input');
+        const eCount = eInput ? (parseInt(eInput.value) || 0) : 0;
+
         if (eCount > 0) {
             const baseN = parseInt(row.dataset.n);
-            const exLevel = parseInt(row.querySelector('.ex-input').value) || 0;
+            const exLevel = exInput ? (parseInt(exInput.value) || 0) : 0;
             const effectiveN = baseN + exLevel;
             const l = parseInt(row.dataset.l);
             const j = parseFloat(row.dataset.j);
@@ -593,12 +628,15 @@ function autoCalculateSuborbitEnergiesUI() {
             let zEff = Math.max(1.0, Z - S);
 
             let energy = solveDiracExactEnergy(effectiveN, l, j, zEff);
-            suborbitEnergies.push(`${row.querySelector('.orbit-label').innerText}: ${energy.toFixed(1)}eV`);
+            const labelEl = row.querySelector('.orbit-label');
+            const labelText = labelEl ? labelEl.innerText : getOrbitalLabel(effectiveN, l, j);
+            suborbitEnergies.push(`${labelText}: ${energy.toFixed(1)}eV`);
             cumElec += eCount;
         }
     });
 
-    document.getElementById('inputEn').value = suborbitEnergies.join(', ');
+    const inputEn = document.getElementById('inputEn');
+    if (inputEn) inputEn.value = suborbitEnergies.join(', ');
 }
 
 function solveDiracRadialExpectationRK4(n, l, j, zEff) {
@@ -622,21 +660,27 @@ function getOrbitalColor(l, j) {
 
 function rebuildQuantumModel() {
     activeMeshes.forEach(item => {
-        if (item.mesh.material) item.mesh.material.dispose();
-        item.mesh.dispose();
+        if (item.mesh) {
+            if (item.mesh.material) item.mesh.material.dispose();
+            item.mesh.dispose();
+        }
     });
     activeMeshes = [];
 
-    const Z = parseInt(document.getElementById('inputZ').value) || 1;
+    const inputZ = document.getElementById('inputZ');
+    const Z = inputZ ? (parseInt(inputZ.value) || 1) : 1;
     const rows = document.querySelectorAll('.orbit-row');
     let maxRadius = 0;
     let cumElec = 0;
 
     rows.forEach(row => {
-        const eCount = parseInt(row.querySelector('.e-input').value) || 0;
+        const eInput = row.querySelector('.e-input');
+        const exInput = row.querySelector('.ex-input');
+        const eCount = eInput ? (parseInt(eInput.value) || 0) : 0;
+
         if (eCount > 0) {
             const baseN = parseInt(row.dataset.n);
-            const exLevel = parseInt(row.querySelector('.ex-input').value) || 0;
+            const exLevel = exInput ? (parseInt(exInput.value) || 0) : 0;
             const effectiveN = baseN + exLevel;
             const l = parseInt(row.dataset.l);
             const j = parseFloat(row.dataset.j);
@@ -658,7 +702,9 @@ function rebuildQuantumModel() {
     refreshDynamicFilterUI();
 
     if (!userHasCustomInit) {
-        initialTarget = BABYLON.Vector3.Zero();
+        if (typeof BABYLON !== 'undefined') {
+            initialTarget = BABYLON.Vector3.Zero();
+        }
         if (maxRadius > 0) initialRadius = maxRadius * 3.2;
     }
 
@@ -666,6 +712,8 @@ function rebuildQuantumModel() {
 }
 
 function createOrbitalMesh(name, radius, n, l, j, stateKey) {
+    if (!scene || typeof BABYLON === 'undefined') return;
+
     // Low segment count creates sparse points with clear gaps between them
     const segs = Math.min(14, 8 + n * 2);
     const sphere = BABYLON.MeshBuilder.CreateSphere(name, { diameter: radius * 2, segments: segs }, scene);
@@ -709,10 +757,22 @@ function refreshDynamicFilterUI() {
 function toggleOrbitalVisibility(stateKey, isChecked) {
     visibilityState[stateKey] = isChecked;
     activeMeshes.forEach(item => {
-        if (item.stateKey === stateKey) {
+        if (item.stateKey === stateKey && item.mesh) {
             item.mesh.isVisible = isChecked;
         }
     });
+}
+
+function toggleAllOrbitals(visible) {
+    Object.keys(visibilityState).forEach(key => {
+        visibilityState[key] = visible;
+    });
+    activeMeshes.forEach(item => {
+        if (item.mesh) {
+            item.mesh.isVisible = visible;
+        }
+    });
+    refreshDynamicFilterUI();
 }
 
 function updateOpacity(val) {
@@ -726,10 +786,16 @@ function updateOpacity(val) {
 
 function initBabylonEngine() {
     canvas = document.getElementById("renderCanvas");
+    if (!canvas || typeof BABYLON === 'undefined') return;
+
     engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
     
     scene = new BABYLON.Scene(engine);
     scene.clearColor = new BABYLON.Color4(0.01, 0.02, 0.04, 1.0);
+
+    if (!initialTarget) {
+        initialTarget = new BABYLON.Vector3(0, 0, 0);
+    }
 
     // Attach dynamic particle fade effect
     setupIndividualParticleFade();
@@ -743,7 +809,7 @@ function initBabylonEngine() {
     hemiLight.intensity = 0.725;
 
     engine.runRenderLoop(() => { scene.render(); });
-    window.addEventListener("resize", () => { engine.resize(); });
+    window.addEventListener("resize", () => engine.resize());
 }
 
 function parseCoordinate(inputVal, currentVal) {
@@ -758,11 +824,15 @@ function parseCoordinate(inputVal, currentVal) {
 }
 
 function teleportCamera() {
-    if (!camera) return;
+    if (!camera || typeof BABYLON === 'undefined') return;
     const currentTarget = camera.target;
-    const newX = parseCoordinate(document.getElementById('tpX').value, currentTarget.x);
-    const newY = parseCoordinate(document.getElementById('tpY').value, currentTarget.y);
-    const newZ = parseCoordinate(document.getElementById('tpZ').value, currentTarget.z);
+    const tpX = document.getElementById('tpX');
+    const tpY = document.getElementById('tpY');
+    const tpZ = document.getElementById('tpZ');
+
+    const newX = parseCoordinate(tpX ? tpX.value : '', currentTarget.x);
+    const newY = parseCoordinate(tpY ? tpY.value : '', currentTarget.y);
+    const newZ = parseCoordinate(tpZ ? tpZ.value : '', currentTarget.z);
     camera.setTarget(new BABYLON.Vector3(newX, newY, newZ));
 }
 
@@ -777,20 +847,34 @@ function setInitialPosition() {
 
 function reloadInitialPosition() {
     if (!camera) return;
-    camera.setTarget(initialTarget.clone());
+    if (initialTarget) {
+        camera.setTarget(initialTarget.clone());
+    }
     camera.radius = initialRadius;
     camera.alpha = initialAlpha;
     camera.beta = initialBeta;
 }
 
+function resetCamera() {
+    reloadInitialPosition();
+}
+
+function resetView() {
+    reloadInitialPosition();
+}
+
 function togglePanel(collapse) {
-    document.getElementById('uiOverlay').classList.toggle('collapsed', collapse);
-    document.getElementById('restoreBtn').style.display = collapse ? 'flex' : 'none';
+    const uiOverlay = document.getElementById('uiOverlay');
+    if (uiOverlay) uiOverlay.classList.toggle('collapsed', collapse);
+    const restoreBtn = document.getElementById('restoreBtn');
+    if (restoreBtn) restoreBtn.style.display = collapse ? 'flex' : 'none';
 }
 
 function toggleTpPanel(collapse) {
-    document.getElementById('tpOverlay').classList.toggle('collapsed', collapse);
-    document.getElementById('tpRestoreBtn').style.display = collapse ? 'flex' : 'none';
+    const tpOverlay = document.getElementById('tpOverlay');
+    if (tpOverlay) tpOverlay.classList.toggle('collapsed', collapse);
+    const tpRestoreBtn = document.getElementById('tpRestoreBtn');
+    if (tpRestoreBtn) tpRestoreBtn.style.display = collapse ? 'flex' : 'none';
 }
 
 /**
@@ -798,7 +882,7 @@ function toggleTpPanel(collapse) {
  * Applies boosted brightness and elevated white baseline to vertices during fade cycles.
  */
 function setupIndividualParticleFade() {
-    if (!scene) return;
+    if (!scene || typeof BABYLON === 'undefined') return;
 
     function initMeshAlphaColors() {
         activeMeshes.forEach(item => {
@@ -815,7 +899,7 @@ function setupIndividualParticleFade() {
             if (!positionData) return;
 
             const vertexCount = positionData.length / 3;
-            const baseCol = mesh.material.diffuseColor || new BABYLON.Color3(1, 1, 1);
+            const baseCol = (mesh.material && mesh.material.diffuseColor) ? mesh.material.diffuseColor : new BABYLON.Color3(1, 1, 1);
 
             // Shift baseline color towards pure white by blending with white
             // 1. Elevate blend ratio to strip away raw orbital colors and establish a uniform white base
@@ -835,7 +919,6 @@ function setupIndividualParticleFade() {
                 colors[i * 4 + 2] = Math.min(1.0, targetB * 0.55); // Renders as a dark gray
                 colors[i * 4 + 3] = 1.0;
             }
-
 
             mesh.setVerticesData(BABYLON.VertexBuffer.ColorKind, colors, true);
 
