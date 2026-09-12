@@ -144,7 +144,7 @@ body {
     height: 100% !important;
     z-index: 0;
     pointer-events: none !important;
-    mix-blend-mode: overlay;
+    mix-blend-mode: screen;
 }
 
 /* Liquid Metal Surface Depression Layer */
