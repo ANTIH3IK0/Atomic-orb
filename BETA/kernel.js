@@ -829,10 +829,10 @@ function setupIndividualParticleFade() {
             const holdTimers = new Int32Array(vertexCount);
 
             for (let i = 0; i < vertexCount; i++) {
-                // 2. Compress the original 1.3 multiplier down to 0.25 to aggressively dim the particles
-                colors[i * 4] = Math.min(1.0, targetR * 0.25);     // Renders as a dark gray
-                colors[i * 4 + 1] = Math.min(1.0, targetG * 0.25); // Renders as a dark gray
-                colors[i * 4 + 2] = Math.min(1.0, targetB * 0.25); // Renders as a dark gray
+                // 2. Compress the original 1.3 multiplier down to 0.55 to aggressively dim the particles
+                colors[i * 4] = Math.min(1.0, targetR * 0.55);     // Renders as a dark gray
+                colors[i * 4 + 1] = Math.min(1.0, targetG * 0.55); // Renders as a dark gray
+                colors[i * 4 + 2] = Math.min(1.0, targetB * 0.55); // Renders as a dark gray
                 colors[i * 4 + 3] = 1.0;
             }
 
