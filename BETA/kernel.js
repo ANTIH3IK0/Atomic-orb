@@ -740,7 +740,7 @@ function initBabylonEngine() {
     camera.upperRadiusLimit = 10000;
 
     const hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(1, 1, 0), scene);
-    hemiLight.intensity = 0.45;
+    hemiLight.intensity = 0.725;
 
     engine.runRenderLoop(() => { scene.render(); });
     window.addEventListener("resize", () => engine.resize());
