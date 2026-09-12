@@ -605,7 +605,7 @@ button.apply-btn {
     pointer-events: auto !important;
 }
 button.apply-btn:hover {
-    background: rgba(28, 28, 34, 0.95);
+    background: var(--mode-bg);
     border-color: rgba(255, 255, 255, 0.15);
 }
 
