@@ -796,6 +796,7 @@ function toggleTpPanel(collapse) {
 /**
  * Stochastic Particle Fade System with Enhanced Luminance.
  * Applies boosted brightness and elevated white baseline to vertices during fade cycles.
+ * [Synchronized with effects.js Idle Mode Theme Toggles]
  */
 function setupIndividualParticleFade() {
     if (!scene) return;
@@ -817,25 +818,36 @@ function setupIndividualParticleFade() {
             const vertexCount = positionData.length / 3;
             const baseCol = mesh.material.diffuseColor || new BABYLON.Color3(1, 1, 1);
 
-            // Shift baseline color towards pure white by blending with white
-            // 1. Elevate blend ratio to strip away raw orbital colors and establish a uniform white base
-            const whiteBlendRatio = 0.9;
-            const targetR = baseCol.r * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
-            const targetG = baseCol.g * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
-            const targetB = baseCol.b * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
+            let targetR, targetG, targetB, dimFactor;
+
+            // =====================================================================
+            // CONNECTS DYNAMIC THEME STATES TO VERTEX BUFFER COLOR INTERPOLATION
+            // =====================================================================
+            if (window.isRedFilterActive) {
+                // 1. Idle Red Filter Mode: Override to deep, low-key crimson quantum cloud
+                targetR = 1.0;
+                targetG = 0.1;
+                targetB = 0.15;
+                dimFactor = 0.65; // Balanced luminosity for dark ambient aesthetic
+            } else {
+                // 2. Interactive Neutral Mode: Restore uniform stark white mix 
+                const whiteBlendRatio = 0.9;
+                targetR = baseCol.r * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
+                targetG = baseCol.g * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
+                targetB = baseCol.b * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
+                dimFactor = 0.55; // Original design dim factor rendering as high-end dark gray
+            }
 
             const colors = new Float32Array(vertexCount * 4);
             const fadeStates = new Uint8Array(vertexCount);
             const holdTimers = new Int32Array(vertexCount);
 
             for (let i = 0; i < vertexCount; i++) {
-                // 2. Compress the original 1.3 multiplier down to 0.55 to aggressively dim the particles
-                colors[i * 4] = Math.min(1.0, targetR * 0.55);     // Renders as a dark gray
-                colors[i * 4 + 1] = Math.min(1.0, targetG * 0.55); // Renders as a dark gray
-                colors[i * 4 + 2] = Math.min(1.0, targetB * 0.55); // Renders as a dark gray
-                colors[i * 4 + 3] = 1.0;
+                colors[i * 4] = Math.min(1.0, targetR * dimFactor);     // Red Channel
+                colors[i * 4 + 1] = Math.min(1.0, targetG * dimFactor); // Green Channel
+                colors[i * 4 + 2] = Math.min(1.0, targetB * dimFactor); // Blue Channel
+                colors[i * 4 + 3] = 1.0;                                // Alpha Channel
             }
-
 
             mesh.setVerticesData(BABYLON.VertexBuffer.ColorKind, colors, true);
 
@@ -906,4 +918,3 @@ function setupIndividualParticleFade() {
         });
     });
 }
-
