@@ -2,51 +2,52 @@
 
 /* Global Theme & Particle State Hooks */
 window.isRedFilterActive = false;
-window.activeParticleColor = { r: 0.2, g: 0.8, b: 1.0 }; // Read by 3D Babylon kernel
+window.activeParticleColor = { r: 0.85, g: 0.85, b: 0.9 }; // Stark neutral quantum cloud
 
-/* High-Contrast Theme Palettes */
+/* Theme Palettes */
 const DEFCSS = Object.freeze({
     '--bg-dark': '#000000',
     '--panel-glass': 'rgba(12, 13, 17, 0.88)',
     '--card-glass': 'rgba(10, 10, 12, 0.88)',
     '--row-glass': 'rgba(8, 8, 10, 0.85)',
     '--input-bg': 'rgba(3, 3, 4, 0.95)',
-    '--quicksilver-bright': '#ffffff',
-    '--quicksilver-silver': '#a0a0a0',
-    '--text-main': '#e8e8e8',
-    '--text-sub': '#b0b0b0',
-    '--text-muted': '#666666',
-    '--text-accent': '#00e5ff',
-    '--edge-color-1': 'rgba(255, 255, 255, 0.6)',
-    '--edge-color-2': 'rgba(200, 220, 255, 0.2)',
-    '--edge-color-3': 'rgba(100, 150, 255, 0.05)',
-    '--glow-color': 'rgba(0, 229, 255, 0.3)',
-    '--text-glow': '0 0 8px rgba(0, 229, 255, 0.3)',
+    '--quicksilver-bright': '#cacaca',
+    '--quicksilver-silver': '#686868',
+    '--text-main': '#b3b3b3',
+    '--text-sub': '#7a7a7a',
+    '--text-muted': '#424242',
+    '--text-accent': '#cacaca',
+    '--edge-color-1': 'rgba(255, 255, 255, 0.4)',
+    '--edge-color-2': 'rgba(255, 255, 255, 0.15)',
+    '--edge-color-3': 'rgba(255, 255, 255, 0.03)',
+    '--glow-color': 'rgba(255, 255, 255, 0.04)',
+    '--text-glow': 'none',
     '--panel-border': '1px solid rgba(255, 255, 255, 0.12)',
-    '--slider-thumb': '#00e5ff',
-    '--slider-track': 'rgba(255, 255, 255, 0.2)'
+    '--slider-thumb': '#ffffff',
+    '--slider-track': 'rgba(255, 255, 255, 0.18)'
 });
 
+/* Low-Key Dark Crimson Theme */
 const REDCSS = Object.freeze({
-    '--bg-dark': '#060102',
-    '--panel-glass': 'rgba(26, 4, 8, 0.92)',
-    '--card-glass': 'rgba(38, 5, 12, 0.90)',
-    '--row-glass': 'rgba(18, 2, 5, 0.88)',
-    '--input-bg': 'rgba(12, 1, 3, 0.95)',
-    '--quicksilver-bright': '#ff3355',      /* Radiant Neon Crimson Header */
-    '--quicksilver-silver': '#ff5570',      /* High-Contrast Readable Labels */
-    '--text-main': '#ff2a4b',              /* Bright Primary Text */
-    '--text-sub': '#ff6680',               /* Crisp Subtext */
-    '--text-muted': '#c4203b',             /* Distinct Secondary Text */
-    '--text-accent': '#ff0033',            /* High-Intensity Accent */
-    '--edge-color-1': '#ff1a3d',           /* Edge Specular Match */
-    '--edge-color-2': '#b30024',
-    '--edge-color-3': '#4d000f',
-    '--glow-color': 'rgba(255, 0, 51, 0.4)',
-    '--text-glow': '0 0 10px rgba(255, 42, 75, 0.65)',
-    '--panel-border': '1px solid rgba(255, 42, 75, 0.35)',
-    '--slider-thumb': '#ff2a4b',           /* Overrides WebKit White Thumb */
-    '--slider-track': 'rgba(255, 42, 75, 0.35)'
+    '--bg-dark': '#030102',
+    '--panel-glass': 'rgba(18, 3, 5, 0.92)',
+    '--card-glass': 'rgba(24, 4, 7, 0.90)',
+    '--row-glass': 'rgba(14, 2, 4, 0.88)',
+    '--input-bg': 'rgba(8, 1, 2, 0.95)',
+    '--quicksilver-bright': '#d93848',      /* Subdued deep crimson */
+    '--quicksilver-silver': '#a62d3a',      /* Low-key secondary labels */
+    '--text-main': '#cf3446',              /* Muted clear red */
+    '--text-sub': '#9e2b38',               /* Soft subtext */
+    '--text-muted': '#661b23',             /* Subdued dark text */
+    '--text-accent': '#e6394a',            /* Understated highlight */
+    '--edge-color-1': '#73131d',           /* Dark ambient edge specular */
+    '--edge-color-2': '#4a0b12',
+    '--edge-color-3': '#260509',
+    '--glow-color': 'rgba(160, 20, 35, 0.12)',
+    '--text-glow': '0 0 6px rgba(180, 25, 40, 0.25)',
+    '--panel-border': '1px solid rgba(160, 25, 40, 0.22)',
+    '--slider-thumb': '#bf2c3e',
+    '--slider-track': 'rgba(160, 25, 40, 0.25)'
 });
 
 function applyCSSTheme(theme) {
@@ -65,8 +66,8 @@ function setRedFilterMode(enable) {
 
     // 2. Synchronize 3D Atomic Particle Cloud Colors
     window.activeParticleColor = window.isRedFilterActive 
-        ? { r: 1.0, g: 0.08, b: 0.22 } 
-        : { r: 0.2, g: 0.8, b: 1.0 };
+        ? { r: 0.65, g: 0.1, b: 0.15 } 
+        : { r: 0.85, g: 0.85, b: 0.9 };
 
     // 3. Trigger 3D Kernel Re-render Hook
     if (typeof window.rebuildQuantumModel === 'function') {
@@ -88,24 +89,21 @@ document.addEventListener('DOMContentLoaded', () => {
     initIdleRedFilter();
 });
 
-/* Dynamic WebKit Control & Contrast Injection */
+/* Dynamic Style Overrides Injection */
 function injectGlobalThemeStyles() {
     const styleTag = document.createElement('style');
     styleTag.id = 'themeDynamicOverrides';
     styleTag.textContent = `
-        /* Synchronize all headers and text with vibrant neon custom properties */
         .ui-overlay *, .tp-overlay *, .pt-modal-window * {
             color: var(--text-main) !important;
             text-shadow: var(--text-glow, none) !important;
         }
 
-        /* Glass Panel Borders & Edge Glow */
         .ui-overlay, .tp-overlay, .pt-modal-window {
             border: var(--panel-border) !important;
-            box-shadow: 0 0 25px var(--glow-color) !important;
+            box-shadow: 0 0 20px var(--glow-color) !important;
         }
 
-        /* Style WebKit Range Slider Thumbs across mobile & desktop browsers */
         input[type=range] {
             -webkit-appearance: none;
             background: transparent;
@@ -116,7 +114,7 @@ function injectGlobalThemeStyles() {
             width: 18px;
             border-radius: 50%;
             background: var(--slider-thumb) !important;
-            box-shadow: 0 0 12px var(--glow-color) !important;
+            box-shadow: 0 0 8px var(--glow-color) !important;
             cursor: pointer;
             margin-top: -6px;
         }
@@ -375,7 +373,7 @@ function initQuicksilverGlassEngine() {
     });
 }
 
-/* Idle Dark Neon Red Trigger (10s Inactivity) */
+/* Idle Dark Crimson Trigger (10s Inactivity) */
 function initIdleRedFilter() {
     const IDLE_TIMEOUT_MS = 10000;
     let idleTimer = null;
