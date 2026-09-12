@@ -31,7 +31,7 @@ const DEFCSS = Object.freeze({
 /* Low-Key Dark Crimson Theme */
 const REDCSS = Object.freeze({
     '--bg-dark': '#030102',
-    '--ui-bg': 'rgba(15, 7, 6, 0.88)'
+    '--ui-bg': 'rgba(15, 7, 6, 0.88)',
     '--panel-glass': 'rgba(18, 3, 5, 0.92)',
     '--card-glass': 'rgba(24, 4, 7, 0.90)',
     '--row-glass': 'rgba(14, 2, 4, 0.88)',
