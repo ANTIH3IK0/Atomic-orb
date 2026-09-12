@@ -7,6 +7,7 @@ window.activeParticleColor = { r: 0.85, g: 0.85, b: 0.9 }; // Stark neutral quan
 /* Theme Palettes */
 const DEFCSS = Object.freeze({
     '--bg-dark': '#000000',
+    '--ui-bg': 'rgba(12, 13, 17, 0.88)',
     '--panel-glass': 'rgba(5, 5, 6, 0.86)',
     '--card-glass': 'rgba(10, 10, 12, 0.88)',
     '--row-glass': 'rgba(8, 8, 10, 0.85)',
@@ -30,6 +31,7 @@ const DEFCSS = Object.freeze({
 /* Low-Key Dark Crimson Theme */
 const REDCSS = Object.freeze({
     '--bg-dark': '#030102',
+    '--ui-bg': 'rgba(9, 10, 22, 0.88)'
     '--panel-glass': 'rgba(18, 3, 5, 0.92)',
     '--card-glass': 'rgba(24, 4, 7, 0.90)',
     '--row-glass': 'rgba(14, 2, 4, 0.88)',
@@ -95,6 +97,7 @@ function injectGlobalThemeStyles() {
     styleTag.id = 'themeDynamicOverrides';
     styleTag.textContent = `
         .ui-overlay *, .tp-overlay *, .pt-modal-window * {
+            background: var(--ui-bg);
             color: var(--text-main) !important;
             text-shadow: var(--text-glow, none) !important;
         }
