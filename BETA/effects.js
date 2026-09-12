@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initGSAPAnimations();
     initSuborbitNotationObserver();
     initQuicksilverGlassEngine();
+    initIdleRedFilter();
 });
 
 /* Format Quantum Suborbit Notation */
@@ -254,4 +255,59 @@ function initQuicksilverGlassEngine() {
             if (!animFrame) animFrame = requestAnimationFrame(update);
         });
     });
+}
+
+/* Idle Dark Neon Red Filter Overlay */
+function initIdleRedFilter() {
+    const IDLE_TIMEOUT_MS = 10000; // 10 seconds
+    let idleTimer = null;
+
+    // Inject dark neon red filter element dynamically into DOM
+    const overlay = document.createElement('div');
+    overlay.id = 'idleNeonOverlay';
+    Object.assign(overlay.style, {
+        position: 'fixed',
+        inset: '0',
+        width: '100vw',
+        height: '100vh',
+        pointerEvents: 'none',
+        zIndex: '999999',
+        opacity: '0',
+        transition: 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
+        background: 'radial-gradient(circle at 50% 50%, rgba(255, 0, 50, 0.12) 0%, rgba(30, 0, 10, 0.65) 60%, rgba(5, 0, 2, 0.92) 100%)',
+        boxShadow: 'inset 0 0 120px rgba(255, 0, 60, 0.55)',
+        backdropFilter: 'saturate(200%) contrast(115%) brightness(0.75)',
+        mixBlendMode: 'screen'
+    });
+    document.body.appendChild(overlay);
+
+    function showIdleEffect() {
+        overlay.style.opacity = '1';
+    }
+
+    function resetIdleTimer() {
+        if (overlay.style.opacity !== '0') {
+            overlay.style.opacity = '0';
+        }
+        if (idleTimer) clearTimeout(idleTimer);
+        idleTimer = setTimeout(showIdleEffect, IDLE_TIMEOUT_MS);
+    }
+
+    // Interaction triggers to reset inactivity timer
+    const activityEvents = [
+        'mousemove', 
+        'mousedown', 
+        'keydown', 
+        'touchstart', 
+        'touchmove', 
+        'wheel', 
+        'pointermove'
+    ];
+
+    activityEvents.forEach(evt => {
+        window.addEventListener(evt, resetIdleTimer, { passive: true });
+    });
+
+    // Initialize timer on load
+    resetIdleTimer();
 }
