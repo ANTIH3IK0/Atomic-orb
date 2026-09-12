@@ -1,5 +1,65 @@
-// effects.js
+// effects.js - Self-contained UI effects & idle theme engine
 
+/* Global Theme Definitions */
+window.isRedFilterActive = false;
+
+const DEFCSS = Object.freeze({
+    '--bg-dark': '#000000',
+    '--panel-glass': 'rgba(12, 13, 17, 0.88)',
+    '--card-glass': 'rgba(10, 10, 12, 0.88)',
+    '--row-glass': 'rgba(8, 8, 10, 0.85)',
+    '--input-bg': 'rgba(3, 3, 4, 0.95)',
+    '--quicksilver-bright': '#e8e8e8',
+    '--quicksilver-silver': '#8c8c8c',
+    '--text-main': '#ffffff',
+    '--text-sub': '#a3a3a3',
+    '--text-muted': '#525252',
+    '--text-accent': '#f5f5f7',
+    '--edge-color-1': '#ffffff',
+    '--edge-color-2': '#dcdcdc',
+    '--edge-color-3': '#8e8e93',
+    '--glow-color': 'rgba(210, 220, 240, 0.07)'
+});
+
+const REDCSS = Object.freeze({
+    '--bg-dark': '#050102',
+    '--panel-glass': 'rgba(38, 6, 10, 0.92)',
+    '--card-glass': 'rgba(48, 8, 14, 0.90)',
+    '--row-glass': 'rgba(30, 5, 8, 0.88)',
+    '--input-bg': 'rgba(20, 3, 5, 0.95)',
+    '--quicksilver-bright': '#a81c1c',
+    '--quicksilver-silver': '#7a1414',
+    '--text-main': '#8b0000',
+    '--text-sub': '#660b0b',
+    '--text-muted': '#4a0808',
+    '--text-accent': '#c41e1e',
+    '--edge-color-1': '#8b0000',
+    '--edge-color-2': '#5e0000',
+    '--edge-color-3': '#3b0000',
+    '--glow-color': 'rgba(139, 0, 0, 0.15)'
+});
+
+function applyCSSTheme(theme) {
+    const root = document.documentElement;
+    for (const [key, value] of Object.entries(theme)) {
+        root.style.setProperty(key, value);
+    }
+}
+
+function setRedFilterMode(enable) {
+    if (window.isRedFilterActive === enable) return;
+    window.isRedFilterActive = Boolean(enable);
+    applyCSSTheme(window.isRedFilterActive ? REDCSS : DEFCSS);
+
+    if (typeof window.rebuildQuantumModel === 'function') {
+        window.rebuildQuantumModel();
+    }
+}
+
+window.setRedFilterMode = setRedFilterMode;
+window.applyCSSTheme = applyCSSTheme;
+
+/* DOM Lifecycle Entry Point */
 document.addEventListener('DOMContentLoaded', () => {
     initGroupAttributesObserver();
     initModalVisibilityHandler();
@@ -124,7 +184,7 @@ function switchControlMode(mode) {
 /* Quicksilver Glass Engine: Touch Spotlight, Surface Compression & Edge Light */
 function initQuicksilverGlassEngine() {
     const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
-    const PROXIMITY_THRESHOLD = 90; // Pixel distance threshold from edge
+    const PROXIMITY_THRESHOLD = 90;
 
     panels.forEach(panel => {
         let currentX = 0, currentY = 0;
@@ -164,11 +224,11 @@ function initQuicksilverGlassEngine() {
             if (isHovered) {
                 const targetEdgeOpacity = dist > 1.5 ? Math.min(1, dist / 25) : 0;
                 opacity += (targetEdgeOpacity - opacity) * 0.12;
-                glowOpacity += (1.0 - glowOpacity) * 0.15; // Smooth touch light fade-in
+                glowOpacity += (1.0 - glowOpacity) * 0.15;
             } else {
                 opacity += (0 - opacity) * 0.15;
                 distOpacity += (0 - distOpacity) * 0.15;
-                glowOpacity += (0 - glowOpacity) * 0.15; // Smooth touch light fade-out
+                glowOpacity += (0 - glowOpacity) * 0.15;
             }
 
             panel.style.setProperty('--mouse-x', `${currentX.toFixed(2)}px`);
@@ -200,7 +260,6 @@ function initQuicksilverGlassEngine() {
             targetX = edgeData.x;
             targetY = edgeData.y;
 
-            // Proximity intensity calculation (0 at center, 1 at edge)
             const minX = Math.min(edgeData.leftDist, edgeData.rightDist);
             const minY = Math.min(edgeData.topDist, edgeData.bottomDist);
 
@@ -212,7 +271,6 @@ function initQuicksilverGlassEngine() {
 
             distOpacity = Math.max(intensityX, intensityY);
 
-            // Dynamic 3D tilt calculation
             const centerX = rect.width / 2;
             const centerY = rect.height / 2;
             const tiltX = (pointerY - centerY) / centerY * -2;
@@ -233,7 +291,6 @@ function initQuicksilverGlassEngine() {
             handlePointerMove(e.clientX, e.clientY);
         });
 
-        // Touch input listeners
         panel.addEventListener('touchstart', (e) => {
             isHovered = true;
             if (e.touches[0]) handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
@@ -257,43 +314,21 @@ function initQuicksilverGlassEngine() {
     });
 }
 
-/* Idle Dark Neon Red Filter Overlay */
+/* Idle Dark Neon Red Trigger (10s Inactivity) */
 function initIdleRedFilter() {
-    const IDLE_TIMEOUT_MS = 10000; // 10 seconds
+    const IDLE_TIMEOUT_MS = 10000;
     let idleTimer = null;
 
-    // Inject dark neon red filter element dynamically into DOM
-    const overlay = document.createElement('div');
-    overlay.id = 'idleNeonOverlay';
-    Object.assign(overlay.style, {
-        position: 'fixed',
-        inset: '0',
-        width: '100vw',
-        height: '100vh',
-        pointerEvents: 'none',
-        zIndex: '999999',
-        opacity: '0',
-        transition: 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
-        background: 'radial-gradient(circle at 50% 50%, rgba(255, 0, 50, 0.12) 0%, rgba(30, 0, 10, 0.65) 60%, rgba(5, 0, 2, 0.92) 100%)',
-        boxShadow: 'inset 0 0 120px rgba(255, 0, 60, 0.55)',
-        backdropFilter: 'saturate(200%) contrast(115%) brightness(0.75)',
-        mixBlendMode: 'screen'
-    });
-    document.body.appendChild(overlay);
-
-    function showIdleEffect() {
-        overlay.style.opacity = '1';
-    }
-
     function resetIdleTimer() {
-        if (overlay.style.opacity !== '0') {
-            overlay.style.opacity = '0';
+        if (window.isRedFilterActive) {
+            setRedFilterMode(false);
         }
         if (idleTimer) clearTimeout(idleTimer);
-        idleTimer = setTimeout(showIdleEffect, IDLE_TIMEOUT_MS);
+        idleTimer = setTimeout(() => {
+            setRedFilterMode(true);
+        }, IDLE_TIMEOUT_MS);
     }
 
-    // Interaction triggers to reset inactivity timer
     const activityEvents = [
         'mousemove', 
         'mousedown', 
@@ -301,13 +336,13 @@ function initIdleRedFilter() {
         'touchstart', 
         'touchmove', 
         'wheel', 
-        'pointermove'
+        'pointermove',
+        'scroll'
     ];
 
     activityEvents.forEach(evt => {
         window.addEventListener(evt, resetIdleTimer, { passive: true });
     });
 
-    // Initialize timer on load
     resetIdleTimer();
 }
