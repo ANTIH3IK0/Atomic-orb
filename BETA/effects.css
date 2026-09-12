@@ -593,7 +593,7 @@ button.apply-btn {
     position: relative;
     padding: 9px 12px;
     border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(20, 20, 24, 0.85);
+    background: var(--mode-bg);
     color: var(--quicksilver-bright);
     border-radius: 9px;
     font-size: 10px;
@@ -605,7 +605,7 @@ button.apply-btn {
     pointer-events: auto !important;
 }
 button.apply-btn:hover {
-    background: var(--mode-bg);
+    background: rgba(24, 24, 28, 0.85);
     border-color: rgba(255, 255, 255, 0.15);
 }
 
