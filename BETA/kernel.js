@@ -825,17 +825,17 @@ function setupIndividualParticleFade() {
             // =====================================================================
             if (window.isRedFilterActive) {
                 // 1. Idle Red Filter Mode: Override to deep, low-key crimson quantum cloud
-                targetR = 0.75;
+                targetR = 0.65;
                 targetG = 0.06;
                 targetB = 0.09;
-                dimFactor = 0.55; // Balanced luminosity for dark ambient aesthetic
+                dimFactor = 0.25;
             } else {
                 // 2. Interactive Neutral Mode: Restore uniform stark white mix 
-                const whiteBlendRatio = 0.9;
+                const whiteBlendRatio = 0.8;
                 targetR = baseCol.r * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
                 targetG = baseCol.g * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
                 targetB = baseCol.b * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
-                dimFactor = 0.55; // Original design dim factor rendering as high-end dark gray
+                dimFactor = 0.465; // Original design dim factor rendering as high-end dark gray
             }
 
             const colors = new Float32Array(vertexCount * 4);
