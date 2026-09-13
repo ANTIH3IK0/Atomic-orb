@@ -10,6 +10,7 @@
     --card-glass: rgba(10, 10, 12, 0.88);
     --row-glass: rgba(8, 8, 10, 0.85);
     --input-bg: rgba(3, 3, 4, 0.95);
+    --bg-fil: blur(28px);
 
     /* Stealth Quicksilver Palette */
     --quicksilver-bright: #cacaca;
@@ -60,7 +61,7 @@ body {
 .ui-overlay, .tp-overlay, .pt-modal-window {
     position: absolute;
     background: var(--ui-bg);
-    backdrop-filter: blur(28px) saturate(190%);
+    backdrop-filter: var(--bg-fil) saturate(190%);
     -webkit-backdrop-filter: blur(28px) saturate(190%);
     border-radius: 10px;
     border: 1px solid transparent !important;
