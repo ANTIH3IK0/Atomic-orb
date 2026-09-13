@@ -51,7 +51,7 @@ const REDCSS = Object.freeze({
     '--edge-color-3': '#260509',
     '--glow-color': 'rgba(160, 20, 35, 0.12)',
     '--text-glow': '0 0 6px rgba(180, 25, 40, 0.25)',
-    '--panel-border': '1px solid rgba(160, 25, 40, 0.22)',
+    '--panel-border': '1px solid rgba(0, 0, 0, 0.0)',
     '--slider-thumb': '#bf2c3e',
     '--slider-track': 'rgba(160, 25, 40, 0.25)'
 });
