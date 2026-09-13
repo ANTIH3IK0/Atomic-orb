@@ -825,10 +825,10 @@ function setupIndividualParticleFade() {
             // =====================================================================
             if (window.isRedFilterActive) {
                 // 1. Idle Red Filter Mode: Override to deep, low-key crimson quantum cloud
-                targetR = 1.0;
-                targetG = 0.1;
-                targetB = 0.15;
-                dimFactor = 0.65; // Balanced luminosity for dark ambient aesthetic
+                targetR = 0.75;
+                targetG = 0.06;
+                targetB = 0.09;
+                dimFactor = 0.55; // Balanced luminosity for dark ambient aesthetic
             } else {
                 // 2. Interactive Neutral Mode: Restore uniform stark white mix 
                 const whiteBlendRatio = 0.9;
