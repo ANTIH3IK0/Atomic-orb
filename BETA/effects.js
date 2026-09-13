@@ -32,19 +32,19 @@ const DEFCSS = Object.freeze({
 /* Low-Key Dark Crimson Theme */
 const REDCSS = Object.freeze({
     '--bg-dark': '#030102',
-    '--ui-bg': 'rgba(15, 7, 6, 0.88)',
-    '--mode-bg': 'rgba(29, 13, 8, 0.90)',
-    '--panel-glass': 'rgba(18, 3, 5, 0.92)',
-    '--card-glass': 'rgba(24, 4, 7, 0.90)',
-    '--row-glass': 'rgba(14, 2, 4, 0.88)',
-    '--input-bg': 'rgba(8, 1, 2, 0.95)',
-    '--quicksilver-bright': '#d93848',      /* Subdued deep crimson */
-    '--quicksilver-silver': '#a62d3a',      /* Low-key secondary labels */
-    '--text-main': '#cf3446',              /* Muted clear red */
-    '--text-sub': '#9e2b38',               /* Soft subtext */
-    '--text-muted': '#661b23',             /* Subdued dark text */
-    '--text-accent': '#e6394a',            /* Understated highlight */
-    '--edge-color-1': '#73131d',           /* Dark ambient edge specular */
+    '--ui-bg': 'rgba(0, 0, 0, 0.0)',
+    '--mode-bg': 'rgba(0, 0, 0, 0.0)',
+    '--panel-glass': 'rgba(0, 0, 0, 0.0)',
+    '--card-glass': 'rgba(0, 0, 0, 0.0)',
+    '--row-glass': 'rgba(0, 0, 0, 0.0)',
+    '--input-bg': 'rgba(0, 0, 0, 0.0)',
+    '--quicksilver-bright': '#d93848',      
+    '--quicksilver-silver': '#a62d3a',   
+    '--text-main': '#cf3446',             
+    '--text-sub': '#9e2b38',              
+    '--text-muted': '#661b23',             
+    '--text-accent': '#e6394a',            
+    '--edge-color-1': '#73131d',          
     '--edge-color-2': '#4a0b12',
     '--edge-color-3': '#260509',
     '--glow-color': 'rgba(160, 20, 35, 0.12)',
@@ -53,6 +53,29 @@ const REDCSS = Object.freeze({
     '--slider-thumb': '#bf2c3e',
     '--slider-track': 'rgba(160, 25, 40, 0.25)'
 });
+/* const REDCSS = Object.freeze({
+    '--bg-dark': '#030102',
+    '--ui-bg': 'rgba(15, 7, 6, 0.88)',
+    '--mode-bg': 'rgba(29, 13, 8, 0.90)',
+    '--panel-glass': 'rgba(18, 3, 5, 0.92)',
+    '--card-glass': 'rgba(24, 4, 7, 0.90)',
+    '--row-glass': 'rgba(14, 2, 4, 0.88)',
+    '--input-bg': 'rgba(8, 1, 2, 0.95)',
+    '--quicksilver-bright': '#d93848',      // Subdued deep crimson
+    '--quicksilver-silver': '#a62d3a',      // Low-key secondary labels
+    '--text-main': '#cf3446',              // Muted clear red
+    '--text-sub': '#9e2b38',               // Soft subtext 
+    '--text-muted': '#661b23',             // Subdued dark text 
+    '--text-accent': '#e6394a',            // Understated highlight 
+    '--edge-color-1': '#73131d',           // Dark ambient edge specular
+    '--edge-color-2': '#4a0b12',
+    '--edge-color-3': '#260509',
+    '--glow-color': 'rgba(160, 20, 35, 0.12)',
+    '--text-glow': '0 0 6px rgba(180, 25, 40, 0.25)',
+    '--panel-border': '1px solid rgba(160, 25, 40, 0.22)',
+    '--slider-thumb': '#bf2c3e',
+    '--slider-track': 'rgba(160, 25, 40, 0.25)'
+}); */
 
 function applyCSSTheme(theme) {
     const root = document.documentElement;
