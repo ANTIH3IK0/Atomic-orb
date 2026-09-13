@@ -62,7 +62,7 @@ body {
     position: absolute;
     background: var(--ui-bg);
     backdrop-filter: var(--bg-fil) saturate(190%);
-    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: var(--bg-fil) saturate(190%);
     border-radius: 10px;
     border: 1px solid transparent !important;
 
