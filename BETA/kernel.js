@@ -17,136 +17,192 @@ let initialBeta = Math.PI / 2.5;
 
 const FINE_ALPHA = 1.0 / 137.035999139;
 const HARTREE_TO_EV = 27.211386245988;
+const DEFAULT_GI = 0.0;
 
 /**
- * 118 Elements Data Repository (Z, Symbol, Name, Period, Group, Category)
+ * 118 Elements Data Repository (Z, Symbol, Name, Period, Group, Category, Mass A, Nuclear g-factor gI)
  */
 const ELEMENTS_DATA = [
-    { Z: 1, sym: "H", name: "Hydrogen", period: 1, group: 1, cat: "reactive-nonmetal" },
-    { Z: 2, sym: "He", name: "Helium", period: 1, group: 18, cat: "noble-gas" },
+    { Z: 1, sym: "H", name: "Hydrogen", period: 1, group: 1, cat: "reactive-nonmetal", A: 1, gI: 5.5857 },
+    { Z: 2, sym: "He", name: "Helium", period: 1, group: 18, cat: "noble-gas", A: 4, gI: 0.0 },
     
-    { Z: 3, sym: "Li", name: "Lithium", period: 2, group: 1, cat: "alkali-metal" },
-    { Z: 4, sym: "Be", name: "Beryllium", period: 2, group: 2, cat: "alkaline-earth" },
-    { Z: 5, sym: "B", name: "Boron", period: 2, group: 13, cat: "metalloid" },
-    { Z: 6, sym: "C", name: "Carbon", period: 2, group: 14, cat: "reactive-nonmetal" },
-    { Z: 7, sym: "N", name: "Nitrogen", period: 2, group: 15, cat: "reactive-nonmetal" },
-    { Z: 8, sym: "O", name: "Oxygen", period: 2, group: 16, cat: "reactive-nonmetal" },
-    { Z: 9, sym: "F", name: "Fluorine", period: 2, group: 17, cat: "reactive-nonmetal" },
-    { Z: 10, sym: "Ne", name: "Neon", period: 2, group: 18, cat: "noble-gas" },
+    { Z: 3, sym: "Li", name: "Lithium", period: 2, group: 1, cat: "alkali-metal", A: 7, gI: 2.1709 },
+    { Z: 4, sym: "Be", name: "Beryllium", period: 2, group: 2, cat: "alkaline-earth", A: 9, gI: -0.5428 },
+    { Z: 5, sym: "B", name: "Boron", period: 2, group: 13, cat: "metalloid", A: 11, gI: 1.7924 },
+    { Z: 6, sym: "C", name: "Carbon", period: 2, group: 14, cat: "reactive-nonmetal", A: 12, gI: 0.0 },
+    { Z: 7, sym: "N", name: "Nitrogen", period: 2, group: 15, cat: "reactive-nonmetal", A: 14, gI: 0.4037 },
+    { Z: 8, sym: "O", name: "Oxygen", period: 2, group: 16, cat: "reactive-nonmetal", A: 16, gI: 0.0 },
+    { Z: 9, sym: "F", name: "Fluorine", period: 2, group: 17, cat: "reactive-nonmetal", A: 19, gI: 5.2577 },
+    { Z: 10, sym: "Ne", name: "Neon", period: 2, group: 18, cat: "noble-gas", A: 20, gI: 0.0 },
 
-    { Z: 11, sym: "Na", name: "Sodium", period: 3, group: 1, cat: "alkali-metal" },
-    { Z: 12, sym: "Mg", name: "Magnesium", period: 3, group: 2, cat: "alkaline-earth" },
-    { Z: 13, sym: "Al", name: "Aluminium", period: 3, group: 13, cat: "post-transition" },
-    { Z: 14, sym: "Si", name: "Silicon", period: 3, group: 14, cat: "metalloid" },
-    { Z: 15, sym: "P", name: "Phosphorus", period: 3, group: 15, cat: "reactive-nonmetal" },
-    { Z: 16, sym: "S", name: "Sulfur", period: 3, group: 16, cat: "reactive-nonmetal" },
-    { Z: 17, sym: "Cl", name: "Chlorine", period: 3, group: 17, cat: "reactive-nonmetal" },
-    { Z: 18, sym: "Ar", name: "Argon", period: 3, group: 18, cat: "noble-gas" },
+    { Z: 11, sym: "Na", name: "Sodium", period: 3, group: 1, cat: "alkali-metal", A: 23, gI: 1.4784 },
+    { Z: 12, sym: "Mg", name: "Magnesium", period: 3, group: 2, cat: "alkaline-earth", A: 24, gI: 0.0 },
+    { Z: 13, sym: "Al", name: "Aluminium", period: 3, group: 13, cat: "post-transition", A: 27, gI: 1.4566 },
+    { Z: 14, sym: "Si", name: "Silicon", period: 3, group: 14, cat: "metalloid", A: 28, gI: 0.0 },
+    { Z: 15, sym: "P", name: "Phosphorus", period: 3, group: 15, cat: "reactive-nonmetal", A: 31, gI: 2.2632 },
+    { Z: 16, sym: "S", name: "Sulfur", period: 3, group: 16, cat: "reactive-nonmetal", A: 32, gI: 0.0 },
+    { Z: 17, sym: "Cl", name: "Chlorine", period: 3, group: 17, cat: "reactive-nonmetal", A: 35, gI: 0.5479 },
+    { Z: 18, sym: "Ar", name: "Argon", period: 3, group: 18, cat: "noble-gas", A: 40, gI: 0.0 },
 
-    { Z: 19, sym: "K", name: "Potassium", period: 4, group: 1, cat: "alkali-metal" },
-    { Z: 20, sym: "Ca", name: "Calcium", period: 4, group: 2, cat: "alkaline-earth" },
-    { Z: 21, sym: "Sc", name: "Scandium", period: 4, group: 3, cat: "transition-metal" },
-    { Z: 22, sym: "Ti", name: "Titanium", period: 4, group: 4, cat: "transition-metal" },
-    { Z: 23, sym: "V", name: "Vanadium", period: 4, group: 5, cat: "transition-metal" },
-    { Z: 24, sym: "Cr", name: "Chromium", period: 4, group: 6, cat: "transition-metal" },
-    { Z: 25, sym: "Mn", name: "Manganese", period: 4, group: 7, cat: "transition-metal" },
-    { Z: 26, sym: "Fe", name: "Iron", period: 4, group: 8, cat: "transition-metal" },
-    { Z: 27, sym: "Co", name: "Cobalt", period: 4, group: 9, cat: "transition-metal" },
-    { Z: 28, sym: "Ni", name: "Nickel", period: 4, group: 10, cat: "transition-metal" },
-    { Z: 29, sym: "Cu", name: "Copper", period: 4, group: 11, cat: "transition-metal" },
-    { Z: 30, sym: "Zn", name: "Zinc", period: 4, group: 12, cat: "transition-metal" },
-    { Z: 31, sym: "Ga", name: "Gallium", period: 4, group: 13, cat: "post-transition" },
-    { Z: 32, sym: "Ge", name: "Germanium", period: 4, group: 14, cat: "metalloid" },
-    { Z: 33, sym: "As", name: "Arsenic", period: 4, group: 15, cat: "metalloid" },
-    { Z: 34, sym: "Se", name: "Selenium", period: 4, group: 16, cat: "reactive-nonmetal" },
-    { Z: 35, sym: "Br", name: "Bromine", period: 4, group: 17, cat: "reactive-nonmetal" },
-    { Z: 36, sym: "Kr", name: "Krypton", period: 4, group: 18, cat: "noble-gas" },
+    { Z: 19, sym: "K", name: "Potassium", period: 4, group: 1, cat: "alkali-metal", A: 39, gI: 0.2610 },
+    { Z: 20, sym: "Ca", name: "Calcium", period: 4, group: 2, cat: "alkaline-earth", A: 40, gI: 0.0 },
+    { Z: 21, sym: "Sc", name: "Scandium", period: 4, group: 3, cat: "transition-metal", A: 45, gI: 1.3590 },
+    { Z: 22, sym: "Ti", name: "Titanium", period: 4, group: 4, cat: "transition-metal", A: 48, gI: 0.0 },
+    { Z: 23, sym: "V", name: "Vanadium", period: 4, group: 5, cat: "transition-metal", A: 51, gI: 1.4711 },
+    { Z: 24, sym: "Cr", name: "Chromium", period: 4, group: 6, cat: "transition-metal", A: 52, gI: 0.0 },
+    { Z: 25, sym: "Mn", name: "Manganese", period: 4, group: 7, cat: "transition-metal", A: 55, gI: 1.3822 },
+    { Z: 26, sym: "Fe", name: "Iron", period: 4, group: 8, cat: "transition-metal", A: 56, gI: 0.0 },
+    { Z: 27, sym: "Co", name: "Cobalt", period: 4, group: 9, cat: "transition-metal", A: 59, gI: 1.3220 },
+    { Z: 28, sym: "Ni", name: "Nickel", period: 4, group: 10, cat: "transition-metal", A: 59, gI: 0.0 },
+    { Z: 29, sym: "Cu", name: "Copper", period: 4, group: 11, cat: "transition-metal", A: 63, gI: 1.4840 },
+    { Z: 30, sym: "Zn", name: "Zinc", period: 4, group: 12, cat: "transition-metal", A: 65, gI: 0.0 },
+    { Z: 31, sym: "Ga", name: "Gallium", period: 4, group: 13, cat: "post-transition", A: 69, gI: 1.3444 },
+    { Z: 32, sym: "Ge", name: "Germanium", period: 4, group: 14, cat: "metalloid", A: 73, gI: -0.1920 },
+    { Z: 33, sym: "As", name: "Arsenic", period: 4, group: 15, cat: "metalloid", A: 75, gI: 0.9596 },
+    { Z: 34, sym: "Se", name: "Selenium", period: 4, group: 16, cat: "reactive-nonmetal", A: 79, gI: 0.0 },
+    { Z: 35, sym: "Br", name: "Bromine", period: 4, group: 17, cat: "reactive-nonmetal", A: 80, gI: 1.3538 },
+    { Z: 36, sym: "Kr", name: "Krypton", period: 4, group: 18, cat: "noble-gas", A: 84, gI: 0.0 },
 
-    { Z: 37, sym: "Rb", name: "Rubidium", period: 5, group: 1, cat: "alkali-metal" },
-    { Z: 38, sym: "Sr", name: "Strontium", period: 5, group: 2, cat: "alkaline-earth" },
-    { Z: 39, sym: "Y", name: "Yttrium", period: 5, group: 3, cat: "transition-metal" },
-    { Z: 40, sym: "Zr", name: "Zirconium", period: 5, group: 4, cat: "transition-metal" },
-    { Z: 41, sym: "Nb", name: "Niobium", period: 5, group: 5, cat: "transition-metal" },
-    { Z: 42, sym: "Mo", name: "Molybdenum", period: 5, group: 6, cat: "transition-metal" },
-    { Z: 43, sym: "Tc", name: "Technetium", period: 5, group: 7, cat: "transition-metal" },
-    { Z: 44, sym: "Ru", name: "Ruthenium", period: 5, group: 8, cat: "transition-metal" },
-    { Z: 45, sym: "Rh", name: "Rhodium", period: 5, group: 9, cat: "transition-metal" },
-    { Z: 46, sym: "Pd", name: "Palladium", period: 5, group: 10, cat: "transition-metal" },
-    { Z: 47, sym: "Ag", name: "Silver", period: 5, group: 11, cat: "transition-metal" },
-    { Z: 48, sym: "Cd", name: "Cadmium", period: 5, group: 12, cat: "transition-metal" },
-    { Z: 49, sym: "In", name: "Indium", period: 5, group: 13, cat: "post-transition" },
-    { Z: 50, sym: "Sn", name: "Tin", period: 5, group: 14, cat: "post-transition" },
-    { Z: 51, sym: "Sb", name: "Antimony", period: 5, group: 15, cat: "metalloid" },
-    { Z: 52, sym: "Te", name: "Tellurium", period: 5, group: 16, cat: "metalloid" },
-    { Z: 53, sym: "I", name: "Iodine", period: 5, group: 17, cat: "reactive-nonmetal" },
-    { Z: 54, sym: "Xe", name: "Xenon", period: 5, group: 18, cat: "noble-gas" },
+    { Z: 37, sym: "Rb", name: "Rubidium", period: 5, group: 1, cat: "alkali-metal", A: 85, gI: 0.5412 },
+    { Z: 38, sym: "Sr", name: "Strontium", period: 5, group: 2, cat: "alkaline-earth", A: 88, gI: 0.0 },
+    { Z: 39, sym: "Y", name: "Yttrium", period: 5, group: 3, cat: "transition-metal", A: 89, gI: -0.2748 },
+    { Z: 40, sym: "Zr", name: "Zirconium", period: 5, group: 4, cat: "transition-metal", A: 91, gI: -0.5210 },
+    { Z: 41, sym: "Nb", name: "Niobium", period: 5, group: 5, cat: "transition-metal", A: 93, gI: 1.3707 },
+    { Z: 42, sym: "Mo", name: "Molybdenum", period: 5, group: 6, cat: "transition-metal", A: 96, gI: 0.0 },
+    { Z: 43, sym: "Tc", name: "Technetium", period: 5, group: 7, cat: "transition-metal", A: 98, gI: 1.2800 },
+    { Z: 44, sym: "Ru", name: "Ruthenium", period: 5, group: 8, cat: "transition-metal", A: 101, gI: -0.2100 },
+    { Z: 45, sym: "Rh", name: "Rhodium", period: 5, group: 9, cat: "transition-metal", A: 103, gI: -0.1768 },
+    { Z: 46, sym: "Pd", name: "Palladium", period: 5, group: 10, cat: "transition-metal", A: 106, gI: 0.0 },
+    { Z: 47, sym: "Ag", name: "Silver", period: 5, group: 11, cat: "transition-metal", A: 108, gI: -0.2270 },
+    { Z: 48, sym: "Cd", name: "Cadmium", period: 5, group: 12, cat: "transition-metal", A: 112, gI: 0.0 },
+    { Z: 49, sym: "In", name: "Indium", period: 5, group: 13, cat: "post-transition", A: 115, gI: 1.2370 },
+    { Z: 50, sym: "Sn", name: "Tin", period: 5, group: 14, cat: "post-transition", A: 119, gI: -1.0490 },
+    { Z: 51, sym: "Sb", name: "Antimony", period: 5, group: 15, cat: "metalloid", A: 122, gI: 0.8920 },
+    { Z: 52, sym: "Te", name: "Tellurium", period: 5, group: 16, cat: "metalloid", A: 128, gI: 0.0 },
+    { Z: 53, sym: "I", name: "Iodine", period: 5, group: 17, cat: "reactive-nonmetal", A: 127, gI: 1.1230 },
+    { Z: 54, sym: "Xe", name: "Xenon", period: 5, group: 18, cat: "noble-gas", A: 131, gI: 0.6918 },
 
-    { Z: 55, sym: "Cs", name: "Caesium", period: 6, group: 1, cat: "alkali-metal" },
-    { Z: 56, sym: "Ba", name: "Barium", period: 6, group: 2, cat: "alkaline-earth" },
-    { Z: 57, sym: "La", name: "Lanthanum", period: 6, group: 3, cat: "lanthanide" },
-    { Z: 58, sym: "Ce", name: "Cerium", period: 6, group: 3, cat: "lanthanide" },
-    { Z: 59, sym: "Pr", name: "Praseodymium", period: 6, group: 3, cat: "lanthanide" },
-    { Z: 60, sym: "Nd", name: "Neodymium", period: 6, group: 3, cat: "lanthanide" },
-    { Z: 61, sym: "Pm", name: "Promethium", period: 6, group: 3, cat: "lanthanide" },
-    { Z: 62, sym: "Sm", name: "Samarium", period: 6, group: 3, cat: "lanthanide" },
-    { Z: 63, sym: "Eu", name: "Europium", period: 6, group: 3, cat: "lanthanide" },
-    { Z: 64, sym: "Gd", name: "Gadolinium", period: 6, group: 3, cat: "lanthanide" },
-    { Z: 65, sym: "Tb", name: "Terbium", period: 6, group: 3, cat: "lanthanide" },
-    { Z: 66, sym: "Dy", name: "Dysprosium", period: 6, group: 3, cat: "lanthanide" },
-    { Z: 67, sym: "Ho", name: "Holmium", period: 6, group: 3, cat: "lanthanide" },
-    { Z: 68, sym: "Er", name: "Erbium", period: 6, group: 3, cat: "lanthanide" },
-    { Z: 69, sym: "Tm", name: "Thulium", period: 6, group: 3, cat: "lanthanide" },
-    { Z: 70, sym: "Yb", name: "Ytterbium", period: 6, group: 3, cat: "lanthanide" },
-    { Z: 71, sym: "Lu", name: "Lutetium", period: 6, group: 3, cat: "lanthanide" },
-    { Z: 72, sym: "Hf", name: "Hafnium", period: 6, group: 4, cat: "transition-metal" },
-    { Z: 73, sym: "Ta", name: "Tantalum", period: 6, group: 5, cat: "transition-metal" },
-    { Z: 74, sym: "W", name: "Tungsten", period: 6, group: 6, cat: "transition-metal" },
-    { Z: 75, sym: "Re", name: "Rhenium", period: 6, group: 7, cat: "transition-metal" },
-    { Z: 76, sym: "Os", name: "Osmium", period: 6, group: 8, cat: "transition-metal" },
-    { Z: 77, sym: "Ir", name: "Iridium", period: 6, group: 9, cat: "transition-metal" },
-    { Z: 78, sym: "Pt", name: "Platinum", period: 6, group: 10, cat: "transition-metal" },
-    { Z: 79, sym: "Au", name: "Gold", period: 6, group: 11, cat: "transition-metal" },
-    { Z: 80, sym: "Hg", name: "Mercury", period: 6, group: 12, cat: "transition-metal" },
-    { Z: 81, sym: "Tl", name: "Thallium", period: 6, group: 13, cat: "post-transition" },
-    { Z: 82, sym: "Pb", name: "Lead", period: 6, group: 14, cat: "post-transition" },
-    { Z: 83, sym: "Bi", name: "Bismuth", period: 6, group: 15, cat: "post-transition" },
-    { Z: 84, sym: "Po", name: "Polonium", period: 6, group: 16, cat: "post-transition" },
-    { Z: 85, sym: "At", name: "Astatine", period: 6, group: 17, cat: "metalloid" },
-    { Z: 86, sym: "Rn", name: "Radon", period: 6, group: 18, cat: "noble-gas" },
+    { Z: 55, sym: "Cs", name: "Caesium", period: 6, group: 1, cat: "alkali-metal", A: 133, gI: 0.7377 },
+    { Z: 56, sym: "Ba", name: "Barium", period: 6, group: 2, cat: "alkaline-earth", A: 137, gI: 0.6220 },
+    { Z: 57, sym: "La", name: "Lanthanum", period: 6, group: 3, cat: "lanthanide", A: 139, gI: 0.7950 },
+    { Z: 58, sym: "Ce", name: "Cerium", period: 6, group: 3, cat: "lanthanide", A: 140, gI: 0.0 },
+    { Z: 59, sym: "Pr", name: "Praseodymium", period: 6, group: 3, cat: "lanthanide", A: 141, gI: 1.7160 },
+    { Z: 60, sym: "Nd", name: "Neodymium", period: 6, group: 3, cat: "lanthanide", A: 144, gI: 0.0 },
+    { Z: 61, sym: "Pm", name: "Promethium", period: 6, group: 3, cat: "lanthanide", A: 145, gI: 0.8900 },
+    { Z: 62, sym: "Sm", name: "Samarium", period: 6, group: 3, cat: "lanthanide", A: 150, gI: 0.0 },
+    { Z: 63, sym: "Eu", name: "Europium", period: 6, group: 3, cat: "lanthanide", A: 152, gI: 1.3880 },
+    { Z: 64, sym: "Gd", name: "Gadolinium", period: 6, group: 3, cat: "lanthanide", A: 157, gI: -0.2260 },
+    { Z: 65, sym: "Tb", name: "Terbium", period: 6, group: 3, cat: "lanthanide", A: 159, gI: 1.3320 },
+    { Z: 66, sym: "Dy", name: "Dysprosium", period: 6, group: 3, cat: "lanthanide", A: 163, gI: -0.1900 },
+    { Z: 67, sym: "Ho", name: "Holmium", period: 6, group: 3, cat: "lanthanide", A: 165, gI: 1.1850 },
+    { Z: 68, sym: "Er", name: "Erbium", period: 6, group: 3, cat: "lanthanide", A: 167, gI: -0.1618 },
+    { Z: 69, sym: "Tm", name: "Thulium", period: 6, group: 3, cat: "lanthanide", A: 169, gI: -0.4620 },
+    { Z: 70, sym: "Yb", name: "Ytterbium", period: 6, group: 3, cat: "lanthanide", A: 173, gI: -0.3154 },
+    { Z: 71, sym: "Lu", name: "Lutetium", period: 6, group: 3, cat: "lanthanide", A: 175, gI: 0.6380 },
+    { Z: 72, sym: "Hf", name: "Hafnium", period: 6, group: 4, cat: "transition-metal", A: 178, gI: 0.0 },
+    { Z: 73, sym: "Ta", name: "Tantalum", period: 6, group: 5, cat: "transition-metal", A: 181, gI: 0.6770 },
+    { Z: 74, sym: "W", name: "Tungsten", period: 6, group: 6, cat: "transition-metal", A: 184, gI: 0.0 },
+    { Z: 75, sym: "Re", name: "Rhenium", period: 6, group: 7, cat: "transition-metal", A: 186, gI: 1.2750 },
+    { Z: 76, sym: "Os", name: "Osmium", period: 6, group: 8, cat: "transition-metal", A: 190, gI: 0.0 },
+    { Z: 77, sym: "Ir", name: "Iridium", period: 6, group: 9, cat: "transition-metal", A: 192, gI: 0.1060 },
+    { Z: 78, sym: "Pt", name: "Platinum", period: 6, group: 10, cat: "transition-metal", A: 195, gI: 1.2190 },
+    { Z: 79, sym: "Au", name: "Gold", period: 6, group: 11, cat: "transition-metal", A: 197, gI: 0.0971 },
+    { Z: 80, sym: "Hg", name: "Mercury", period: 6, group: 12, cat: "transition-metal", A: 201, gI: -0.5602 },
+    { Z: 81, sym: "Tl", name: "Thallium", period: 6, group: 13, cat: "post-transition", A: 204, gI: 3.2430 },
+    { Z: 82, sym: "Pb", name: "Lead", period: 6, group: 14, cat: "post-transition", A: 207, gI: 1.1718 },
+    { Z: 83, sym: "Bi", name: "Bismuth", period: 6, group: 15, cat: "post-transition", A: 209, gI: 0.9135 },
+    { Z: 84, sym: "Po", name: "Polonium", period: 6, group: 16, cat: "post-transition", A: 209, gI: 0.0 },
+    { Z: 85, sym: "At", name: "Astatine", period: 6, group: 17, cat: "metalloid", A: 210, gI: 0.0 },
+    { Z: 86, sym: "Rn", name: "Radon", period: 6, group: 18, cat: "noble-gas", A: 222, gI: 0.0 },
 
-    { Z: 87, sym: "Fr", name: "Francium", period: 7, group: 1, cat: "alkali-metal" },
-    { Z: 88, sym: "Ra", name: "Radium", period: 7, group: 2, cat: "alkaline-earth" },
-    { Z: 89, sym: "Ac", name: "Actinium", period: 7, group: 3, cat: "actinide" },
-    { Z: 90, sym: "Th", name: "Thorium", period: 7, group: 3, cat: "actinide" },
-    { Z: 91, sym: "Pa", name: "Protactinium", period: 7, group: 3, cat: "actinide" },
-    { Z: 92, sym: "U", name: "Uranium", period: 7, group: 3, cat: "actinide" },
-    { Z: 93, sym: "Np", name: "Neptunium", period: 7, group: 3, cat: "actinide" },
-    { Z: 94, sym: "Pu", name: "Plutonium", period: 7, group: 3, cat: "actinide" },
-    { Z: 95, sym: "Am", name: "Americium", period: 7, group: 3, cat: "actinide" },
-    { Z: 96, sym: "Cm", name: "Curium", period: 7, group: 3, cat: "actinide" },
-    { Z: 97, sym: "Bk", name: "Berkelium", period: 7, group: 3, cat: "actinide" },
-    { Z: 98, sym: "Cf", name: "Californium", period: 7, group: 3, cat: "actinide" },
-    { Z: 99, sym: "Es", name: "Einsteinium", period: 7, group: 3, cat: "actinide" },
-    { Z: 100, sym: "Fm", name: "Fermium", period: 7, group: 3, cat: "actinide" },
-    { Z: 101, sym: "Md", name: "Mendelevium", period: 7, group: 3, cat: "actinide" },
-    { Z: 102, sym: "No", name: "Nobelium", period: 7, group: 3, cat: "actinide" },
-    { Z: 103, sym: "Lr", name: "Lawrencium", period: 7, group: 3, cat: "actinide" },
-    { Z: 104, sym: "Rf", name: "Rutherfordium", period: 7, group: 4, cat: "transition-metal" },
-    { Z: 105, sym: "Db", name: "Dubnium", period: 7, group: 5, cat: "transition-metal" },
-    { Z: 106, sym: "Sg", name: "Seaborgium", period: 7, group: 6, cat: "transition-metal" },
-    { Z: 107, sym: "Bh", name: "Bohrium", period: 7, group: 7, cat: "transition-metal" },
-    { Z: 108, sym: "Hs", name: "Hassium", period: 7, group: 8, cat: "transition-metal" },
-    { Z: 109, sym: "Mt", name: "Meitnerium", period: 7, group: 9, cat: "transition-metal" },
-    { Z: 110, sym: "Ds", name: "Darmstadtium", period: 7, group: 10, cat: "transition-metal" },
-    { Z: 111, sym: "Rg", name: "Roentgenium", period: 7, group: 11, cat: "transition-metal" },
-    { Z: 112, sym: "Cn", name: "Copernicium", period: 7, group: 12, cat: "transition-metal" },
-    { Z: 113, sym: "Nh", name: "Nihonium", period: 7, group: 13, cat: "post-transition" },
-    { Z: 114, sym: "Fl", name: "Flerovium", period: 7, group: 14, cat: "post-transition" },
-    { Z: 115, sym: "Mc", name: "Moscovium", period: 7, group: 15, cat: "post-transition" },
-    { Z: 116, sym: "Lv", name: "Livermorium", period: 7, group: 16, cat: "post-transition" },
-    { Z: 117, sym: "Ts", name: "Tennessine", period: 7, group: 17, cat: "post-transition" },
-    { Z: 118, sym: "Og", name: "Oganesson", period: 7, group: 18, cat: "noble-gas" }
+    { Z: 87, sym: "Fr", name: "Francium", period: 7, group: 1, cat: "alkali-metal", A: 223, gI: 0.8000 },
+    { Z: 88, sym: "Ra", name: "Radium", period: 7, group: 2, cat: "alkaline-earth", A: 226, gI: 0.0 },
+    { Z: 89, sym: "Ac", name: "Actinium", period: 7, group: 3, cat: "actinide", A: 227, gI: 1.1100 },
+    { Z: 90, sym: "Th", name: "Thorium", period: 7, group: 3, cat: "actinide", A: 232, gI: 0.0 },
+    { Z: 91, sym: "Pa", name: "Protactinium", period: 7, group: 3, cat: "actinide", A: 231, gI: 1.3400 },
+    { Z: 92, sym: "U", name: "Uranium", period: 7, group: 3, cat: "actinide", A: 238, gI: 0.0 },
+    { Z: 93, sym: "Np", name: "Neptunium", period: 7, group: 3, cat: "actinide", A: 237, gI: 1.2500 },
+    { Z: 94, sym: "Pu", name: "Plutonium", period: 7, group: 3, cat: "actinide", A: 244, gI: 0.0 },
+    { Z: 95, sym: "Am", name: "Americium", period: 7, group: 3, cat: "actinide", A: 243, gI: 0.6100 },
+    { Z: 96, sym: "Cm", name: "Curium", period: 7, group: 3, cat: "actinide", A: 247, gI: 0.0 },
+    { Z: 97, sym: "Bk", name: "Berkelium", period: 7, group: 3, cat: "actinide", A: 247, gI: 0.9800 },
+    { Z: 98, sym: "Cf", name: "Californium", period: 7, group: 3, cat: "actinide", A: 251, gI: -0.3500 },
+    { Z: 99, sym: "Es", name: "Einsteinium", period: 7, group: 3, cat: "actinide", A: 252, gI: 1.2000 },
+    { Z: 100, sym: "Fm", name: "Fermium", period: 7, group: 3, cat: "actinide", A: 257, gI: 0.0 },
+    { Z: 101, sym: "Md", name: "Mendelevium", period: 7, group: 3, cat: "actinide", A: 258, gI: 0.0 },
+    { Z: 102, sym: "No", name: "Nobelium", period: 7, group: 3, cat: "actinide", A: 259, gI: 0.0 },
+    { Z: 103, sym: "Lr", name: "Lawrencium", period: 7, group: 3, cat: "actinide", A: 266, gI: 0.0 },
+    { Z: 104, sym: "Rf", name: "Rutherfordium", period: 7, group: 4, cat: "transition-metal", A: 267, gI: 0.0 },
+    { Z: 105, sym: "Db", name: "Dubnium", period: 7, group: 5, cat: "transition-metal", A: 268, gI: 0.0 },
+    { Z: 106, sym: "Sg", name: "Seaborgium", period: 7, group: 6, cat: "transition-metal", A: 269, gI: 0.0 },
+    { Z: 107, sym: "Bh", name: "Bohrium", period: 7, group: 7, cat: "transition-metal", A: 270, gI: 0.0 },
+    { Z: 108, sym: "Hs", name: "Hassium", period: 7, group: 8, cat: "transition-metal", A: 277, gI: 0.0 },
+    { Z: 109, sym: "Mt", name: "Meitnerium", period: 7, group: 9, cat: "transition-metal", A: 278, gI: 0.0 },
+    { Z: 110, sym: "Ds", name: "Darmstadtium", period: 7, group: 10, cat: "transition-metal", A: 281, gI: 0.0 },
+    { Z: 111, sym: "Rg", name: "Roentgenium", period: 7, group: 11, cat: "transition-metal", A: 282, gI: 0.0 },
+    { Z: 112, sym: "Cn", name: "Copernicium", period: 7, group: 12, cat: "transition-metal", A: 285, gI: 0.0 },
+    { Z: 113, sym: "Nh", name: "Nihonium", period: 7, group: 13, cat: "post-transition", A: 286, gI: 0.0 },
+    { Z: 114, sym: "Fl", name: "Flerovium", period: 7, group: 14, cat: "post-transition", A: 289, gI: 0.0 },
+    { Z: 115, sym: "Mc", name: "Moscovium", period: 7, group: 15, cat: "post-transition", A: 290, gI: 0.0 },
+    { Z: 116, sym: "Lv", name: "Livermorium", period: 7, group: 16, cat: "post-transition", A: 293, gI: 0.0 },
+    { Z: 117, sym: "Ts", name: "Tennessine", period: 7, group: 17, cat: "post-transition", A: 294, gI: 0.0 },
+    { Z: 118, sym: "Og", name: "Oganesson", period: 7, group: 18, cat: "noble-gas", A: 294, gI: 0.0 }
 ];
+
+/**
+ * Gets element metadata by atomic number Z; defaults gI to DEFAULT_GI for Z > 118 or unknown elements.
+ */
+function getElementData(Z) {
+    if (Z > 118 || Z < 1) {
+        return { Z: Z, sym: "Unk", name: "Unknown", period: 0, group: 0, cat: "unknown", A: 0, gI: DEFAULT_GI };
+    }
+    const elem = ELEMENTS_DATA.find(e => e.Z === Z);
+    return elem || { Z: Z, sym: "Unk", name: "Unknown", period: 0, group: 0, cat: "unknown", A: 0, gI: DEFAULT_GI };
+}
+
+/**
+ * Calculates total electron spin quantum number S based on ground-state subshell occupations (Hund's Rule).
+ */
+function calculateTotalSpinS(Z) {
+    const config = HARDCODED_ELECTRON_CONFIGS[Z] || HARDCODED_ELECTRON_CONFIGS[1];
+    const subCapacities = { s: 2, p: 6, d: 10, f: 14 };
+    let totalS = 0;
+
+    for (const [subshell, count] of Object.entries(config)) {
+        const type = subshell[1];
+        const capacity = subCapacities[type] || 2;
+        const halfCap = capacity / 2;
+
+        const unpaired = (count <= halfCap) ? count : (capacity - count);
+        totalS += unpaired * 0.5;
+    }
+
+    return totalS;
+}
+
+/**
+ * Calculates internal radial electric field (in V/m) at radius r (in Angstroms) using effective nuclear charge Z_eff.
+ */
+function calculateElectricFieldVperM(Z, rAngstrom) {
+    if (rAngstrom <= 0) return 0;
+
+    const elem = getElementData(Z);
+    const configData = getElectronConfigForZ(elem.Z);
+
+    let totalElec = 0;
+    for (const count of Object.values(configData.subConfig)) {
+        totalElec += count;
+    }
+
+    const shieldingS = Math.max(0, totalElec - 1) * 0.85;
+    const zEff = Math.max(1.0, elem.Z - shieldingS);
+
+    const rMeters = rAngstrom * 1e-10;
+    const coulombConst = 8.9875517923e9;
+    const elemCharge = 1.602176634e-19;
+
+    return (coulombConst * zEff * elemCharge) / (rMeters * rMeters);
+}
 
 /**
  * Hardcoded Ground-State Subshell Electron Counts (Z = 1 to 118)
@@ -441,10 +497,8 @@ function selectElementBySymbol(symbol) {
     document.getElementById('inputZ').value = elem.Z;
     document.getElementById('inputMaxN').value = configData.maxN;
 
-    // Pass false to rebuild clean rows without copying stale DOM inputs from previous elements
     generateOrbitsBuilder(false);
 
-    // Apply exact subshell electron counts and reset excitations
     document.querySelectorAll('.orbit-row').forEach(row => {
         const label = row.querySelector('.orbit-label').innerText;
         const eInput = row.querySelector('.e-input');
@@ -461,7 +515,6 @@ function selectElementBySymbol(symbol) {
     const tag = document.getElementById('selectedElementTag');
     if (tag) tag.innerText = `[Z = ${elem.Z} ${elem.name}]`;
 
-    // Clear visibility overrides for removed orbitals
     visibilityState = {};
 
     rebuildQuantumModel();
@@ -510,7 +563,6 @@ function getSuborbitCapacity(l, j) {
 
 /**
  * Generates quantum orbit UI elements.
- * @param {boolean} preserveExisting - Whether to retain existing UI text values.
  */
 function generateOrbitsBuilder(preserveExisting = true) {
     const maxN = parseInt(document.getElementById('inputMaxN').value) || 1;
@@ -560,6 +612,10 @@ function generateOrbitsBuilder(preserveExisting = true) {
 }
 
 function solveDiracExactEnergy(n, l, j, zEff) {
+    if (typeof DiracModule !== 'undefined' && typeof DiracModule._solveDiracExactEnergy === 'function') {
+        return DiracModule._solveDiracExactEnergy(n, l, j, zEff);
+    }
+
     const kappa = (j > l) ? -(l + 1) : l;
     const absKappa = Math.abs(kappa);
     const zAlpha = zEff * FINE_ALPHA;
@@ -589,7 +645,6 @@ function autoCalculateSuborbitEnergiesUI() {
             const j = parseFloat(row.dataset.j);
 
             let S = cumElec * 0.85;
-            // Ensure Z_eff never drops below 1.0 for physical atomic orbits
             let zEff = Math.max(1.0, Z - S);
 
             let energy = solveDiracExactEnergy(effectiveN, l, j, zEff);
@@ -602,6 +657,10 @@ function autoCalculateSuborbitEnergiesUI() {
 }
 
 function solveDiracRadialExpectationRK4(n, l, j, zEff) {
+    if (typeof DiracModule !== 'undefined' && typeof DiracModule._solveDiracRadialExpectationRK4 === 'function') {
+        return DiracModule._solveDiracRadialExpectationRK4(n, l, j, zEff);
+    }
+
     const kappa = (j > l) ? -(l + 1) : l;
     const absKappa = Math.abs(kappa);
     const zAlpha = Math.min(zEff * FINE_ALPHA, absKappa - 1e-5);
@@ -615,8 +674,8 @@ function solveDiracRadialExpectationRK4(n, l, j, zEff) {
 function getOrbitalColor(l, j) {
     const baseHues = [185, 280, 140, 35, 310, 50, 200];
     let hue = (l < baseHues.length) ? baseHues[l] : (l * 137.5) % 360;
-    let sat = 0.22; // Low saturation version of existing subshell hues
-    let val = (j > l) ? 0.95 : 0.70; // Tuned lightness for clear point visibility
+    let sat = 0.22;
+    let val = (j > l) ? 0.95 : 0.70;
     return BABYLON.Color3.FromHSV(hue, sat, val);
 }
 
@@ -641,7 +700,6 @@ function rebuildQuantumModel() {
             const l = parseInt(row.dataset.l);
             const j = parseFloat(row.dataset.j);
 
-            // Realistic Slater shielding lower-bound constraint
             let S = cumElec * 0.85;
             let zEff = Math.max(1.0, Z - S);
 
@@ -666,16 +724,15 @@ function rebuildQuantumModel() {
 }
 
 function createOrbitalMesh(name, radius, n, l, j, stateKey) {
-    // Low segment count creates sparse points with clear gaps between them
     const segs = Math.min(14, 8 + n * 2);
     const sphere = BABYLON.MeshBuilder.CreateSphere(name, { diameter: radius * 2, segments: segs }, scene);
     const mat = new BABYLON.StandardMaterial(`${name}_mat`, scene);
     const col = getOrbitalColor(l, j);
 
     mat.pointsCloud = true;
-    mat.pointSize = 6.0; // Prominent, clearly visible point size on screen
+    mat.pointSize = 6.0;
     mat.diffuseColor = col;
-    mat.emissiveColor = col.scale(0.85); // High emissive intensity for low-saturation glow
+    mat.emissiveColor = col.scale(0.85);
     mat.alpha = currentOpacity;
     mat.backFaceCulling = false;
     mat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
@@ -731,7 +788,6 @@ function initBabylonEngine() {
     scene = new BABYLON.Scene(engine);
     scene.clearColor = new BABYLON.Color4(0.01, 0.02, 0.04, 1.0);
 
-    // Attach dynamic particle fade effect
     setupIndividualParticleFade();
 
     camera = new BABYLON.ArcRotateCamera("Camera", initialAlpha, initialBeta, initialRadius, initialTarget.clone(), scene);
@@ -740,7 +796,7 @@ function initBabylonEngine() {
     camera.upperRadiusLimit = 10000;
 
     const hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(1, 1, 0), scene);
-    hemiLight.intensity = 0.725;
+    hemiLight.intensity = 0.9;
 
     engine.runRenderLoop(() => { scene.render(); });
     window.addEventListener("resize", () => engine.resize());
@@ -825,10 +881,10 @@ function setupIndividualParticleFade() {
             // =====================================================================
             if (window.isRedFilterActive) {
                 // 1. Idle Red Filter Mode: Override to deep, low-key crimson quantum cloud
-                targetR = 0.65;
-                targetG = 0.06;
-                targetB = 0.09;
-                dimFactor = 0.25;
+                targetR = 0.0275;
+                targetG = 0.0;
+                targetB = 0.0065;
+                dimFactor = 16.75;
             } else {
                 // 2. Interactive Neutral Mode: Restore uniform stark white mix 
                 const whiteBlendRatio = 0.8;

@@ -4,13 +4,20 @@
     --bg-dark: #000000;
 
     /* Total Dark Obsidian Translucency */
-    --ui-bg: rgba(12, 13, 17, 0.88);
-    --mode-bg: rgba(24, 24, 28, 0.90);
+    --ui-bg: rgba(7, 8, 10, 0.88);
+    --mode-bg: rgba(6, 6, 7, 0.9);
     --panel-glass: rgba(5, 5, 6, 0.86);
-    --card-glass: rgba(10, 10, 12, 0.88);
-    --row-glass: rgba(8, 8, 10, 0.85);
+    --card-glass: rgba(7, 7, 8, 0.88);
+    --row-glass: rgba(5, 5, 7, 0.85);
     --input-bg: rgba(3, 3, 4, 0.95);
     --bg-fil: blur(28px);
+    --met-edge: rgba(62, 58, 75, 0.12);
+    --bs-shad: rgba(0, 0, 0, 0.85);
+
+    /* quicksilver */
+    --l1: #ffffff;
+    --l2: #cac4f5;
+    --l3: #291a4e;
 
     /* Stealth Quicksilver Palette */
     --quicksilver-bright: #cacaca;
@@ -26,6 +33,8 @@
     --chk-bg: rgba(4, 4, 5, 0.95);
     --chk-checked-bg: rgba(30, 30, 35, 0.95);
     --chk-tick-color: #78767a;
+
+    --panel-border: 1px solid rgba(255, 255, 255, 0.12);
 }
 * {
     box-sizing: border-box;
@@ -68,8 +77,8 @@ body {
 
     /* Base Shadow & Metallic Edge Rim */
     box-shadow: 
-        0 30px 60px -12px rgba(0, 0, 0, 0.85),
-        inset 0 0 0 1px rgba(220, 220, 220, 0.12);
+        0 30px 60px -12px var(--bs-shad),
+        inset 0 0 0 1px var(--met-edge);
 
     /* Clean tilt mapping without forced perspective overlap */
     transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
@@ -234,18 +243,18 @@ body {
 
     /* Metallic Liquid Specular Gradient */
     background: radial-gradient(
-        220px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        #ffffff 0%,
-        #dcdcdc 25%,
-        #8e8e93 50%,
-        rgba(220, 220, 220, 0.05) 80%,
+        220px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), 
+        var(--l1) 0%, 
+        var(--l2) 20%, 
+        var(--l3) 45%, 
+        rgba(53, 1, 1, 0.2) 80%, 
         transparent 100%
     );
 
     /* Edge Frame Mask Clip */
     -webkit-mask: 
-        linear-gradient(#fff 0 0) content-box, 
-        linear-gradient(#fff 0 0);
+        linear-gradient(#8a80af 0 0) content-box, 
+        linear-gradient(#8a80af 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
 
@@ -261,7 +270,7 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     background: rgba(6, 6, 8, 0.90);
-    border: 1px solid rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--panel-border);
     border-radius: 12px;
     padding: 4px;
     gap: 4px;
@@ -313,7 +322,7 @@ body {
     background: var(--row-glass);
     padding: 8px 10px;
     border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--panel-border);
     position: relative;
     z-index: 10;
 }
@@ -412,7 +421,7 @@ body {
 
 .close-btn {
     background: rgba(5, 5, 6, 0.90);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--panel-border);
     color: var(--text-sub);
     width: 32px;
     height: 32px;
@@ -437,7 +446,7 @@ body {
     height: 56px;
     padding: 4px 5px;
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--panel-border);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -451,7 +460,7 @@ body {
 .pt-element-card:hover {
     background: rgba(20, 20, 25, 0.90);
     transform: translateY(-1px);
-    border-color: rgba(255, 255, 255, 0.12);
+    border-color: var(--panel-border);
 }
 
 .pt-card-top {
@@ -504,7 +513,7 @@ body {
 
 input[type="text"], input[type="number"] {
     background: var(--input-bg);
-    border: 1px solid rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--panel-border);
     color: var(--quicksilver-bright);
     padding: 8px 10px;
     border-radius: 9px;
@@ -517,7 +526,7 @@ input[type="text"], input[type="number"] {
 }
 input[type="text"]:focus, input[type="number"]:focus {
     outline: none;
-    border-color: rgba(255, 255, 255, 0.18);
+    border-color: var(--panel-border);
 }
 
 .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; position: relative; z-index: 10; }
@@ -527,7 +536,7 @@ input[type="text"]:focus, input[type="number"]:focus {
     top: 16px;
     z-index: 150;
     background: rgba(10, 10, 12, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--panel-border);
     color: var(--quicksilver-bright);
     width: 40px;
     height: 40px;
@@ -570,7 +579,7 @@ header h1 {
     background: var(--card-glass);
     padding: 12px;
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--panel-border);
     position: relative;
     z-index: 10;
 }
@@ -593,7 +602,7 @@ header h1 {
 button.apply-btn {
     position: relative;
     padding: 9px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--panel-border);
     background: var(--mode-bg);
     color: var(--quicksilver-bright);
     border-radius: 9px;
@@ -613,7 +622,7 @@ button.apply-btn:hover {
 button.secondary-btn {
     position: relative;
     padding: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--panel-border);
     background: rgba(8, 8, 10, 0.70);
     color: var(--quicksilver-silver);
     border-radius: 9px;
@@ -646,7 +655,7 @@ input[type="checkbox"] {
     width: 16px;
     height: 16px;
     background: var(--chk-bg);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--panel-border);
     border-radius: 5px;
     cursor: pointer;
     position: relative;
@@ -655,7 +664,7 @@ input[type="checkbox"] {
 }
 input[type="checkbox"]:checked {
     background: var(--chk-checked-bg);
-    border-color: rgba(255, 255, 255, 0.20);
+    border-color: var(--panel-border);
 }
 input[type="checkbox"]:checked::after {
     content: '✓';
@@ -677,7 +686,7 @@ input[type="checkbox"]:checked::after {
     background: var(--row-glass);
     padding: 7px 10px;
     border-radius: 9px;
-    border: 1px solid rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--panel-border);
     position: relative;
     z-index: 10;
 }

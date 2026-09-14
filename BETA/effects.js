@@ -7,13 +7,18 @@ window.activeParticleColor = { r: 0.85, g: 0.85, b: 0.9 }; // Stark neutral quan
 /* Theme Palettes */
 const DEFCSS = Object.freeze({
     '--bg-dark': '#000000',
-    '--ui-bg': 'rgba(12, 13, 17, 0.88)',
-    '--mode-bg': 'rgba(24, 24, 28, 0.90)',
+    '--ui-bg': 'rgba(7, 8, 10, 0.88)',
+    '--mode-bg': 'rgba(6, 6, 7, 0.9)',
     '--panel-glass': 'rgba(5, 5, 6, 0.86)',
-    '--card-glass': 'rgba(10, 10, 12, 0.88)',
-    '--row-glass': 'rgba(8, 8, 10, 0.85)',
+    '--card-glass': 'rgba(7, 7, 8, 0.88)',
+    '--row-glass': 'rgba(5, 5, 7, 0.85)',
     '--input-bg': 'rgba(3, 3, 4, 0.95)',
     '--bg-fil': 'blur(28px)',
+    '--met-edge': 'rgba(62, 58, 75, 0.12)',
+    '--bs-shad': 'rgba(0, 0, 0, 0.85)',
+    '--l1': '#ffffff',
+    '--l2': '#cac4f5',
+    '--l3': '#291a4e',
     '--quicksilver-bright': '#cacaca',
     '--quicksilver-silver': '#686868',
     '--text-main': '#b3b3b3',
@@ -32,7 +37,7 @@ const DEFCSS = Object.freeze({
 
 /* Low-Key Dark Crimson Theme */
 const REDCSS = Object.freeze({
-    '--bg-dark': '#030102',
+    '--bg-dark': '#0e0103',
     '--ui-bg': 'rgba(0, 0, 0, 0.0)',
     '--mode-bg': 'rgba(0, 0, 0, 0.0)',
     '--panel-glass': 'rgba(0, 0, 0, 0.0)',
@@ -40,19 +45,24 @@ const REDCSS = Object.freeze({
     '--row-glass': 'rgba(0, 0, 0, 0.0)',
     '--input-bg': 'rgba(0, 0, 0, 0.0)',
     '--bg-fil': 'none',
-    '--quicksilver-bright': '#d93848',      
-    '--quicksilver-silver': '#a62d3a',   
-    '--text-main': '#cf3446',             
-    '--text-sub': '#9e2b38',              
-    '--text-muted': '#661b23',             
-    '--text-accent': '#e6394a',            
-    '--edge-color-1': '#73131d',          
-    '--edge-color-2': '#4a0b12',
-    '--edge-color-3': '#260509',
+    '--met-edge': 'rgba(66, 8, 17, 0.12)',
+    '--bs-shad': 'rgba(0, 0, 0, 0.0)',
+    '--l1': '#ff0000',
+    '--l2': '#b11731',
+    '--l3': '#851430',
+    '--quicksilver-bright': '#9e424b',      
+    '--quicksilver-silver': '#86353a',   
+    '--text-main': '#812c2c',             
+    '--text-sub': '#80363d',              
+    '--text-muted': '#7e2c33',             
+    '--text-accent': '#8a3840',            
+    '--edge-color-1': '#613f42',          
+    '--edge-color-2': '#4d2327',
+    '--edge-color-3': '#522a2e',
     '--glow-color': 'rgba(160, 20, 35, 0.12)',
     '--text-glow': '0 0 6px rgba(180, 25, 40, 0.25)',
     '--panel-border': '1px solid rgba(0, 0, 0, 0.0)',
-    '--slider-thumb': '#bf2c3e',
+    '--slider-thumb': '#4e181e',
     '--slider-track': 'rgba(160, 25, 40, 0.25)'
 });
 /* const REDCSS = Object.freeze({
@@ -97,6 +107,14 @@ function setRedFilterMode(enable) {
     window.activeParticleColor = window.isRedFilterActive 
         ? { r: 0.65, g: 0.1, b: 0.15 } 
         : { r: 0.85, g: 0.85, b: 0.9 };
+
+    if (typeof scene !== 'undefined' && scene) {
+        if (window.isRedFilterActive) {
+            scene.clearColor = new BABYLON.Color4(0.0118, 0.0008, 0.0098, 1.0);
+        } else {
+            scene.clearColor = new BABYLON.Color4(0.01, 0.02, 0.04, 1.0); 
+        }
+    }
 
     // 3. Trigger 3D Kernel Re-render Hook
     if (typeof window.rebuildQuantumModel === 'function') {
@@ -419,14 +437,8 @@ function initIdleRedFilter() {
     }
 
     const activityEvents = [
-        'mousemove', 
         'mousedown', 
-        'keydown', 
-        'touchstart', 
-        'touchmove', 
-        'wheel', 
-        'pointermove',
-        'scroll'
+        'touchstart'
     ];
 
     activityEvents.forEach(evt => {

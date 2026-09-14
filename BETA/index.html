@@ -26,9 +26,52 @@
 
     <!-- 3D Engine & Application Core -->
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
-    <script src="effects.js" defer></script>
-    <script src="kernel.js" defer></script>
-    <script src="scene.js" defer></script>
+    <script defer src="effects.js"></script>
+
+    <script src="compker.js"></script>
+    <script defer src="kernel.js"></script>
+
+    <script defer src="scene.js"></script>
+
+    <script defer>
+    window.addEventListener('DOMContentLoaded', async () => {
+        console.log("Atomic-orb Boot Loader: Invoking DiracModule factory initialization...");
+
+        try {
+        // 1. Manually resolve the underlying WebAssembly binary file payload
+        // By passing locateFile inside the factory parameter, we prevent tracking failures
+        const initializedInstance = await DiracModule({
+            locateFile: function(path) {
+            if (path.endsWith('.wasm')) {
+                return 'compker.wasm';
+            }
+            return path;
+            }
+        });
+      
+        console.log("WebAssembly Core compiled successfully!");
+
+        // 2. Explicitly bind the resolved engine instance onto the window workspace
+        window.DiracModule = initializedInstance;
+
+        // 3. Immediately look for your kernel mesh renderer to initiate the quantum cloud
+        if (typeof window.rebuildQuantumModel === 'function') {
+            console.log("Initiating Relativistic Dirac Radial Visualizer");
+            window.rebuildQuantumModel();
+        } else {
+            // Fallback catch if kernel.js evaluation completes slightly late
+            window.addEventListener('load', () => {
+            if (typeof window.rebuildQuantumModel === 'function') {
+                window.rebuildQuantumModel();
+            }
+            });
+        }
+
+        } catch (wasmError) {
+        console.error("Critical Failure initializing WebAssembly Core Module:", wasmError);
+        }
+    });
+    </script>
 </head>
 <body>
 
