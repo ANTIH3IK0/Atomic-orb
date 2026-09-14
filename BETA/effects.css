@@ -243,7 +243,7 @@ body {
 
     /* Metallic Liquid Specular Gradient */
     background: radial-gradient(
-        220px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), 
+        220px circle at var(--pointer-x, 50%) var(--pointer-y, 50%), 
         var(--l1) 0%, 
         var(--l2) 20%, 
         var(--l3) 45%, 
@@ -265,6 +265,38 @@ body {
     opacity: var(--edge-opacity, 0);
     will-change: opacity, transform;
 }
+/*
+.ui-overlay::before, .tp-overlay::before, .pt-modal-window::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    padding: 1px; // 1px precision edge
+
+    // Metallic Liquid Specular Gradient
+    background: radial-gradient(
+        220px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), 
+        var(--l1) 0%, 
+        var(--l2) 20%, 
+        var(--l3) 45%, 
+        rgba(53, 1, 1, 0.2) 80%, 
+        transparent 100%
+    );
+
+    // Edge Frame Mask Clip
+    -webkit-mask: 
+        linear-gradient(#8a80af 0 0) content-box, 
+        linear-gradient(#8a80af 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+
+    pointer-events: none !important;
+    z-index: 10;
+
+    // Controlled dynamically via JS physics loop
+    opacity: var(--edge-opacity, 0);
+    will-change: opacity, transform;
+} */
 
 .mode-switch-bar {
     display: grid;
