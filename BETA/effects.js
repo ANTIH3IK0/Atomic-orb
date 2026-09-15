@@ -421,29 +421,50 @@ function initQuicksilverGlassEngine() {
     });
 }
 
-/* Idle Dark Crimson Trigger (10s Inactivity) */
+/* Idle Dark Crimson Trigger (10s Inactivity) + Double Tap to Unlock on Touchscreen */
 function initIdleRedFilter() {
     const IDLE_TIMEOUT_MS = 10000;
+    const DOUBLE_TAP_DELAY = 300; // Time window for double-tap in milliseconds
+    
     let idleTimer = null;
+    let lastTapTime = 0; // Tracks the timestamp of the last touch
 
     function resetIdleTimer() {
-        if (window.isRedFilterActive) {
-            setRedFilterMode(false);
-        }
+        // Clear existing timer and restart the 10-second countdown
         if (idleTimer) clearTimeout(idleTimer);
         idleTimer = setTimeout(() => {
             setRedFilterMode(true);
         }, IDLE_TIMEOUT_MS);
     }
 
-    const activityEvents = [
-        'mousedown', 
-        'touchstart'
-    ];
+    // Handle mouse clicks (Desktop: Single click unlocks instantly)
+    window.addEventListener('mousedown', () => {
+        if (window.isRedFilterActive) {
+            setRedFilterMode(false);
+        }
+        resetIdleTimer();
+    }, { passive: true });
 
-    activityEvents.forEach(evt => {
-        window.addEventListener(evt, resetIdleTimer, { passive: true });
-    });
+    // Handle touch events (Mobile/Tablet: Requires double tap to unlock)
+    window.addEventListener('touchstart', () => {
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTapTime;
+        
+        if (window.isRedFilterActive) {
+            // If the filter is active, only unlock on a valid double tap
+            if (tapLength < DOUBLE_TAP_DELAY && tapLength > 0) {
+                setRedFilterMode(false); // Success: Unlock filter
+                resetIdleTimer();       // Restart the 10s idle clock
+            }
+            // Single taps are ignored when locked, preventing accidental wake-ups
+        } else {
+            // If already unlocked, any touch interaction resets the 10s idle clock
+            resetIdleTimer();
+        }
+        
+        lastTapTime = currentTime; // Update the last tap timestamp
+    }, { passive: true });
 
+    // Initial trigger to start the system
     resetIdleTimer();
 }
