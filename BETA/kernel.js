@@ -891,7 +891,7 @@ function setupIndividualParticleFade() {
                 targetR = baseCol.r * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
                 targetG = baseCol.g * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
                 targetB = baseCol.b * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
-                dimFactor = 0.465; // Original design dim factor rendering as high-end dark gray
+                dimFactor = 0.365; // Original design dim factor rendering as high-end dark gray
             }
 
             const colors = new Float32Array(vertexCount * 4);
