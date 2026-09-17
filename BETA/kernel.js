@@ -611,10 +611,16 @@ function generateOrbitsBuilder(preserveExisting = true) {
     }
 }
 
-function solveDiracExactEnergy(n, l, j, zEff) {
+/* function solveDiracExactEnergy(n, l, j, zEff, symbol) {
+    const elem = ELEMENTS_DATA.find(e => e.sym === symbol);
+    if (!elem) return;
+
+    const totalSpinS = calculateTotalSpinS(elem.Z);
+
     if (typeof DiracModule !== 'undefined' && typeof DiracModule._solveDiracExactEnergy === 'function') {
-        return DiracModule._solveDiracExactEnergy(n, l, j, zEff);
+        return DiracModule._solveDiracExactEnergy(n, l, j, zEff, totalSpinS);
     }
+    console.log("[WARN]: Can't call the WASM kernel.");
 
     const kappa = (j > l) ? -(l + 1) : l;
     const absKappa = Math.abs(kappa);
@@ -627,7 +633,7 @@ function solveDiracExactEnergy(n, l, j, zEff) {
     
     const energyHartree = (1.0 / (FINE_ALPHA * FINE_ALPHA)) * (1.0 / Math.sqrt(1.0 + Math.pow(zAlpha / (nr + gamma), 2)) - 1.0);
     return energyHartree * HARTREE_TO_EV;
-}
+} */
 
 function autoCalculateSuborbitEnergiesUI() {
     const Z = parseInt(document.getElementById('inputZ').value) || 1;
@@ -647,7 +653,7 @@ function autoCalculateSuborbitEnergiesUI() {
             let S = cumElec * 0.85;
             let zEff = Math.max(1.0, Z - S);
 
-            let energy = solveDiracExactEnergy(effectiveN, l, j, zEff);
+            let energy = solveDiracExactEnergy(effectiveN, l, j, zEff, selectedElementSymbol);
             suborbitEnergies.push(`${row.querySelector('.orbit-label').innerText}: ${energy.toFixed(1)}eV`);
             cumElec += eCount;
         }
@@ -655,6 +661,125 @@ function autoCalculateSuborbitEnergiesUI() {
 
     document.getElementById('inputEn').value = suborbitEnergies.join(', ');
 }
+
+/**
+ * Executes all three core WASM algorithms, updates the UI log panel,
+ * and recreates the accurate physical 3D quantum model.
+ */
+async function rebuildQuantumModel() {
+    /* 
+    // Core Timing Fix: Multi-lock guard to ensure we consume the "instance" rather than the "factory Promise".
+    let Module = window.DiracModule;
+
+    // If window.DiracModule is still a factory function or a Promise, warn and attempt fallback.
+    if (Module && typeof Module === 'function' && typeof Module.solveDiracExactEnergy !== 'function') {
+        console.warn("[WASM Timing Alert] window.DiracModule is currently a factory Promise. Attempting to await or locate the instance...");
+    }
+
+    // Ultimate Defense: If the method is missing from the current Module but available on the global scope, force-bind it.
+    if (Module && typeof Module.solveDiracExactEnergy !== 'function') {
+        // Fallback protection: If manually callable via global scope during debugging, redirect reference to window.
+        if (typeof window.solveDiracExactEnergy === 'function') {
+            Module = window;
+        }
+    }
+
+    // Identify the active object instance that actually contains solveDiracExactEnergy.
+    const activeInstance = (typeof Module?.solveDiracExactEnergy === 'function') ? Module : window.DiracModule;
+    
+    if (!activeInstance || typeof activeInstance.solveDiracExactEnergy !== 'function') {
+        console.error("[WASM Error] WASM core is not fully initialized or has been overwritten! Halting current render. Core content:", activeInstance);
+        return; // Safe interception to prevent Uncaught TypeError crashes.
+    }
+    */
+    
+    const Z = parseInt(document.getElementById('inputZ').value) || 1;
+    const rows = document.querySelectorAll('.orbit-row');
+    const elem = getElementData(Z); // Retrieves element metadata including gI
+    
+    // Purge previous residual 3D meshes before computing new quantum states
+    activeMeshes.forEach(item => {
+        if (item.mesh.material) item.mesh.material.dispose();
+        item.mesh.dispose();
+    });
+    activeMeshes = [];
+    
+    let resultsLog = [];
+    let maxRadius = 0;
+    let cumElec = 0;
+    const totalSpinS = calculateTotalSpinS(Z); //
+
+    rows.forEach(row => {
+        const eCount = parseInt(row.querySelector('.e-input').value) || 0;
+        if (eCount > 0) {
+            const baseN = parseInt(row.dataset.n);
+            const exLevel = parseInt(row.querySelector('.ex-input').value) || 0;
+            const n = baseN + exLevel; 
+            const l = parseInt(row.dataset.l);
+            const j = parseFloat(row.dataset.j);
+
+            // Calculate active screening and effective charge Z_eff
+            let S = cumElec * 0.85;
+            let zEff = Math.max(1.0, Z - S);
+
+            // Algorithm 1: Exact Relativistic Dirac Energy (eV)
+            let energy = window.DiracModule.solveDiracExactEnergy(n, l, j, zEff, totalSpinS);
+            
+            // Algorithm 2: Hyperfine Splitting Constant A_HFS (MHz)
+            let hfsConstant = window.DiracModule.computeHyperfineSplittingConstant(n, l, j, zEff, elem.gI);
+            
+            // Generate standard radial expectation value via RK4 integration
+            let rDirac = solveDiracRadialExpectationRK4(n, l, j, zEff);
+            if (rDirac > maxRadius) maxRadius = rDirac;
+
+            // Algorithm 3: Second-Order Stark Shift ΔE (eV)
+            let eFieldVperM = calculateElectricFieldVperM(Z, rDirac);
+            let starkShift = window.DiracModule.computeStarkShift(n, l, j, zEff, eFieldVperM);
+
+            // Log parameters for UI string display Panel
+            const label = row.querySelector('.orbit-label').innerText;
+            resultsLog.push(
+                `[${label}] E: ${energy.toFixed(2)} eV | ` +
+                `A_HFS: ${hfsConstant.toFixed(1)} MHz | ` +
+                `Stark ΔE: ${starkShift.toExponential(3)} eV`
+            );
+
+            // =====================================================================
+            // PHYSICAL 3D MESH GENERATION BINDING
+            // =====================================================================
+            // Structural Shift 1: Atomic Polarization (Stark Shift deformations)
+            // Maps the Stark energy shift modifier directly to an ellipsoidal distortion factor.
+            let polarizationScaleZ = 1.0 + (Math.abs(starkShift) * 5.0); // Boosted visual factor
+
+            // Structural Shift 2: Multi-Shell Splitting (Hyperfine Splitting)
+            // Splitting the degenerate shell into explicit state sub-orbitals if a nuclear magnetic moment exists.
+            if (Math.abs(hfsConstant) > 1e-1) {
+                // Relativistic conversion factor mapping MHz frequencies to local visual spatial intervals (Angstroms)
+                let deltaRadius = (hfsConstant / 6.579683920729e9) * 25.0; // Scaled for visible separation
+                
+                createOrbitalMesh(`orb_${label}_F_up`, rDirac + deltaRadius, n, l, j, `${label} (F+)`, polarizationScaleZ);
+                createOrbitalMesh(`orb_${label}_F_down`, rDirac - deltaRadius, n, l, j, `${label} (F-)`, polarizationScaleZ);
+            } else {
+                // Non-splitting singlet cloud mapping (Unsplit Nuclear spin system)
+                createOrbitalMesh(`orb_${label}`, rDirac, n, l, j, label, polarizationScaleZ);
+            }
+
+            cumElec += eCount;
+        }
+    });
+
+    // Write accurate text arrays back into UI overlay panel
+    document.getElementById('inputEn').value = resultsLog.join('\n');
+    
+    // Refresh checkboxes and reset the global camera constraints safely
+    refreshDynamicFilterUI();
+    if (!userHasCustomInit) {
+        initialTarget = BABYLON.Vector3.Zero();
+        if (maxRadius > 0) initialRadius = maxRadius * 3.2;
+    }
+    reloadInitialPosition();
+}
+
 
 function solveDiracRadialExpectationRK4(n, l, j, zEff) {
     if (typeof DiracModule !== 'undefined' && typeof DiracModule._solveDiracRadialExpectationRK4 === 'function') {
@@ -679,7 +804,7 @@ function getOrbitalColor(l, j) {
     return BABYLON.Color3.FromHSV(hue, sat, val);
 }
 
-function rebuildQuantumModel() {
+/* function rebuildQuantumModel() {
     activeMeshes.forEach(item => {
         if (item.mesh.material) item.mesh.material.dispose();
         item.mesh.dispose();
@@ -721,7 +846,7 @@ function rebuildQuantumModel() {
     }
 
     reloadInitialPosition();
-}
+} */
 
 function createOrbitalMesh(name, radius, n, l, j, stateKey) {
     const segs = Math.min(14, 8 + n * 2);
@@ -849,11 +974,12 @@ function toggleTpPanel(collapse) {
     document.getElementById('tpRestoreBtn').style.display = collapse ? 'flex' : 'none';
 }
 
-/**
+/*
+/
  * Stochastic Particle Fade System with Enhanced Luminance.
  * Applies boosted brightness and elevated white baseline to vertices during fade cycles.
  * [Synchronized with effects.js Idle Mode Theme Toggles]
- */
+
 function setupIndividualParticleFade() {
     if (!scene) return;
 
@@ -964,6 +1090,179 @@ function setupIndividualParticleFade() {
                     if (data.colors[i * 4 + 3] >= 1.0) {
                         data.colors[i * 4 + 3] = 1.0;
                         data.fadeStates[i] = 0; // Return to baseline
+                    }
+                }
+            }
+
+            if (bufferNeedsUpdate) {
+                mesh.updateVerticesData(BABYLON.VertexBuffer.ColorKind, data.colors);
+            }
+        });
+    });
+} */
+
+/**
+ * Stochastic Particle Fade System with Continuous Theme Interpolation.
+ * Dynamically blends vertex colors between Neutral White and Deep Crimson
+ * in sync with the real-time transition progress from effects.js.
+ */
+function setupIndividualParticleFade() {
+    if (!scene) return;
+
+    function getInterpolatedColors(baseCol, factor) {
+        const whiteBlendRatio = 0.8;
+        const neutralR = baseCol.r * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
+        const neutralG = baseCol.g * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
+        const neutralB = baseCol.b * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
+        const neutralDim = 0.365;
+
+        const redR = 0.0275;
+        const redG = 0.0;
+        const redB = 0.0085;
+        const redDim = 7.25;
+
+        const targetR = neutralR + (redR - neutralR) * factor;
+        const targetG = neutralG + (redG - neutralG) * factor;
+        const targetB = neutralB + (redB - neutralB) * factor;
+        const dimFactor = neutralDim + (redDim - neutralDim) * factor;
+
+        return {
+            r: Math.min(1.0, targetR * dimFactor),
+            g: Math.min(1.0, targetG * dimFactor),
+            b: Math.min(1.0, targetB * dimFactor)
+        };
+    }
+
+    // Helper to retrieve factor from window variable with fallback
+    /*
+    function getThemeFactor() {
+        if (typeof window.globalThemeFactor !== 'undefined') {
+            return window.globalThemeFactor;
+        }
+        if (typeof currentProgress !== 'undefined') {
+            return currentProgress / 100;
+        }
+        return window.isRedFilterActive ? 1.0 : 0.0;
+    }
+    */
+
+    function getThemeFactor() {
+        // Check the fluid sliding progress indicator first
+        if (typeof currentProgress !== 'undefined') {
+            return currentProgress / 100;
+        }
+        if (typeof window.globalThemeFactor !== 'undefined') {
+            return window.globalThemeFactor;
+        }
+        return window.isRedFilterActive ? 1.0 : 0.0;
+    }
+
+    function initMeshAlphaColors() {
+        activeMeshes.forEach(item => {
+            const mesh = item.mesh;
+            if (!mesh || mesh._vertexFadeData) return;
+
+            if (mesh.material) {
+                mesh.material.useVertexColors = true;
+                mesh.material.hasVertexAlpha = true;
+                mesh.material.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
+            }
+
+            const positionData = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+            if (!positionData) return;
+
+            const vertexCount = positionData.length / 3;
+            const baseCol = mesh.material.diffuseColor || new BABYLON.Color3(1, 1, 1);
+
+            const factor = getThemeFactor();
+            const col = getInterpolatedColors(baseCol, factor);
+
+            const colors = new Float32Array(vertexCount * 4);
+            const fadeStates = new Uint8Array(vertexCount);
+            const holdTimers = new Int32Array(vertexCount);
+
+            for (let i = 0; i < vertexCount; i++) {
+                colors[i * 4]     = col.r;
+                colors[i * 4 + 1] = col.g;
+                colors[i * 4 + 2] = col.b;
+                colors[i * 4 + 3] = 1.0;
+            }
+
+            mesh.setVerticesData(BABYLON.VertexBuffer.ColorKind, colors, true);
+
+            mesh._vertexFadeData = {
+                vertexCount,
+                colors,
+                fadeStates,
+                holdTimers,
+                baseCol,
+                lastFactor: factor
+            };
+        });
+    }
+
+    initMeshAlphaColors();
+
+    scene.onBeforeRenderObservable.add(() => {
+        initMeshAlphaColors();
+
+        const factor = getThemeFactor();
+
+        activeMeshes.forEach(item => {
+            const mesh = item.mesh;
+            const data = mesh ? mesh._vertexFadeData : null;
+            if (!mesh || !mesh.isVisible || !data) return;
+
+            let bufferNeedsUpdate = false;
+
+            // Interpolate particle RGB channels as global theme factor changes
+            if (data.lastFactor !== factor) {
+                const col = getInterpolatedColors(data.baseCol, factor);
+                for (let i = 0; i < data.vertexCount; i++) {
+                    data.colors[i * 4]     = col.r;
+                    data.colors[i * 4 + 1] = col.g;
+                    data.colors[i * 4 + 2] = col.b;
+                }
+                data.lastFactor = factor;
+                bufferNeedsUpdate = true;
+            }
+
+            // Stochastic trigger for individual particle fade cycles
+            if (Math.random() < 0.35) {
+                const count = Math.floor(Math.random() * 2) + 1;
+                for (let k = 0; k < count; k++) {
+                    const targetIdx = Math.floor(Math.random() * data.vertexCount);
+                    if (data.fadeStates[targetIdx] === 0) {
+                        data.fadeStates[targetIdx] = 1;
+                    }
+                }
+            }
+
+            const fadeStep = 0.08;
+
+            for (let i = 0; i < data.vertexCount; i++) {
+                const state = data.fadeStates[i];
+
+                if (state === 1) { // Fading out
+                    data.colors[i * 4 + 3] -= fadeStep;
+                    bufferNeedsUpdate = true;
+                    if (data.colors[i * 4 + 3] <= 0.0) {
+                        data.colors[i * 4 + 3] = 0.0;
+                        data.fadeStates[i] = 2;
+                        data.holdTimers[i] = Math.floor(Math.random() * 10) + 5;
+                    }
+                } else if (state === 2) { // Hold invisible
+                    if (data.holdTimers[i] > 0) {
+                        data.holdTimers[i]--;
+                    } else {
+                        data.fadeStates[i] = 3;
+                    }
+                } else if (state === 3) { // Fading in
+                    data.colors[i * 4 + 3] += fadeStep;
+                    bufferNeedsUpdate = true;
+                    if (data.colors[i * 4 + 3] >= 1.0) {
+                        data.colors[i * 4 + 3] = 1.0;
+                        data.fadeStates[i] = 0;
                     }
                 }
             }

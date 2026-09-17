@@ -3,6 +3,7 @@
 /* Global Theme & Particle State Hooks */
 window.isRedFilterActive = false;
 window.activeParticleColor = { r: 0.85, g: 0.85, b: 0.9 }; // Stark neutral quantum cloud
+window.globalThemeFactor = 0.0; // Global sync variable (0.0 = Neutral, 1.0 = Red Filter)
 
 /* Theme Palettes */
 const DEFCSS = Object.freeze({
@@ -100,6 +101,9 @@ function setRedFilterMode(enable) {
     if (window.isRedFilterActive === enable) return;
     window.isRedFilterActive = Boolean(enable);
     
+    // Synchronize global theme factor
+    window.globalThemeFactor = window.isRedFilterActive ? 1.0 : 0.0;
+
     // 1. Mutate CSS Custom Properties
     applyCSSTheme(window.isRedFilterActive ? REDCSS : DEFCSS);
 
@@ -421,50 +425,207 @@ function initQuicksilverGlassEngine() {
     });
 }
 
-/* Idle Dark Crimson Trigger (10s Inactivity) + Double Tap to Unlock on Touchscreen */
+/* Color & Theme Interpolation Engine */
+function parseRGBA(str) {
+    if (!str || str === 'none') return { r: 0, g: 0, b: 0, a: 0 };
+    str = str.trim();
+    if (str.startsWith('#')) {
+        let hex = str.slice(1);
+        if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+        const num = parseInt(hex, 16);
+        return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255, a: 1 };
+    }
+    const m = str.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*(?:,\s*([\d.]+)\s*)?\)/);
+    if (m) {
+        return {
+            r: parseFloat(m[1]),
+            g: parseFloat(m[2]),
+            b: parseFloat(m[3]),
+            a: m[4] !== undefined ? parseFloat(m[4]) : 1
+        };
+    }
+    return { r: 0, g: 0, b: 0, a: 0 };
+}
+
+function lerp(a, b, t) {
+    return a + (b - a) * t;
+}
+
+function lerpColorStr(c1Str, c2Str, factor) {
+    const c1 = parseRGBA(c1Str);
+    const c2 = parseRGBA(c2Str);
+    const r = Math.round(lerp(c1.r, c2.r, factor));
+    const g = Math.round(lerp(c1.g, c2.g, factor));
+    const b = Math.round(lerp(c1.b, c2.b, factor));
+    const a = lerp(c1.a, c2.a, factor);
+    return `rgba(${r}, ${g}, ${b}, ${a.toFixed(3)})`;
+}
+
+function interpolateCSSValue(key, v1, v2, factor) {
+    if (key === '--bg-fil') {
+        const blurPx = lerp(28, 0, factor);
+        return blurPx > 0.5 ? `blur(${blurPx.toFixed(1)}px)` : 'none';
+    }
+    if (key === '--text-glow') {
+        if (factor <= 0.01) return 'none';
+        const alpha = factor * 0.25;
+        return `0 0 6px rgba(180, 25, 40, ${alpha.toFixed(3)})`;
+    }
+    if (key === '--panel-border') {
+        return `1px solid ${lerpColorStr('rgba(255, 255, 255, 0.12)', 'rgba(0, 0, 0, 0.0)', factor)}`;
+    }
+    return lerpColorStr(v1, v2, factor);
+}
+
+// Global Progress Index: 0 = DEFCSS (Unlocked), 100 = REDCSS (Idle)
+let currentProgress = 0;
+
+function applyThemeProgress(progressIndex) {
+    currentProgress = Math.max(0, Math.min(100, progressIndex));
+    const factor = currentProgress / 100; // 0.0 to 1.0
+    const root = document.documentElement;
+
+    for (const key of Object.keys(DEFCSS)) {
+        const v1 = DEFCSS[key];
+        const v2 = REDCSS[key];
+        const blended = interpolateCSSValue(key, v1, v2, factor);
+        root.style.setProperty(key, blended);
+    }
+
+    // Synchronize 3D Atomic Particle Cloud Colors
+    window.activeParticleColor = {
+        r: lerp(0.85, 0.65, factor),
+        g: lerp(0.85, 0.1, factor),
+        b: lerp(0.9, 0.15, factor)
+    };
+
+    // Synchronize Babylon scene clearColor if active
+    if (typeof scene !== 'undefined' && scene) {
+        scene.clearColor = new BABYLON.Color4(
+            lerp(0.01, 0.0118, factor),
+            lerp(0.02, 0.0008, factor),
+            lerp(0.04, 0.0098, factor),
+            1.0
+        );
+    }
+
+    window.isRedFilterActive = (factor > 0.5);
+
+    /*
+    if (typeof window.rebuildQuantumModel === 'function') {
+        window.rebuildQuantumModel();
+    }
+    */
+}
+
+/* Idle Dark Crimson Trigger & 3-Second Interpolated Hold Controller */
 function initIdleRedFilter() {
-    const IDLE_TIMEOUT_MS = 10000;
-    const DOUBLE_TAP_DELAY = 300; // Time window for double-tap in milliseconds
-    
+    const IDLE_TIMEOUT_MS = 30000; // 30s inactivity delay
+    const LOCK_ANIM_MS = 1000;     // 1s max fade to red
+    const UNLOCK_HOLD_MS = 3000;   // 3s hold fade back to default
+
     let idleTimer = null;
-    let lastTapTime = 0; // Tracks the timestamp of the last touch
+    let animFrameId = null;
+    let lastTimestamp = null;
+    let isHolding = false;
 
     function resetIdleTimer() {
-        // Clear existing timer and restart the 10-second countdown
         if (idleTimer) clearTimeout(idleTimer);
+
+        // Do not queue idle timers while in idle transition or locked state
+        if (currentProgress > 0 || window.isRedFilterActive) return;
+
         idleTimer = setTimeout(() => {
-            setRedFilterMode(true);
+            startAnimationLoop();
         }, IDLE_TIMEOUT_MS);
     }
 
-    // Handle mouse clicks (Desktop: Single click unlocks instantly)
-    window.addEventListener('mousedown', () => {
-        if (window.isRedFilterActive) {
-            setRedFilterMode(false);
-        }
-        resetIdleTimer();
-    }, { passive: true });
+    function updateTransition(timestamp) {
+        if (!lastTimestamp) lastTimestamp = timestamp;
+        const delta = timestamp - lastTimestamp;
+        lastTimestamp = timestamp;
 
-    // Handle touch events (Mobile/Tablet: Requires double tap to unlock)
-    window.addEventListener('touchstart', () => {
-        const currentTime = new Date().getTime();
-        const tapLength = currentTime - lastTapTime;
-        
-        if (window.isRedFilterActive) {
-            // If the filter is active, only unlock on a valid double tap
-            if (tapLength < DOUBLE_TAP_DELAY && tapLength > 0) {
-                setRedFilterMode(false); // Success: Unlock filter
-                resetIdleTimer();       // Restart the 10s idle clock
+        if (isHolding) {
+            // Holding: REDCSS (100) -> DEFCSS (0) over 3000ms
+            currentProgress -= (100 / UNLOCK_HOLD_MS) * delta;
+            if (currentProgress <= 0) {
+                applyThemeProgress(0);
+                animFrameId = null;
+                lastTimestamp = null;
+                resetIdleTimer();
+                return;
             }
-            // Single taps are ignored when locked, preventing accidental wake-ups
         } else {
-            // If already unlocked, any touch interaction resets the 10s idle clock
+            // Released / Inactive: DEFCSS (0) -> REDCSS (100) over 1000ms max
+            if (currentProgress < 100) {
+                currentProgress += (100 / LOCK_ANIM_MS) * delta;
+                if (currentProgress >= 100) {
+                    applyThemeProgress(100);
+                    animFrameId = null;
+                    lastTimestamp = null;
+                    return;
+                }
+            } else {
+                animFrameId = null;
+                lastTimestamp = null;
+                return;
+            }
+        }
+
+        applyThemeProgress(currentProgress);
+        animFrameId = requestAnimationFrame(updateTransition);
+    }
+
+    function startAnimationLoop() {
+        if (!animFrameId) {
+            lastTimestamp = null;
+            animFrameId = requestAnimationFrame(updateTransition);
+        }
+    }
+
+    function handlePointerDown(e) {
+        if (currentProgress > 0 || window.isRedFilterActive) {
+            if (e.cancelable) e.preventDefault();
+            isHolding = true;
+            startAnimationLoop();
+        } else {
             resetIdleTimer();
         }
-        
-        lastTapTime = currentTime; // Update the last tap timestamp
-    }, { passive: true });
+    }
 
-    // Initial trigger to start the system
+    function handlePointerRelease() {
+        if (isHolding) {
+            isHolding = false;
+            if (currentProgress > 0) {
+                startAnimationLoop();
+            }
+        }
+    }
+
+    // Suppress context menus on mobile/desktop during idle state
+    window.addEventListener('contextmenu', (e) => {
+        if (currentProgress > 0 || window.isRedFilterActive) {
+            e.preventDefault();
+        }
+    });
+
+    // Pointer event listeners
+    window.addEventListener('pointerdown', handlePointerDown, { passive: false });
+    window.addEventListener('pointerup', handlePointerRelease, { passive: true });
+    window.addEventListener('pointercancel', handlePointerRelease, { passive: true });
+    window.addEventListener('pointerleave', handlePointerRelease, { passive: true });
+    window.addEventListener('pointerout', handlePointerRelease, { passive: true });
+    window.addEventListener('blur', handlePointerRelease, { passive: true });
+
+    // Track activity while unlocked
+    const activityEvents = ['pointermove', 'keydown', 'wheel', 'scroll'];
+    activityEvents.forEach(evt => {
+        window.addEventListener(evt, () => {
+            if (currentProgress === 0 && !window.isRedFilterActive) {
+                resetIdleTimer();
+            }
+        }, { passive: true });
+    });
+
     resetIdleTimer();
 }
