@@ -18,6 +18,43 @@
             display: none !important;
         }
     </style>
+    
+    <!-- Prevents Mobile WebKit Selection Menus & Restricts Copy to Keyboard Shortcuts -->
+    <style>
+      /* Disable default WebKit long-press callout menu and touch text selection */
+body {
+      -webkit-touch-callout: none !important; /* Disables iOS long-press popups */
+      -webkit-user-select: none !important;   /* Disables WebKit text highlight callouts */
+      user-select: none !important;          /* Standard UI selection block */
+    }
+
+    /* Allow standard selection inside form inputs if present */
+    input, textarea, [contenteditable="true"] {
+      -webkit-user-select: text !important;
+      user-select: text !important;
+    }
+  </style>
+
+  <script>
+    (function() {
+      // Prevent long-press touch context menus on mobile devices
+      document.addEventListener('contextmenu', function(e) {
+        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+          e.preventDefault();
+        }
+      }, { capture: true });
+
+      // Only allow Copy / Cut / Paste triggered by physical keyboard shortcuts (Ctrl / Cmd)
+      ['copy', 'cut', 'paste'].forEach(function(eventType) {
+        document.addEventListener(eventType, function(e) {
+          const isKeyboardShortcut = e.ctrlKey || e.metaKey;
+          if (!isKeyboardShortcut) {
+            e.preventDefault();
+          }
+        }, { capture: true });
+      });
+    })();
+  </script>
 
     <!-- External UI & Effect APIs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
