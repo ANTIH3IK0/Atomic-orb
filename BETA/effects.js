@@ -529,10 +529,12 @@ function initIdleRedFilter() {
     let lastTimestamp = null;
     let isHolding = false;
 
+    const idleUnlockBtn = document.getElementById('idleUnlockBtn');
+
     function resetIdleTimer() {
         if (idleTimer) clearTimeout(idleTimer);
 
-        // Do not queue idle timers while in idle transition or locked state
+        // Do not queue idle timers while in transition or locked state
         if (currentProgress > 0 || window.isRedFilterActive) return;
 
         idleTimer = setTimeout(() => {
@@ -552,22 +554,25 @@ function initIdleRedFilter() {
                 applyThemeProgress(0);
                 animFrameId = null;
                 lastTimestamp = null;
+                if (idleUnlockBtn) idleUnlockBtn.style.display = 'none';
                 resetIdleTimer();
                 return;
             }
         } else {
-            // Released / Inactive: DEFCSS (0) -> REDCSS (100) over 1000ms max
+            // Inactive: DEFCSS (0) -> REDCSS (100) over 1000ms max
             if (currentProgress < 100) {
                 currentProgress += (100 / LOCK_ANIM_MS) * delta;
                 if (currentProgress >= 100) {
                     applyThemeProgress(100);
                     animFrameId = null;
                     lastTimestamp = null;
+                    if (idleUnlockBtn) idleUnlockBtn.style.display = 'flex';
                     return;
                 }
             } else {
                 animFrameId = null;
                 lastTimestamp = null;
+                if (idleUnlockBtn) idleUnlockBtn.style.display = 'flex';
                 return;
             }
         }
@@ -602,14 +607,14 @@ function initIdleRedFilter() {
         }
     }
 
-    // Suppress context menus on mobile/desktop during idle state
+    // Suppress context menus on both mobile and desktop during idle hold
     window.addEventListener('contextmenu', (e) => {
         if (currentProgress > 0 || window.isRedFilterActive) {
             e.preventDefault();
         }
     });
 
-    // Pointer event listeners
+    // Universal Pointer API (Handles Desktop Mouse, Mobile Touch, & Stylus seamlessly)
     window.addEventListener('pointerdown', handlePointerDown, { passive: false });
     window.addEventListener('pointerup', handlePointerRelease, { passive: true });
     window.addEventListener('pointercancel', handlePointerRelease, { passive: true });
@@ -617,7 +622,7 @@ function initIdleRedFilter() {
     window.addEventListener('pointerout', handlePointerRelease, { passive: true });
     window.addEventListener('blur', handlePointerRelease, { passive: true });
 
-    // Track activity while unlocked
+    // Track user interaction while unlocked to reset idle timeout
     const activityEvents = ['pointermove', 'keydown', 'wheel', 'scroll'];
     activityEvents.forEach(evt => {
         window.addEventListener(evt, () => {
