@@ -349,8 +349,133 @@ double computeStarkShift(int n, int l, double j, double zEff, double electricFie
     return starkEnergyAU * HARTREE_TO_EV;
 }
 
+#include <emscripten/val.h>
+#include <cstring>
+
+constexpr double AVOGADRO = 6.02214076e23;
+constexpr double BOHR_RADIUS_CM = 5.29177210903e-9;
+
+#pragma pack(push, 1)
+struct PhysicalProperties {
+    uint8_t  r;                      // RGB Red (0-255)
+    uint8_t  g;                      // RGB Green (0-255)
+    uint8_t  b;                      // RGB Blue (0-255)
+    uint8_t  crystalStructure;       // 0: Gas/Liquid, 1: FCC, 2: BCC, 3: HCP, 4: Diamond, 5: Hexagonal
+    uint8_t  stateAt298K;            // 0: Solid, 1: Liquid, 2: Gas
+    uint8_t  isMetal;               // 0: Non-metal, 1: Metalloid, 2: Metal
+    float    density;                // g/cm^3
+    float    electricalConductivity; // S/m
+    float    thermalConductivity;    // W/(m·K)
+    float    meltingPoint;           // Kelvin
+    float    boilingPoint;           // Kelvin
+};
+#pragma pack(pop)
+
+emscripten::val generatePhysicalPropertiesBuffer(int Z, double atomicMass, int sCount, int pCount, int dCount, int fCount, int gCount = 0, double tempK = 298.15) {
+    static PhysicalProperties props;
+    std::memset(&props, 0, sizeof(PhysicalProperties));
+
+    // 1. Relativistic Dirac contraction factor gamma = sqrt(1 - (Z*alpha)^2)
+    // Regularized for superheavy elements Z > 137 to prevent imaginary roots
+    double zAlpha = std::min(0.99, Z * FINE_STRUCTURE_ALPHA);
+    double gamma = std::sqrt(1.0 - zAlpha * zAlpha);
+
+    // 2. Quantum shell screening & effective nuclear charge (Z_eff)
+    int totalElectrons = sCount + pCount + dCount + fCount + gCount;
+    int valenceElectrons = std::max(1, sCount + pCount + dCount + fCount + gCount);
+    int n_max = 1 + (Z > 2) + (Z > 10) + (Z > 18) + (Z > 36) + (Z > 54) + (Z > 86) + (Z > 118);
+    
+    double shielding = (totalElectrons - (sCount + pCount)) * 0.85 + (sCount + pCount - 1) * 0.35;
+    double zEff = std::max(1.0, Z - shielding);
+
+    // 3. Relativistic orbital radius contraction/expansion (cm)
+    // s/p1/2 contract by gamma; d/f/g expand due to inner-shell shielding
+    double orbitalWeight = ((sCount + pCount) * gamma + (dCount + fCount + gCount) / gamma) / valenceElectrons;
+    double radius_cm = BOHR_RADIUS_CM * (std::pow(n_max, 2.0) / zEff) * orbitalWeight;
+    
+    // Molar volume & Goldhammer-Herzfeld metallicity index (R_V / V_m)
+    double atomicVolume_cm3_mol = (4.0 / 3.0) * M_PI * std::pow(radius_cm, 3.0) * AVOGADRO / 0.68;
+    double molarPolarizability = (4.0 / 3.0) * M_PI * std::pow(radius_cm, 3.0) * AVOGADRO;
+    double metallicityIndex = molarPolarizability / atomicVolume_cm3_mol;
+
+    // 4. Classification via electronic polarization
+    if (metallicityIndex >= 0.82 || (dCount > 0 && zEff > 2.0)) {
+        props.isMetal = 2; // Metal
+    } else if (metallicityIndex >= 0.58) {
+        props.isMetal = 1; // Metalloid
+    } else {
+        props.isMetal = 0; // Non-metal
+    }
+
+    // 5. Cohesive Energy & Phase Change Dynamics (Melting & Boiling Points)
+    bool isClosedShell = (pCount == 6 && sCount == 2) || (Z == 2);
+    double cohesiveFactor = isClosedShell ? 0.03 : (1.0 + 0.12 * dCount + 0.04 * fCount);
+    double cohesiveEnergy = (zEff * zEff * valenceElectrons * cohesiveFactor) / (radius_cm * 1e8);
+    
+    props.meltingPoint = static_cast<float>(std::max(0.5, cohesiveEnergy * 19.2 * gamma));
+    props.boilingPoint = static_cast<float>(props.meltingPoint * (1.45 + 0.35 / orbitalWeight));
+
+    // 6. State of Matter & Density Calculation
+    if (tempK < props.meltingPoint) props.stateAt298K = 0;      // Solid
+    else if (tempK < props.boilingPoint) props.stateAt298K = 1; // Liquid
+    else props.stateAt298K = 2;                                 // Gas
+
+    props.density = static_cast<float>(props.stateAt298K == 2 
+        ? (atomicMass / 22414.0) * (273.15 / tempK) 
+        : atomicMass / atomicVolume_cm3_mol);
+
+    // 7. Crystal Structure Heuristic
+    if (props.stateAt298K != 0) {
+        props.crystalStructure = 0;
+    } else if (props.isMetal == 2) {
+        if (dCount >= 1 && dCount <= 8) props.crystalStructure = 1;      // FCC
+        else if (sCount == 1 || dCount > 8) props.crystalStructure = 2;  // BCC
+        else props.crystalStructure = 3;                                  // HCP
+    } else {
+        props.crystalStructure = (props.isMetal == 1 || pCount == 2) ? 4 : 5; // Diamond / Hexagonal
+    }
+
+    // 8. Electrical & Thermal Conductivity (Drude / Wiedemann-Franz Transport)
+    if (props.isMetal == 2) {
+        double electronDensity = (valenceElectrons * AVOGADRO) / atomicVolume_cm3_mol;
+        double tau = 1e-14 * gamma / (1.0 + 0.00385 * (tempK - 298.15));
+        double sigma = (electronDensity * 2.566e-38 * tau) / 9.109e-31;
+        props.electricalConductivity = static_cast<float>(sigma * 1e-2);
+        props.thermalConductivity = static_cast<float>(2.44e-8 * tempK * props.electricalConductivity);
+    } else if (props.isMetal == 1) {
+        props.electricalConductivity = static_cast<float>(120.0 * std::exp(-0.4 / (8.617e-5 * tempK)));
+        props.thermalConductivity = 12.0f;
+    } else {
+        props.electricalConductivity = 1e-12f;
+        props.thermalConductivity = 0.15f;
+    }
+
+    // 9. Optical Absorption & Relativistic Color Shift
+    if (props.stateAt298K == 2) {
+        props.r = 240; props.g = 248; props.b = 255; // Translucent Gas
+    } else if (props.isMetal == 2) {
+        double plasmaGap_eV = (3.6 / gamma) - (dCount * 0.14);
+        if (plasmaGap_eV < 2.3) { // Relativistic shift lowers s-d gap into visible spectra (Gold/Copper effect)
+            props.r = static_cast<uint8_t>(std::min(255.0, 200.0 + 55.0 / gamma));
+            props.g = static_cast<uint8_t>(std::clamp(120.0 * plasmaGap_eV, 30.0, 180.0));
+            props.b = static_cast<uint8_t>(std::clamp(35.0 * (plasmaGap_eV - 1.0), 5.0, 90.0));
+        } else {
+            props.r = 192; props.g = 192; props.b = 192; // Metallic Silver
+        }
+    } else {
+        double electronegativity = (zEff / radius_cm) * 1e-8;
+        props.r = static_cast<uint8_t>(std::clamp(255.0 - electronegativity * 28.0, 40.0, 255.0));
+        props.g = static_cast<uint8_t>(std::clamp(190.0 - electronegativity * 18.0, 20.0, 220.0));
+        props.b = static_cast<uint8_t>(std::clamp(90.0 + electronegativity * 14.0, 10.0, 255.0));
+    }
+
+    uint8_t* bytePtr = reinterpret_cast<uint8_t*>(&props);
+    return emscripten::val(emscripten::typed_memory_view(sizeof(PhysicalProperties), bytePtr));
+}
+
 EMSCRIPTEN_BINDINGS(dirac_kernel_module) {
     emscripten::function("solveDiracExactEnergy", &solveDiracExactEnergy);
     emscripten::function("computeHyperfineSplittingConstant", &computeHyperfineSplittingConstant);
     emscripten::function("computeStarkShift", &computeStarkShift);
+    emscripten::function("generatePhysicalPropertiesBuffer", &generatePhysicalPropertiesBuffer);
 }

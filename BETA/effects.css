@@ -55,6 +55,83 @@ body {
     font-weight: 100;
 }
 
+/* Quicksilver Obsidian Project List Items */
+.project-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.project-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--row-glass);
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.project-item:hover {
+    background: rgba(18, 18, 24, 0.9);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.project-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+}
+
+.project-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--quicksilver-bright);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.project-date {
+    font-size: 10px;
+    color: var(--text-sub);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.project-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.project-actions button {
+    background: rgba(12, 12, 16, 0.85);
+    border: 1px solid var(--panel-border);
+    color: var(--text-main);
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.2s ease;
+}
+
+.project-actions button:hover {
+    background: rgba(30, 30, 40, 0.9);
+    color: var(--quicksilver-bright);
+}
+
+.project-actions button.delete-btn:hover {
+    background: rgba(160, 30, 30, 0.8);
+    border-color: rgba(200, 50, 50, 0.5);
+    color: #ffffff;
+}
+
 /* 3D WebGL Background Canvas */
 #renderCanvas {
     width: 100%;
@@ -66,14 +143,85 @@ body {
     z-index: 0;
 }
 
+/* Modal Backdrop Overlay Fix */
+.pt-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    display: none; /* Hidden by default */
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+}
+
+/* Shown when open class is applied */
+.pt-modal-backdrop.open {
+    display: flex !important;
+}
+
+/* Modal Content Card */
+.pt-modal-window {
+    position: relative;
+    width: 90%;
+    max-width: 500px;
+    background: rgba(12, 12, 16, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.pt-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 1px;
+}
+
+.pt-modal-backdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    display: none; /* Hidden until .open is applied */
+    align-items: center;
+    justify-content: center;
+    z-index: 99999 !important; /* Floats above canvas and UI controls */
+}
+
+.pt-modal-backdrop.open {
+    display: flex !important;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 16px;
+    cursor: pointer;
+}
+.close-btn:hover { color: #fff; }
+
 /* Base Panel Glass Properties (Eliminates forced 3D stacking context layout shifts) */
 .ui-overlay, .tp-overlay, .pt-modal-window {
     position: absolute;
     background: var(--ui-bg);
     backdrop-filter: var(--bg-fil) saturate(190%);
     -webkit-backdrop-filter: var(--bg-fil) saturate(190%);
-    border-radius: 10px;
-    border: 1px solid transparent !important;
+    border-radius: 0px;
+    border: 1.25px solid transparent !important;
 
     /* Base Shadow & Metallic Edge Rim */
     box-shadow: 

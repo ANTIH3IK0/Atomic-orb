@@ -138,6 +138,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initSuborbitNotationObserver();
     initQuicksilverGlassEngine();
     initIdleRedFilter();
+    initUltraDarkFX();
+    renderProjectList();
 });
 
 /* Dynamic Style Overrides Injection */
@@ -233,27 +235,29 @@ function initGroupAttributesObserver() {
 
 /* Modal Visibility Handler */
 function initModalVisibilityHandler() {
-    const modalBackdrop = document.querySelector('.pt-modal-backdrop');
-    if (!modalBackdrop) return;
+    const modalBackdrops = document.querySelectorAll('.pt-modal-backdrop');
+    if (!modalBackdrops.length) return;
 
-    const syncModalDisplay = () => {
-        const isOpen = modalBackdrop.classList.contains('open');
-        if (isOpen) {
-            modalBackdrop.style.display = 'flex';
-            modalBackdrop.style.pointerEvents = 'auto';
-        } else {
-            modalBackdrop.style.pointerEvents = 'none';
-            setTimeout(() => {
-                if (!modalBackdrop.classList.contains('open')) {
-                    modalBackdrop.style.display = 'none';
-                }
-            }, 250);
-        }
-    };
+    modalBackdrops.forEach(modalBackdrop => {
+        const syncModalDisplay = () => {
+            const isOpen = modalBackdrop.classList.contains('open');
+            if (isOpen) {
+                modalBackdrop.style.display = 'flex';
+                modalBackdrop.style.pointerEvents = 'auto';
+            } else {
+                modalBackdrop.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    if (!modalBackdrop.classList.contains('open')) {
+                        modalBackdrop.style.display = 'none';
+                    }
+                }, 250);
+            }
+        };
 
-    syncModalDisplay();
-    const observer = new MutationObserver(syncModalDisplay);
-    observer.observe(modalBackdrop, { attributes: true, attributeFilter: ['class'] });
+        syncModalDisplay();
+        const observer = new MutationObserver(syncModalDisplay);
+        observer.observe(modalBackdrop, { attributes: true, attributeFilter: ['class'] });
+    });
 }
 
 /* Entrance Animations */
@@ -270,95 +274,226 @@ function switchControlMode(mode) {
     const manualContainer = document.getElementById('manualModeContainer');
     const btnAuto = document.getElementById('btnModeAuto');
     const btnManual = document.getElementById('btnModeManual');
-    if (!autoContainer || !manualContainer || !btnAuto || !btnManual) return;
+    const btnElementLook = document.getElementById('btnElementLook');
+
+    if (!btnAuto || !btnManual || !btnElementLook) return;
+
+    // Reset button states
+    btnAuto.classList.remove('active');
+    btnManual.classList.remove('active');
+    btnElementLook.classList.remove('active');
+
+    let activeContainer = null;
 
     if (mode === 'auto') {
-        autoContainer.classList.remove('hidden');
-        manualContainer.classList.add('hidden');
         btnAuto.classList.add('active');
-        btnManual.classList.remove('active');
-    } else {
-        autoContainer.classList.add('hidden');
-        manualContainer.classList.remove('hidden');
-        btnAuto.classList.remove('active');
+        if (autoContainer) autoContainer.classList.remove('hidden');
+        if (manualContainer) manualContainer.classList.add('hidden');
+        activeContainer = autoContainer;
+
+        // Cleanup element look mesh and restore orbitals when returning to builder
+        if (window.realLookRenderer) window.realLookRenderer.clear();
+        if (typeof showOrbitalCloud === 'function') showOrbitalCloud();
+
+    } else if (mode === 'manual') {
         btnManual.classList.add('active');
+        if (autoContainer) autoContainer.classList.add('hidden');
+        if (manualContainer) manualContainer.classList.remove('hidden');
+        activeContainer = manualContainer;
+
+        // Cleanup element look mesh and restore orbitals when returning to builder
+        if (window.realLookRenderer) window.realLookRenderer.clear();
+        if (typeof showOrbitalCloud === 'function') showOrbitalCloud();
+
+    } else if (mode === 'elementLook') {
+        btnElementLook.classList.add('active');
+        if (autoContainer) autoContainer.classList.add('hidden');
+        if (manualContainer) manualContainer.classList.add('hidden');
+
+        // Hide electron cloud orbitals
+        if (typeof hideOrbitalCloud === 'function') hideOrbitalCloud();
+
+        // Render real element look
+        if (typeof getElementPhysicalProps === 'function' && window.realLookRenderer) {
+            const activeElement = window.currentElement || {
+                Z: 79, mass: 196.966, s: 1, p: 0, d: 10, f: 14, g: 0
+            };
+
+            const props = getElementPhysicalProps(
+                activeElement.Z,
+                activeElement.mass,
+                activeElement.s,
+                activeElement.p,
+                activeElement.d,
+                activeElement.f,
+                activeElement.g
+            );
+
+            window.realLookRenderer.renderElement(props);
+        }
     }
 
-    if (typeof gsap !== 'undefined') {
-        const activeContainer = mode === 'auto' ? autoContainer : manualContainer;
+    // GSAP animation for panel switching
+    if (typeof gsap !== 'undefined' && activeContainer) {
         gsap.fromTo(activeContainer,
             { opacity: 0, y: 6 },
             { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' });
     }
 }
 
-/* Quicksilver Glass Engine: Touch Spotlight, Surface Compression & Edge Light */
+/* Germanium Oxide Quicksilver Engine */
 function initQuicksilverGlassEngine() {
+    // Inject Germanium Oxide Palette & Idle Red CSS Styles
+    if (!document.getElementById('quicksilverEngineStyles')) {
+        const style = document.createElement('style');
+        style.id = 'quicksilverEngineStyles';
+        style.textContent = `
+            /* Hide non-content scrollbar leaks caused by transforms */
+            .ui-overlay::-webkit-scrollbar, 
+            .tp-overlay::-webkit-scrollbar, 
+            .pt-modal-window::-webkit-scrollbar {
+                width: 4px;
+            }
+
+            .ui-overlay, .tp-overlay, .pt-modal-window {
+                transform: perspective(1000px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) scale3d(var(--scale-s, 1), var(--scale-s, 1), 1) !important;
+                transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                            border-radius 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+                            box-shadow 0.3s ease;
+                will-change: transform, border-radius;
+            }
+
+            /* Edge Rim: Germanium Oxide Rainbow (Active) -> Crimson Red (Idle) */
+            .ui-overlay::before, .tp-overlay::before, .pt-modal-window::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                border-radius: inherit;
+                padding: 1px;
+                background: 
+                    /* Dark Specular Core Spark */
+                    radial-gradient(circle 180px at var(--light-x, 50%) var(--light-y, 50%), 
+                        rgba(200, 200, 220, 0.8) 0%, 
+                        rgba(120, 110, 140, 0.3) 25%, 
+                        transparent 70%),
+                    /* Scatter 1: Germanium Oxide Copper-Red */
+                    radial-gradient(ellipse 260px 160px at var(--scatter-x1, 30%) var(--scatter-y1, 30%), 
+                        rgba(180, 35, 20, var(--rainbow-op, 0.5)) 0%, 
+                        rgba(110, 20, 10, var(--rainbow-op, 0.25)) 45%, 
+                        transparent 75%),
+                    /* Scatter 2: Deep Amethyst / Violet Prism */
+                    radial-gradient(ellipse 220px 240px at var(--scatter-x2, 70%) var(--scatter-y2, 70%), 
+                        rgba(75, 15, 95, var(--rainbow-op, 0.5)) 0%, 
+                        rgba(40, 10, 60, var(--rainbow-op, 0.25)) 50%, 
+                        transparent 80%),
+                    /* Scatter 3: Smoked Slate Cyan / Amber Oxide */
+                    radial-gradient(circle 280px at var(--scatter-x3, 50%) var(--scatter-y3, 20%), 
+                        rgba(20, 65, 85, var(--rainbow-op, 0.45)) 0%, 
+                        rgba(130, 80, 15, var(--rainbow-op, 0.25)) 50%, 
+                        transparent 85%),
+                    /* IDLE MODE: Deep Germanium Crimson Red Glow */
+                    radial-gradient(circle 350px at 50% 50%, 
+                        rgba(208, 24, 24, var(--idle-red-op, 0.45)) 0%, 
+                        rgba(80, 5, 5, var(--idle-red-op, 0.25)) 60%, 
+                        transparent 90%);
+
+                -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+                -webkit-mask-composite: xor;
+                mask-composite: exclude;
+                pointer-events: none !important;
+                opacity: var(--edge-opacity, 0.4);
+                transition: opacity 0.3s ease;
+                z-index: 10;
+            }
+
+            /* Interior Refraction Lens */
+            .ui-overlay::after, .tp-overlay::after, .pt-modal-window::after {
+                content: "";
+                position: absolute;
+                inset: 0;
+                border-radius: inherit;
+                background: 
+                    /* Dark Smoked Core Focus Glow */
+                    radial-gradient(circle 160px at var(--pointer-x, 50%) var(--pointer-y, 50%), 
+                        rgba(200, 200, 220, 0.08) 0%, 
+                        rgba(120, 40, 50, 0.04) 40%, 
+                        transparent 70%),
+                    /* Idle Crimson Internal Wash */
+                    radial-gradient(circle 300px at 50% 50%, 
+                        rgba(180, 20, 20, calc(0.12 * var(--idle-red-op, 0.45))) 0%, 
+                        transparent 80%);
+                pointer-events: none !important;
+                opacity: var(--glow-opacity, 0.3);
+                transition: opacity 0.3s ease;
+                mix-blend-mode: screen;
+                z-index: 2;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
     const panels = document.querySelectorAll('.ui-overlay, .tp-overlay, .pt-modal-window');
-    const PROXIMITY_THRESHOLD = 90;
 
     panels.forEach(panel => {
         let currentX = 0, currentY = 0;
         let targetX = 0, targetY = 0;
         let pointerX = 0, pointerY = 0;
-        let opacity = 0;
-        let distOpacity = 0;
-        let glowOpacity = 0;
-        let intensityX = 0, intensityY = 0;
+        
+        // Low sensitivity tilt limits
+        let rotX = 0, rotY = 0;
+        let scaleVal = 1.0;
+        
+        // Dynamic Corner Morph Radii (px)
+        let tl = 10, tr = 10, br = 10, bl = 10;
+
+        // Dark Rainbow Scatter Coordinates
+        let sc1X = 50, sc1Y = 50;
+        let sc2X = 50, sc2Y = 50;
+        let sc3X = 50, sc3Y = 50;
+
+        let activeFactor = 0; // 1 = Hovered (Germanium Rainbow), 0 = Idle (Red)
         let isHovered = false;
+        let isPressed = false;
         let animFrame = null;
 
-        function getNearestEdgePoint(mouseX, mouseY, width, height) {
-            const leftDist = mouseX;
-            const rightDist = width - mouseX;
-            const topDist = mouseY;
-            const bottomDist = height - mouseY;
-            const minDist = Math.min(leftDist, rightDist, topDist, bottomDist);
-
-            let edgeX = mouseX;
-            let edgeY = mouseY;
-
-            if (minDist === leftDist) edgeX = 0;
-            else if (minDist === rightDist) edgeX = width;
-            else if (minDist === topDist) edgeY = 0;
-            else if (minDist === bottomDist) edgeY = height;
-
-            return { x: edgeX, y: edgeY, leftDist, rightDist, topDist, bottomDist };
-        }
-
         function update() {
-            currentX += (targetX - currentX) * 0.12;
-            currentY += (targetY - currentY) * 0.12;
+            // Smooth LERP Damping
+            currentX += (targetX - currentX) * 0.1;
+            currentY += (targetY - currentY) * 0.1;
 
-            const dist = Math.hypot(targetX - currentX, targetY - currentY);
-            
             if (isHovered) {
-                const targetEdgeOpacity = dist > 1.5 ? Math.min(1, dist / 25) : 0;
-                opacity += (targetEdgeOpacity - opacity) * 0.12;
-                glowOpacity += (1.0 - glowOpacity) * 0.15;
+                activeFactor += (1.0 - activeFactor) * 0.1;
             } else {
-                opacity += (0 - opacity) * 0.15;
-                distOpacity += (0 - distOpacity) * 0.15;
-                glowOpacity += (0 - glowOpacity) * 0.15;
+                activeFactor += (0 - activeFactor) * 0.08;
             }
 
-            panel.style.setProperty('--mouse-x', `${currentX.toFixed(2)}px`);
-            panel.style.setProperty('--mouse-y', `${currentY.toFixed(2)}px`);
+            // CSS Variables for Transforms & Subtle Corner Morphing
+            panel.style.setProperty('--tilt-x', `${rotX.toFixed(2)}deg`);
+            panel.style.setProperty('--tilt-y', `${rotY.toFixed(2)}deg`);
+            panel.style.setProperty('--scale-s', `${(isPressed ? 0.985 : scaleVal).toFixed(3)}`);
+            panel.style.borderRadius = `${tl.toFixed(1)}px ${tr.toFixed(1)}px ${br.toFixed(1)}px ${bl.toFixed(1)}px`;
+
+            // Position Custom Properties
+            panel.style.setProperty('--light-x', `${currentX.toFixed(2)}px`);
+            panel.style.setProperty('--light-y', `${currentY.toFixed(2)}px`);
             panel.style.setProperty('--pointer-x', `${pointerX.toFixed(2)}px`);
             panel.style.setProperty('--pointer-y', `${pointerY.toFixed(2)}px`);
-            panel.style.setProperty('--edge-opacity', opacity.toFixed(3));
-            panel.style.setProperty('--distortion-opacity', distOpacity.toFixed(3));
-            panel.style.setProperty('--glow-opacity', glowOpacity.toFixed(3));
-            panel.style.setProperty('--press-intensity-x', intensityX.toFixed(3));
-            panel.style.setProperty('--press-intensity-y', intensityY.toFixed(3));
+            
+            panel.style.setProperty('--scatter-x1', `${sc1X.toFixed(2)}%`);
+            panel.style.setProperty('--scatter-y1', `${sc1Y.toFixed(2)}%`);
+            panel.style.setProperty('--scatter-x2', `${sc2X.toFixed(2)}%`);
+            panel.style.setProperty('--scatter-y2', `${sc2Y.toFixed(2)}%`);
+            panel.style.setProperty('--scatter-x3', `${sc3X.toFixed(2)}%`);
+            panel.style.setProperty('--scatter-y3', `${sc3Y.toFixed(2)}%`);
 
-            if (opacity > 0.005 || distOpacity > 0.005 || glowOpacity > 0.005 || isHovered) {
+            // Mode Opacity Crossfade: Rainbow vs Red Idle
+            panel.style.setProperty('--rainbow-op', activeFactor.toFixed(3));
+            panel.style.setProperty('--idle-red-op', (1.0 - activeFactor).toFixed(3));
+            panel.style.setProperty('--edge-opacity', (0.35 + activeFactor * 0.45).toFixed(3));
+            panel.style.setProperty('--glow-opacity', (0.2 + activeFactor * 0.5).toFixed(3));
+
+            if (animFrame) {
                 animFrame = requestAnimationFrame(update);
-            } else {
-                panel.style.setProperty('--edge-opacity', '0');
-                panel.style.setProperty('--distortion-opacity', '0');
-                panel.style.setProperty('--glow-opacity', '0');
-                animFrame = null;
             }
         }
 
@@ -367,61 +502,69 @@ function initQuicksilverGlassEngine() {
             pointerX = clientX - rect.left;
             pointerY = clientY - rect.top;
 
-            const edgeData = getNearestEdgePoint(pointerX, pointerY, rect.width, rect.height);
-            targetX = edgeData.x;
-            targetY = edgeData.y;
+            const normX = (pointerX / rect.width) * 2 - 1;  // -1 to 1
+            const normY = (pointerY / rect.height) * 2 - 1; // -1 to 1
 
-            const minX = Math.min(edgeData.leftDist, edgeData.rightDist);
-            const minY = Math.min(edgeData.topDist, edgeData.bottomDist);
+            targetX = Math.max(0, Math.min(rect.width, pointerX));
+            targetY = Math.max(0, Math.min(rect.height, pointerY));
 
-            const targetIntX = Math.max(0, (PROXIMITY_THRESHOLD - minX) / PROXIMITY_THRESHOLD);
-            const targetIntY = Math.max(0, (PROXIMITY_THRESHOLD - minY) / PROXIMITY_THRESHOLD);
+            // Extremely gentle 3D tilt (Max ±3.0 deg for usability)
+            rotX = -normY * 3.0; 
+            rotY = normX * 3.0;
 
-            intensityX += (targetIntX - intensityX) * 0.2;
-            intensityY += (targetIntY - intensityY) * 0.2;
+            scaleVal = 1.0;
 
-            distOpacity = Math.max(intensityX, intensityY);
+            // Controlled Corner Radius Shift (10px ± 2px max)
+            const flex = 2.5;
+            tl = 10 + (-normX - normY) * flex;
+            tr = 10 + (normX - normY) * flex;
+            br = 10 + (normX + normY) * flex;
+            bl = 10 + (-normX + normY) * flex;
 
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-            const tiltX = (pointerY - centerY) / centerY * -2;
-            const tiltY = (pointerX - centerX) / centerX * 2;
+            // Germanium Oxide Rainbow Scatter Angles
+            const angle = Math.atan2(normY, normX);
+            const distPct = Math.hypot(normX, normY) * 35;
 
-            panel.style.setProperty('--tilt-x', `${tiltX}deg`);
-            panel.style.setProperty('--tilt-y', `${tiltY}deg`);
+            sc1X = 50 + Math.cos(angle) * distPct;
+            sc1Y = 50 + Math.sin(angle) * distPct;
 
-            if (!animFrame) animFrame = requestAnimationFrame(update);
+            sc2X = 50 + Math.cos(angle + Math.PI * 0.6) * distPct;
+            sc2Y = 50 + Math.sin(angle + Math.PI * 0.6) * distPct;
+
+            sc3X = 50 + Math.cos(angle - Math.PI * 0.6) * distPct;
+            sc3Y = 50 + Math.sin(angle - Math.PI * 0.6) * distPct;
         }
 
+        // Pointer Event Handlers
         panel.addEventListener('mouseenter', (e) => {
             isHovered = true;
             handlePointerMove(e.clientX, e.clientY);
+            if (!animFrame) animFrame = requestAnimationFrame(update);
         });
 
         panel.addEventListener('mousemove', (e) => {
             handlePointerMove(e.clientX, e.clientY);
         });
 
-        panel.addEventListener('touchstart', (e) => {
-            isHovered = true;
-            if (e.touches[0]) handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
-        }, { passive: true });
+        panel.addEventListener('pointerdown', () => {
+            isPressed = true;
+        });
 
-        panel.addEventListener('touchmove', (e) => {
-            if (e.touches[0]) handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
-        }, { passive: true });
+        panel.addEventListener('pointerup', () => {
+            isPressed = false;
+        });
 
         panel.addEventListener('mouseleave', () => {
             isHovered = false;
-            panel.style.setProperty('--tilt-x', `0deg`);
-            panel.style.setProperty('--tilt-y', `0deg`);
-            if (!animFrame) animFrame = requestAnimationFrame(update);
+            isPressed = false;
+            rotX = 0;
+            rotY = 0;
+            scaleVal = 1.0;
+            tl = tr = br = bl = 10;
         });
 
-        panel.addEventListener('touchend', () => {
-            isHovered = false;
-            if (!animFrame) animFrame = requestAnimationFrame(update);
-        });
+        // Start animation loop
+        animFrame = requestAnimationFrame(update);
     });
 }
 
@@ -511,11 +654,9 @@ function applyThemeProgress(progressIndex) {
 
     window.isRedFilterActive = (factor > 0.5);
 
-    /*
     if (typeof window.rebuildQuantumModel === 'function') {
         window.rebuildQuantumModel();
     }
-    */
 }
 
 /* Idle Dark Crimson Trigger & 3-Second Interpolated Hold Controller */
@@ -633,4 +774,916 @@ function initIdleRedFilter() {
     });
 
     resetIdleTimer();
+}
+
+/**
+ * Advanced Ultra-Dark Visual Effects Library (effects.js)
+ */
+
+const UltraDarkFX = {
+  /**
+   * Generates a procedural tileable noise texture canvas for film grain / dark mesh overlay
+   */
+  createGrainTexture(width = 256, height = 256, opacity = 0.08) {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    const imgData = ctx.createImageData(width, height);
+    const buffer = new Uint32Array(imgData.data.buffer);
+
+    for (let i = 0; i < buffer.length; i++) {
+      // Dark grayscale micro-noise with subtle alpha variation
+      const noise = (Math.random() * 255) | 0;
+      const alpha = (Math.random() * opacity * 255) | 0;
+      buffer[i] = (alpha << 24) | (noise << 16) | (noise << 8) | noise;
+    }
+
+    ctx.putImageData(imgData, 0, 0);
+    return canvas;
+  },
+
+  /**
+   * Initializes a full-screen ultra-dark atmospheric background canvas
+   * Features: Radial dark vignette, continuous grain texture, subtle floating dark matter nodes
+   */
+  initAtmosphericBackground(container = document.body) {
+    const canvas = document.createElement('canvas');
+    canvas.id = 'fx-dark-atmosphere';
+    Object.assign(canvas.style, {
+      position: 'fixed',
+      top: '0',
+      left: '0',
+      width: '100vw',
+      height: '100vh',
+      pointerEvents: 'none',
+      zIndex: '-2',
+      background: '#040406'
+    });
+
+    container.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+    const grainTile = this.createGrainTexture(256, 256, 0.06);
+
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+
+    let mouseX = width / 2;
+    let mouseY = height / 2;
+    let targetMouseX = mouseX;
+    let targetMouseY = mouseY;
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      targetMouseX = e.clientX;
+      targetMouseY = e.clientY;
+    });
+
+    const render = () => {
+      // Smooth mouse damping
+      mouseX += (targetMouseX - mouseX) * 0.05;
+      mouseY += (targetMouseY - mouseY) * 0.05;
+
+      // Deep obsidian base clear
+      ctx.fillStyle = '#030305';
+      ctx.fillRect(0, 0, width, height);
+
+      // Interactive radial ambient spotlight (Ultra dark cyan/violet rim glow)
+      const glowRadius = Math.max(width, height) * 0.6;
+      const gradient = ctx.createRadialGradient(
+        mouseX, mouseY, 0,
+        mouseX, mouseY, glowRadius
+      );
+      gradient.addColorStop(0, 'rgba(18, 24, 38, 0.45)');
+      gradient.addColorStop(0.5, 'rgba(8, 10, 18, 0.8)');
+      gradient.addColorStop(1, 'rgba(3, 3, 5, 1)');
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+
+      // Repeat grain pattern across canvas
+      const pattern = ctx.createPattern(grainTile, 'repeat');
+      if (pattern) {
+        ctx.fillStyle = pattern;
+        ctx.fillRect(0, 0, width, height);
+      }
+
+      requestAnimationFrame(render);
+    };
+
+    render();
+  },
+
+  /**
+   * Creates an interactive, textured quantum particle field with magnetic spring physics
+   */
+  initQuantumParticleGrid(canvasId = 'fx-quantum-grid') {
+    let canvas = document.getElementById(canvasId);
+    if (!canvas) {
+      canvas = document.createElement('canvas');
+      canvas.id = canvasId;
+      Object.assign(canvas.style, {
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        width: '100vw',
+        height: '100vh',
+        pointerEvents: 'none',
+        zIndex: '-1'
+      });
+      document.body.appendChild(canvas);
+    }
+
+    const ctx = canvas.getContext('2d');
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+
+    const particleCount = Math.floor((width * height) / 12000);
+    const particles = [];
+
+    const mouse = { x: -1000, y: -1000, radius: 180 };
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.vx = (Math.random() - 0.5) * 0.4;
+        this.vy = (Math.random() - 0.5) * 0.4;
+        this.baseRadius = Math.random() * 1.5 + 0.5;
+        this.alpha = Math.random() * 0.5 + 0.2;
+        this.hue = Math.random() > 0.8 ? 190 : 260; // Cyber cyan / Deep magenta tint
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // Screen boundary bounce
+        if (this.x < 0 || this.x > width) this.vx *= -1;
+        if (this.y < 0 || this.y > height) this.vy *= -1;
+
+        // Mouse repulsion / perturbation
+        const dx = mouse.x - this.x;
+        const dy = mouse.y - this.y;
+        const dist = Math.hypot(dx, dy);
+
+        if (dist < mouse.radius) {
+          const force = (1 - dist / mouse.radius) * 2;
+          const angle = Math.atan2(dy, dx);
+          this.x -= Math.cos(angle) * force;
+          this.y -= Math.sin(angle) * force;
+        }
+      }
+
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.baseRadius, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${this.hue}, 40%, 60%, ${this.alpha})`;
+        ctx.shadowColor = `hsla(${this.hue}, 80%, 50%, 0.5)`;
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    for (let i = 0; i < particleCount; i++) {
+      particles.push(new Particle());
+    }
+
+    const animate = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      // Render connecting triangular network lines
+      for (let i = 0; i < particles.length; i++) {
+        particles[i].update();
+        particles[i].draw();
+
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.hypot(dx, dy);
+
+          if (dist < 110) {
+            const lineAlpha = (1 - dist / 110) * 0.15;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(100, 140, 200, ${lineAlpha})`;
+            ctx.lineWidth = 0.6;
+            ctx.stroke();
+          }
+        }
+      }
+
+      requestAnimationFrame(animate);
+    };
+
+    animate();
+  },
+
+  /**
+   * Applies modern dynamic dark glassmorphism & subtle chromatic aberration on hover
+   */
+  initInteractiveElementEffects(selector = '.fx-interactive') {
+    const elements = document.querySelectorAll(selector);
+
+    elements.forEach((el) => {
+      Object.assign(el.style, {
+        transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease',
+        willChange: 'transform, box-shadow'
+      });
+
+      el.addEventListener('mousemove', (e) => {
+        const rect = el.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+
+        const tiltX = (y / rect.height) * -8;
+        const tiltY = (x / rect.width) * 8;
+
+        el.style.transform = `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale3d(1.02, 1.02, 1.02)`;
+        el.style.boxShadow = `
+          0 15px 35px rgba(0, 0, 0, 0.8),
+          -2px 0 10px rgba(0, 240, 255, 0.15),
+          2px 0 10px rgba(255, 0, 128, 0.15)
+        `;
+      });
+
+      el.addEventListener('mouseleave', () => {
+        el.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+        el.style.boxShadow = 'none';
+      });
+    });
+  },
+
+  /**
+   * Injects global dark textured CSS scanlines and ambient noise overlays into the document
+   */
+  injectUltraDarkStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+      /* Dark Scanline Texture Overlay */
+      body::after {
+        content: "";
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background: linear-gradient(
+          rgba(18, 16, 26, 0) 50%, 
+          rgba(0, 0, 0, 0.25) 50%
+        );
+        background-size: 100% 4px;
+        pointer-events: none;
+        z-index: 9999;
+        opacity: 0.35;
+      }
+
+      /* Dark Vignette Frame */
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.95);
+        pointer-events: none;
+        z-index: 9998;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+};
+
+/**
+ * Convenience entry point to run on window DOM load
+ */
+function initUltraDarkFX() {
+  UltraDarkFX.injectUltraDarkStyles();
+  UltraDarkFX.initAtmosphericBackground();
+  UltraDarkFX.initQuantumParticleGrid();
+  UltraDarkFX.initInteractiveElementEffects();
+}
+
+// Attach to window object for execution inside DOMContentLoaded listener
+window.initUltraDarkFX = initUltraDarkFX;
+window.UltraDarkFX = UltraDarkFX;
+
+/* Modal Visibility Handler */
+function initModalVisibilityHandler() {
+    const modalBackdrops = document.querySelectorAll('.pt-modal-backdrop');
+    if (!modalBackdrops.length) return;
+
+    modalBackdrops.forEach(modalBackdrop => {
+        const syncModalDisplay = () => {
+            const isOpen = modalBackdrop.classList.contains('open');
+            if (isOpen) {
+                modalBackdrop.style.display = 'flex';
+                modalBackdrop.style.pointerEvents = 'auto';
+            } else {
+                modalBackdrop.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    if (!modalBackdrop.classList.contains('open')) {
+                        modalBackdrop.style.display = 'none';
+                    }
+                }, 250);
+            }
+        };
+
+        syncModalDisplay();
+        const observer = new MutationObserver(syncModalDisplay);
+        observer.observe(modalBackdrop, { attributes: true, attributeFilter: ['class'] });
+    });
+}
+
+// Open Project Manager Modal
+function openProjectManagerModal() {
+    const modal = document.getElementById('projectModal');
+    if (modal) {
+        modal.classList.add('open');
+        renderProjectList();
+    }
+}
+
+// Close Project Manager Modal
+function closeProjectManagerModal() {
+    const modal = document.getElementById('projectModal');
+    if (modal) {
+        modal.classList.remove('open');
+    }
+}
+
+// Render Saved Projects into the list
+function renderProjectList() {
+    const listEl = document.getElementById('projectList');
+    const countEl = document.getElementById('projectCount');
+    const buttonCountEl = document.getElementById('projectCountButtonTag');
+    if (!listEl) return;
+
+    const savedProjects = JSON.parse(localStorage.getItem('atomic_orb_projects') || '[]');
+    
+    if (countEl) countEl.textContent = savedProjects.length;
+    if (buttonCountEl) buttonCountEl.textContent = savedProjects.length;
+
+    if (savedProjects.length === 0) {
+        listEl.innerHTML = `<li style="color:var(--text-muted); font-size:11px; text-align:center; padding:16px; font-family:'JetBrains Mono';">No saved projects found.</li>`;
+        return;
+    }
+
+    listEl.innerHTML = savedProjects.map((proj, index) => `
+        <li class="project-item">
+            <div class="project-info">
+                <span class="project-name">${proj.name || 'Untitled Atom'}</span>
+                <span class="project-date">Z: ${proj.Z || '?'} | Saved: ${proj.date || 'N/A'}</span>
+            </div>
+            <div class="project-actions">
+                <button onclick="loadProject(${index})">LOAD</button>
+                <button class="delete-btn" onclick="deleteProject(${index})">DELETE</button>
+            </div>
+        </li>
+    `).join('');
+}
+
+/*
+// Save Current Quantum Parameters & Camera / Internal Data to LocalStorage
+function saveCurrentProject() {
+    const savedProjects = JSON.parse(localStorage.getItem('atomic_orb_projects') || '[]');
+    if (savedProjects.length >= 10) {
+        alert("Project storage limit reached (10 max). Please delete an existing project before saving.");
+        return;
+    }
+
+    const ZVal = document.getElementById('inputZ')?.value || '1';
+    const element = (typeof getElementData === 'function') ? getElementData(parseInt(ZVal, 10)) : 
+                    ((typeof ELEMENTS_DATA !== 'undefined') ? ELEMENTS_DATA.find(e => e.Z == ZVal) : null);
+    const defaultName = element ? `${element.name} (Z=${ZVal})` : `Atom Z=${ZVal}`;
+
+    const projectName = prompt("Enter a name for this project:", defaultName);
+    if (projectName === null) return; // User cancelled prompt
+
+    // Capture 3D camera position, angles, radius, and target
+    let cameraData = null;
+    if (typeof camera !== 'undefined' && camera) {
+        cameraData = {
+            x: camera.position ? camera.position.x : parseFloat(document.getElementById('tpX')?.value || 0),
+            y: camera.position ? camera.position.y : parseFloat(document.getElementById('tpY')?.value || 0),
+            z: camera.position ? camera.position.z : parseFloat(document.getElementById('tpZ')?.value || 0),
+            alpha: camera.alpha,
+            beta: camera.beta,
+            radius: camera.radius,
+            target: camera.target ? { x: camera.target.x, y: camera.target.y, z: camera.target.z } : null
+        };
+    } else {
+        cameraData = {
+            x: document.getElementById('tpX')?.value || '',
+            y: document.getElementById('tpY')?.value || '',
+            z: document.getElementById('tpZ')?.value || ''
+        };
+    }
+
+    // Capture active mode state (auto, manual, elementLook)
+    let activeMode = 'auto';
+    if (document.getElementById('btnModeManual')?.classList.contains('active')) {
+        activeMode = 'manual';
+    } else if (document.getElementById('btnElementLook')?.classList.contains('active')) {
+        activeMode = 'elementLook';
+    }
+
+    // Capture dynamic suborbit configuration inputs
+    const suborbitInputs = [];
+    document.querySelectorAll('#orbitsBuilderContainer input').forEach(inp => {
+        if (inp.id || inp.name || inp.dataset.suborbitKey) {
+            suborbitInputs.push({
+                id: inp.id,
+                key: inp.dataset.suborbitKey || inp.name,
+                value: inp.value
+            });
+        }
+    });
+
+    // Capture orbital visibility filter states
+    const filterStates = (typeof visibilityState !== 'undefined') ? { ...visibilityState } : {};
+
+    const projectData = {
+        name: projectName.trim() || defaultName,
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        Z: ZVal,
+        maxN: document.getElementById('inputMaxN')?.value || '2',
+        inputEn: document.getElementById('inputEn')?.value || '',
+        manualZ: document.getElementById('inputZManual')?.value || ZVal,
+        config: document.getElementById('inputConfig')?.value || '',
+        elec: document.getElementById('inputElec')?.value || '',
+        n: document.getElementById('inputN')?.value || '',
+        l: document.getElementById('inputL')?.value || '',
+        gI: document.getElementById('inputGI')?.value || '',
+        spinS: document.getElementById('inputTotalSpinS')?.value || '',
+        electricField: document.getElementById('inputElectricField')?.value || '',
+        opacity: document.getElementById('opacityRange')?.value || '0.35',
+        activeMode: activeMode,
+        camera: cameraData,
+        suborbitInputs: suborbitInputs,
+        filterStates: filterStates
+    };
+
+    savedProjects.push(projectData);
+    localStorage.setItem('atomic_orb_projects', JSON.stringify(savedProjects));
+    
+    renderProjectList();
+    alert(`Project "${projectData.name}" saved successfully!`);
+}
+*/
+
+/*
+// Load Saved Project Parameters and Fully Sync with Internal Data, Camera, & Configurations
+async function loadProject(index) {
+    try {
+        const savedProjects = JSON.parse(localStorage.getItem('atomic_orb_projects') || '[]');
+        const proj = savedProjects[index];
+        if (!proj) return;
+
+        const zVal = parseInt(proj.Z, 10) || 1;
+
+        // 1. Sync internal element data from ELEMENTS_DATA repository
+        let elemData = null;
+        if (typeof getElementData === 'function') {
+            elemData = getElementData(zVal);
+        } else if (typeof ELEMENTS_DATA !== 'undefined') {
+            elemData = ELEMENTS_DATA.find(e => e.Z === zVal);
+        }
+
+        if (elemData) {
+            window.currentElement = elemData;
+        }
+
+        // 2. Update UI Element Header / Tag Indicators
+        const selectedTag = document.getElementById('selectedElementTag');
+        if (selectedTag && elemData) {
+            selectedTag.textContent = `${elemData.name} (${elemData.sym}, Z=${elemData.Z})`;
+        }
+
+        // 3. Restore Auto Builder fields
+        if (document.getElementById('inputZ')) document.getElementById('inputZ').value = proj.Z;
+        if (document.getElementById('inputMaxN')) document.getElementById('inputMaxN').value = proj.maxN;
+        if (document.getElementById('inputEn')) document.getElementById('inputEn').value = proj.inputEn || '';
+
+        // 4. Restore Manual Mode fields
+        if (document.getElementById('inputZManual')) document.getElementById('inputZManual').value = proj.manualZ || proj.Z;
+        if (document.getElementById('inputConfig')) document.getElementById('inputConfig').value = proj.config || '';
+        if (document.getElementById('inputElec')) document.getElementById('inputElec').value = proj.elec || '';
+        if (document.getElementById('inputN')) document.getElementById('inputN').value = proj.n || '';
+        if (document.getElementById('inputL')) document.getElementById('inputL').value = proj.l || '';
+
+        // 5. Fallback nuclear & physical quantum properties
+        const inputGI = document.getElementById('inputGI');
+        if (inputGI) {
+            const fallbackGI = elemData ? elemData.gI : 0.0;
+            inputGI.value = (proj.gI !== undefined && proj.gI !== '') ? proj.gI : fallbackGI;
+        }
+
+        const inputSpinS = document.getElementById('inputTotalSpinS');
+        if (inputSpinS) {
+            const fallbackSpin = (typeof calculateTotalSpinS === 'function') ? calculateTotalSpinS(zVal) : 0.5;
+            inputSpinS.value = (proj.spinS !== undefined && proj.spinS !== '') ? proj.spinS : fallbackSpin;
+        }
+
+        if (document.getElementById('inputElectricField')) {
+            document.getElementById('inputElectricField').value = proj.electricField || '';
+        }
+
+        // 6. Restore Opacity State
+        if (proj.opacity !== undefined) {
+            const opacitySlider = document.getElementById('opacityRange');
+            if (opacitySlider) {
+                opacitySlider.value = proj.opacity;
+                if (typeof updateOpacity === 'function') {
+                    updateOpacity(proj.opacity);
+                }
+            }
+        }
+
+        // 7. Rebuild Suborbit Controls and restore custom suborbit electron inputs
+        if (typeof generateOrbitsBuilder === 'function') {
+            generateOrbitsBuilder();
+        }
+
+        if (Array.isArray(proj.suborbitInputs)) {
+            proj.suborbitInputs.forEach(item => {
+                if (item.id) {
+                    const el = document.getElementById(item.id);
+                    if (el) el.value = item.value;
+                } else if (item.key) {
+                    const el = document.querySelector(`[data-suborbit-key="${item.key}"], [name="${item.key}"]`);
+                    if (el) el.value = item.value;
+                }
+            });
+        }
+
+        // Restore Orbital Visibility Filters
+        if (proj.filterStates) {
+            if (typeof visibilityState !== 'undefined') {
+                Object.assign(visibilityState, proj.filterStates);
+            }
+            Object.entries(proj.filterStates).forEach(([key, val]) => {
+                const chk = document.querySelector(`input[data-filter="${key}"]`) || document.getElementById(`filter_${key}`);
+                if (chk) chk.checked = Boolean(val);
+            });
+        }
+
+        // 8. Switch Active Control Mode BEFORE rebuilding model so the Dirac solver uses active tab parameters
+        if (proj.activeMode && typeof switchControlMode === 'function') {
+            switchControlMode(proj.activeMode);
+        }
+
+        // 9. Rebuild 3D Quantum Dirac Model
+        if (typeof rebuildQuantumModel === 'function') {
+            await rebuildQuantumModel();
+        }
+
+        // 10. Restore Camera Position, Angles, Target, and TP Panel Inputs
+        if (proj.camera) {
+            if (typeof userHasCustomInit !== 'undefined') {
+                userHasCustomInit = true; // Lock custom view state
+            }
+
+            const tpX = document.getElementById('tpX');
+            const tpY = document.getElementById('tpY');
+            const tpZ = document.getElementById('tpZ');
+
+            if (tpX && proj.camera.x !== undefined) tpX.value = typeof proj.camera.x === 'number' ? proj.camera.x.toFixed(2) : proj.camera.x;
+            if (tpY && proj.camera.y !== undefined) tpY.value = typeof proj.camera.y === 'number' ? proj.camera.y.toFixed(2) : proj.camera.y;
+            if (tpZ && proj.camera.z !== undefined) tpZ.value = typeof proj.camera.z === 'number' ? proj.camera.z.toFixed(2) : proj.camera.z;
+
+            if (typeof camera !== 'undefined' && camera) {
+                if (proj.camera.target && camera.target) {
+                    camera.target.set(Number(proj.camera.target.x), Number(proj.camera.target.y), Number(proj.camera.target.z));
+                }
+                if (proj.camera.alpha !== undefined) camera.alpha = Number(proj.camera.alpha);
+                if (proj.camera.beta !== undefined) camera.beta = Number(proj.camera.beta);
+                if (proj.camera.radius !== undefined) camera.radius = Number(proj.camera.radius);
+
+                if (proj.camera.x !== undefined && proj.camera.y !== undefined && proj.camera.z !== undefined) {
+                    camera.position.set(Number(proj.camera.x), Number(proj.camera.y), Number(proj.camera.z));
+                }
+            } else if (typeof teleportCamera === 'function') {
+                teleportCamera();
+            }
+        }
+
+        // 11. Close Project Manager Modal
+        if (typeof closeProjectManagerModal === 'function') {
+            closeProjectManagerModal();
+        }
+    } catch (err) {
+        console.error("[loadProject Error] Exception while loading project index", index, err);
+    }
+}
+*/
+
+// Delete Saved Project Entry
+function deleteProject(index) {
+    let savedProjects = JSON.parse(localStorage.getItem('atomic_orb_projects') || '[]');
+    if (index >= 0 && index < savedProjects.length) {
+        savedProjects.splice(index, 1);
+        localStorage.setItem('atomic_orb_projects', JSON.stringify(savedProjects));
+        renderProjectList();
+    }
+}
+
+// Render Saved Projects List and Sync Count Indicators
+function renderProjectList() {
+    const listEl = document.getElementById('projectList');
+    const countEl = document.getElementById('projectCount');
+    const buttonCountEl = document.getElementById('projectCountButtonTag');
+
+    const savedProjects = JSON.parse(localStorage.getItem('atomic_orb_projects') || '[]');
+    
+    if (countEl) countEl.textContent = savedProjects.length;
+    if (buttonCountEl) buttonCountEl.textContent = savedProjects.length;
+
+    if (!listEl) return;
+
+    if (savedProjects.length === 0) {
+        listEl.innerHTML = `<li style="color:var(--text-muted); font-size:11px; text-align:center; padding:16px; font-family:'JetBrains Mono';">No saved projects found.</li>`;
+        return;
+    }
+
+    listEl.innerHTML = savedProjects.map((proj, index) => `
+        <li class="project-item">
+            <div class="project-info">
+                <span class="project-name">${proj.name || 'Untitled Atom'}</span>
+                <span class="project-date">Z: ${proj.Z || '?'} | Saved: ${proj.date || 'N/A'}</span>
+            </div>
+            <div class="project-actions">
+                <button onclick="loadProject(${index})">LOAD</button>
+                <button class="delete-btn" onclick="deleteProject(${index})">DELETE</button>
+            </div>
+        </li>
+    `).join('');
+}
+
+// Helper to calculate required maxN shell depth from atomic number Z
+function getRequiredMaxN(z) {
+    if (z <= 0) return 1;
+
+    let n = 1;
+    let capacity = 2; // Period 1 capacity (1s)
+
+    while (z > capacity) {
+        z -= capacity;
+        n++;
+        // Period length sequence: 2, 8, 8, 18, 18, 32, 32, 50, 50...
+        // Formula for capacity at period n: 2 * Math.floor((n + 2) / 2)^2
+        const k = Math.floor((n + 2) / 2);
+        capacity = 2 * k * k;
+    }
+
+    return n;
+}
+
+// Save Current Quantum Parameters & Camera / Internal Data to LocalStorage
+function saveCurrentProject() {
+    const savedProjects = JSON.parse(localStorage.getItem('atomic_orb_projects') || '[]');
+    if (savedProjects.length >= 10) {
+        alert("Project storage limit reached (10 max). Please delete an existing project before saving.");
+        return;
+    }
+
+    const ZVal = parseInt(document.getElementById('inputZ')?.value || '1', 10);
+    const element = (typeof getElementData === 'function') ? getElementData(ZVal) : 
+                    ((typeof ELEMENTS_DATA !== 'undefined') ? ELEMENTS_DATA.find(e => e.Z == ZVal) : null);
+    const defaultName = element ? `${element.name} (Z=${ZVal})` : `Atom Z=${ZVal}`;
+
+    const projectName = prompt("Enter a name for this project:", defaultName);
+    if (projectName === null) return;
+
+    let cameraData = null;
+    if (typeof camera !== 'undefined' && camera) {
+        cameraData = {
+            x: camera.position ? camera.position.x : parseFloat(document.getElementById('tpX')?.value || 0),
+            y: camera.position ? camera.position.y : parseFloat(document.getElementById('tpY')?.value || 0),
+            z: camera.position ? camera.position.z : parseFloat(document.getElementById('tpZ')?.value || 0),
+            alpha: camera.alpha,
+            beta: camera.beta,
+            radius: camera.radius,
+            target: camera.target ? { x: camera.target.x, y: camera.target.y, z: camera.target.z } : null
+        };
+    } else {
+        cameraData = {
+            x: document.getElementById('tpX')?.value || '',
+            y: document.getElementById('tpY')?.value || '',
+            z: document.getElementById('tpZ')?.value || ''
+        };
+    }
+
+    let activeMode = 'auto';
+    if (document.getElementById('btnModeManual')?.classList.contains('active')) {
+        activeMode = 'manual';
+    } else if (document.getElementById('btnElementLook')?.classList.contains('active')) {
+        activeMode = 'elementLook';
+    }
+
+    const suborbitInputs = [];
+    document.querySelectorAll('#orbitsBuilderContainer input').forEach(inp => {
+        if (inp.id || inp.name || inp.dataset.suborbitKey) {
+            suborbitInputs.push({
+                id: inp.id,
+                key: inp.dataset.suborbitKey || inp.name,
+                value: inp.value
+            });
+        }
+    });
+
+    const filterStates = (typeof visibilityState !== 'undefined') ? { ...visibilityState } : {};
+    const reqMaxN = Math.max(parseInt(document.getElementById('inputMaxN')?.value || '1', 10), getRequiredMaxN(ZVal));
+
+    const projectData = {
+        name: projectName.trim() || defaultName,
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        Z: ZVal,
+        maxN: reqMaxN,
+        inputEn: document.getElementById('inputEn')?.value || '',
+        manualZ: document.getElementById('inputZManual')?.value || ZVal,
+        config: document.getElementById('inputConfig')?.value || '',
+        elec: document.getElementById('inputElec')?.value || '',
+        n: document.getElementById('inputN')?.value || '',
+        l: document.getElementById('inputL')?.value || '',
+        gI: document.getElementById('inputGI')?.value || '',
+        spinS: document.getElementById('inputTotalSpinS')?.value || '',
+        electricField: document.getElementById('inputElectricField')?.value || '',
+        opacity: document.getElementById('opacityRange')?.value || '0.35',
+        activeMode: activeMode,
+        camera: cameraData,
+        suborbitInputs: suborbitInputs,
+        filterStates: filterStates
+    };
+
+    savedProjects.push(projectData);
+    localStorage.setItem('atomic_orb_projects', JSON.stringify(savedProjects));
+    
+    renderProjectList();
+    alert(`Project "${projectData.name}" saved successfully!`);
+}
+
+// Load Saved Project Parameters and Fully Sync with Internal Data, Camera, & Configurations
+async function loadProject(index) {
+    try {
+        const savedProjects = JSON.parse(localStorage.getItem('atomic_orb_projects') || '[]');
+        const proj = savedProjects[index];
+        if (!proj) return;
+
+        const zVal = parseInt(proj.Z, 10) || 1;
+        const requiredMaxN = Math.max(parseInt(proj.maxN, 10) || 1, getRequiredMaxN(zVal));
+
+        // 1. Sync internal element data
+        let elemData = null;
+        if (typeof getElementData === 'function') {
+            elemData = getElementData(zVal);
+        } else if (typeof ELEMENTS_DATA !== 'undefined') {
+            elemData = ELEMENTS_DATA.find(e => e.Z === zVal);
+        }
+
+        if (elemData) {
+            window.currentElement = elemData;
+        }
+
+        // 2. Update UI Element Header
+        const selectedTag = document.getElementById('selectedElementTag');
+        if (selectedTag && elemData) {
+            selectedTag.textContent = `${elemData.name} (${elemData.sym}, Z=${elemData.Z})`;
+        }
+
+        // 3. Restore Auto Builder fields with enforced maxN for high Z elements
+        if (document.getElementById('inputZ')) document.getElementById('inputZ').value = zVal;
+        if (document.getElementById('inputMaxN')) document.getElementById('inputMaxN').value = requiredMaxN;
+        if (document.getElementById('inputEn')) document.getElementById('inputEn').value = proj.inputEn || '';
+
+        // 4. Restore Manual Mode fields
+        if (document.getElementById('inputZManual')) document.getElementById('inputZManual').value = proj.manualZ || zVal;
+        if (document.getElementById('inputConfig')) document.getElementById('inputConfig').value = proj.config || '';
+        if (document.getElementById('inputElec')) document.getElementById('inputElec').value = proj.elec || '';
+        if (document.getElementById('inputN')) document.getElementById('inputN').value = proj.n || '';
+        if (document.getElementById('inputL')) document.getElementById('inputL').value = proj.l || '';
+
+        // 5. Physical quantum properties
+        const inputGI = document.getElementById('inputGI');
+        if (inputGI) {
+            const fallbackGI = elemData ? elemData.gI : 0.0;
+            inputGI.value = (proj.gI !== undefined && proj.gI !== '') ? proj.gI : fallbackGI;
+        }
+
+        const inputSpinS = document.getElementById('inputTotalSpinS');
+        if (inputSpinS) {
+            const fallbackSpin = (typeof calculateTotalSpinS === 'function') ? calculateTotalSpinS(zVal) : 0.5;
+            inputSpinS.value = (proj.spinS !== undefined && proj.spinS !== '') ? proj.spinS : fallbackSpin;
+        }
+
+        if (document.getElementById('inputElectricField')) {
+            document.getElementById('inputElectricField').value = proj.electricField || '';
+        }
+
+        // 6. Restore Opacity State
+        if (proj.opacity !== undefined) {
+            const opacitySlider = document.getElementById('opacityRange');
+            if (opacitySlider) {
+                opacitySlider.value = proj.opacity;
+                if (typeof updateOpacity === 'function') {
+                    updateOpacity(proj.opacity);
+                }
+            }
+        }
+
+        // 7. Rebuild Suborbit Controls with correct N depth
+        if (typeof generateOrbitsBuilder === 'function') {
+            generateOrbitsBuilder();
+        }
+
+        // Restore custom suborbit electron inputs if present
+        let restoredElectronsCount = 0;
+        if (Array.isArray(proj.suborbitInputs) && proj.suborbitInputs.length > 0) {
+            proj.suborbitInputs.forEach(item => {
+                let el = null;
+                if (item.id) el = document.getElementById(item.id);
+                if (!el && item.key) el = document.querySelector(`[data-suborbit-key="${item.key}"], [name="${item.key}"]`);
+                if (el) {
+                    el.value = item.value;
+                    restoredElectronsCount += parseInt(item.value, 10) || 0;
+                }
+            });
+        }
+
+        // Fallback: If suborbit inputs sum to 0, regenerate ground-state suborbit configuration
+        if (restoredElectronsCount === 0 && typeof populateDefaultSuborbitElectrons === 'function') {
+            populateDefaultSuborbitElectrons(zVal);
+        }
+
+        // Restore Orbital Visibility Filters
+        if (proj.filterStates) {
+            if (typeof visibilityState !== 'undefined') {
+                Object.assign(visibilityState, proj.filterStates);
+            }
+            Object.entries(proj.filterStates).forEach(([key, val]) => {
+                const chk = document.querySelector(`input[data-filter="${key}"]`) || document.getElementById(`filter_${key}`);
+                if (chk) chk.checked = Boolean(val);
+            });
+        }
+
+        // 8. Switch Active Control Mode BEFORE rebuilding 3D model
+        if (proj.activeMode && typeof switchControlMode === 'function') {
+            switchControlMode(proj.activeMode);
+        }
+
+        // 9. Rebuild 3D Quantum Dirac Model
+        if (typeof rebuildQuantumModel === 'function') {
+            await rebuildQuantumModel();
+        }
+
+        // 10. Restore Camera Position, Angles, and Target
+        if (proj.camera) {
+            if (typeof userHasCustomInit !== 'undefined') {
+                userHasCustomInit = true;
+            }
+
+            const tpX = document.getElementById('tpX');
+            const tpY = document.getElementById('tpY');
+            const tpZ = document.getElementById('tpZ');
+
+            if (tpX && proj.camera.x !== undefined) tpX.value = typeof proj.camera.x === 'number' ? proj.camera.x.toFixed(2) : proj.camera.x;
+            if (tpY && proj.camera.y !== undefined) tpY.value = typeof proj.camera.y === 'number' ? proj.camera.y.toFixed(2) : proj.camera.y;
+            if (tpZ && proj.camera.z !== undefined) tpZ.value = typeof proj.camera.z === 'number' ? proj.camera.z.toFixed(2) : proj.camera.z;
+
+            if (typeof camera !== 'undefined' && camera) {
+                if (proj.camera.target && camera.target) {
+                    camera.target.set(Number(proj.camera.target.x), Number(proj.camera.target.y), Number(proj.camera.target.z));
+                }
+                if (proj.camera.alpha !== undefined) camera.alpha = Number(proj.camera.alpha);
+                if (proj.camera.beta !== undefined) camera.beta = Number(proj.camera.beta);
+                if (proj.camera.radius !== undefined) camera.radius = Number(proj.camera.radius);
+
+                if (proj.camera.x !== undefined && proj.camera.y !== undefined && proj.camera.z !== undefined) {
+                    camera.position.set(Number(proj.camera.x), Number(proj.camera.y), Number(proj.camera.z));
+                }
+            } else if (typeof teleportCamera === 'function') {
+                teleportCamera();
+            }
+        }
+
+        // 11. Close Project Manager Modal
+        if (typeof closeProjectManagerModal === 'function') {
+            closeProjectManagerModal();
+        }
+    } catch (err) {
+        console.error("[loadProject Error] Exception while loading project index", index, err);
+    }
 }

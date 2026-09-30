@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Atomic-orb Beta b1.3-2</title>
+    <title>Atomic-orb Beta b1.3-4</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,43 +18,43 @@
             display: none !important;
         }
     </style>
-    
+
     <!-- Prevents Mobile WebKit Selection Menus & Restricts Copy to Keyboard Shortcuts -->
     <style>
-      /* Disable default WebKit long-press callout menu and touch text selection */
-body {
-      -webkit-touch-callout: none !important; /* Disables iOS long-press popups */
-      -webkit-user-select: none !important;   /* Disables WebKit text highlight callouts */
-      user-select: none !important;          /* Standard UI selection block */
-    }
-
-    /* Allow standard selection inside form inputs if present */
-    input, textarea, [contenteditable="true"] {
-      -webkit-user-select: text !important;
-      user-select: text !important;
-    }
-  </style>
-
-  <script>
-    (function() {
-      // Prevent long-press touch context menus on mobile devices
-      document.addEventListener('contextmenu', function(e) {
-        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-          e.preventDefault();
+        /* Disable default WebKit long-press callout menu and touch text selection */
+        body {
+            -webkit-touch-callout: none !important; /* Disables iOS long-press popups */
+            -webkit-user-select: none !important;   /* Disables WebKit text highlight callouts */
+            user-select: none !important;          /* Standard UI selection block */
         }
-      }, { capture: true });
 
-      // Only allow Copy / Cut / Paste triggered by physical keyboard shortcuts (Ctrl / Cmd)
-      ['copy', 'cut', 'paste'].forEach(function(eventType) {
-        document.addEventListener(eventType, function(e) {
-          const isKeyboardShortcut = e.ctrlKey || e.metaKey;
-          if (!isKeyboardShortcut) {
+        /* Allow standard selection inside form inputs if present */
+        input, textarea, [contenteditable="true"] {
+            -webkit-user-select: text !important;
+            user-select: text !important;
+        }
+    </style>
+
+    <script>
+        (function() {
+        // Prevent long-press touch context menus on mobile devices
+        document.addEventListener('contextmenu', function(e) {
+            if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
             e.preventDefault();
-          }
+            }
         }, { capture: true });
-      });
-    })();
-  </script>
+
+        // Only allow Copy / Cut / Paste triggered by physical keyboard shortcuts (Ctrl / Cmd)
+        ['copy', 'cut', 'paste'].forEach(function(eventType) {
+            document.addEventListener(eventType, function(e) {
+            const isKeyboardShortcut = e.ctrlKey || e.metaKey;
+            if (!isKeyboardShortcut) {
+                e.preventDefault();
+            }
+            }, { capture: true });
+        });
+        })();
+    </script>
 
     <!-- External UI & Effect APIs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -63,7 +63,7 @@ body {
 
     <!-- 3D Engine & Application Core -->
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
-    <script defer src="effects.js"></script>
+    <script defer src="effects_test.js"></script>
 
     <script src="compker.js"></script>
     <script defer>
@@ -84,16 +84,22 @@ body {
 
         // 3. Immediately look for your kernel mesh renderer to initiate the quantum cloud
         if (typeof window.rebuildQuantumModel === 'function') {
-            console.log("Initiating Relativistic Dirac Radial Visualizer");
+    console.log("Initiating Relativistic Dirac Radial Visualizer");
+    window.rebuildQuantumModel();
+} else {
+    if (document.readyState === 'complete') {
+        // Window load already fired; execute immediately
+        if (typeof window.rebuildQuantumModel === 'function') {
             window.rebuildQuantumModel();
-        } else {
-            // Fallback catch if kernel.js evaluation completes slightly late
-            window.addEventListener('load', () => {
+        }
+    } else {
+        window.addEventListener('load', () => {
             if (typeof window.rebuildQuantumModel === 'function') {
                 window.rebuildQuantumModel();
             }
-            });
-        }
+        });
+    }
+}
 
         } catch (wasmError) {
         console.error("Critical Failure initializing WebAssembly Core Module:", wasmError);
@@ -109,6 +115,9 @@ body {
     <!-- 3D Render Canvas -->
     <canvas id="renderCanvas"></canvas>
 
+    <!-- 2D Element Sample Canvas (ElementLookRenderer) -->
+    <canvas id="elementLookCanvas" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; background: #080b10;"></canvas>
+
     <!-- Floating Restore Trigger Buttons -->
     <button class="restore-btn" id="restoreBtn" style="display:none;" onclick="togglePanel(false)">☰</button>
     <button class="tp-restore-btn" id="tpRestoreBtn" style="display:none;" onclick="toggleTpPanel(false)">⧇</button>
@@ -118,7 +127,7 @@ body {
     <!-- Camera / Teleport Overlay -->
     <div class="tp-overlay" id="tpOverlay">
         <div class="tp-title">
-            <span>CAMERA POS & GOTO</span>
+            <span>POS & GOTO</span>
             <button class="minimize-btn" onclick="toggleTpPanel(true)">✕</button>
         </div>
         <div class="tp-grid">
@@ -133,23 +142,73 @@ body {
         </div>
     </div>
 
+    <!-- Project Manager Modal (Quicksilver Glass Standard) -->
+<div class="pt-modal-backdrop" id="projectModal" onclick="if(event.target === this) closeProjectManagerModal()">
+    <div class="pt-modal-window" style="max-width: 640px; width: 90%;">
+        <div class="pt-modal-header">
+            <div class="pt-modal-title">
+                <span>(beta) PROJECTS</span>
+                <span id="projectCountTag" style="color:var(--text-accent); font-size:11px; margin-left:8px;">
+                (<span id="projectCount">0</span>/10)
+                </span>
+            </div>
+            <button class="close-btn" onclick="closeProjectManagerModal()">✕</button>
+        </div>
+        <div class="pt-scroll-area">
+            <div class="project-modal-body" style="padding: 12px;">
+                <ul id="projectList" class="project-list"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+
     <!-- Main UI Panel -->
     <div class="ui-overlay" id="uiOverlay">
         <header style="display:flex; justify-content:space-between; align-items:center;">
-            <h1>DIRAC QUANTUM 3D</h1>
             <button class="minimize-btn" onclick="togglePanel(true)">✕</button>
         </header>
 
         <!-- Element Selector via Periodic Table Modal -->
         <div>
-            <div class="section-title">Element Selector</div>
+            <div class="section-title">Elements</div>
+            <br>
+            <br>
             <button class="secondary-btn" style="margin-top:6px;" onclick="openPeriodicTableModal()">PERIODIC TABLE ⊞</button>
         </div>
+
+        <!-- Load & Export System Buttons -->
+        <!-- <div class="btn-group" style="margin-top:6px;"> -->
+            <!-- <button class="secondary-btn" onclick="triggerLoadAtomJson()">LOAD (.JSON)</button> -->
+            <!-- <button class="secondary-btn" onclick="exportAtomJson()">EXPORT (.JSON)</button> -->
+        <!-- </div> -->
+        <!-- <input type="file" id="atomJsonFileInput" accept=".json" style="display: none;" onchange="handleLoadAtomJson(event)"> -->
+
+        <!-- Main UI Panel Control Button -->
+<!--
+<div>
+    <div class="section-title" style="margin-top: 10px;">Project Storage</div>
+    <button class="secondary-btn" style="margin-top:6px;" onclick="openProjectManagerModal()">
+        SAVED PROJECTS (<span id="projectCountButtonTag">0</span>/10)
+    </button>
+</div>
+-->
+
+<!-- Project Storage Controls -->
+<div>
+    <div class="section-title" style="margin-top: 10px;">Project Storage</div>
+    <div class="btn-group" style="margin-top:6px;">
+        <button class="apply-btn" onclick="saveCurrentProject()">SAVE PROJECT</button>
+        <button class="secondary-btn" onclick="openProjectManagerModal()">
+            PROJECTS (<span id="projectCountButtonTag">0</span>/10)
+        </button>
+    </div>
+</div>
 
         <!-- Mode Switcher -->
         <div class="mode-switch-bar">
             <button class="mode-btn active" id="btnModeAuto" onclick="switchControlMode('auto')">AUTO BUILDER</button>
             <button class="mode-btn" id="btnModeManual" onclick="switchControlMode('manual')">MANUAL</button>
+            <!-- <button class="mode-btn" id="btnElementLook" onclick="switchControlMode('elementLook')">ELEMENT'S LOOK</button> -->
         </div>
 
         <!-- AUTO BUILDER MODE SECTION -->
@@ -163,12 +222,12 @@ body {
                 <div id="quantumSetupContent" class="collapsible-content collapsed">
                     <div class="input-card" style="margin-top:6px;">
                         <div class="input-field">
-                            <label>Atomic Number (Z)</label>
+                            <label>Z</label>
                             <input type="number" id="inputZ" value="10" min="1" max="172" onchange="rebuildQuantumModel()">
                         </div>
 
                         <div class="input-field">
-                            <label>Max Principal Quantum Number (n)</label>
+                            <label>n</label>
                             <input type="number" id="inputMaxN" value="2" min="1" max="20" onchange="generateOrbitsBuilder()">
                         </div>
                     </div>
@@ -179,7 +238,7 @@ body {
             <div class="collapsible-section" style="margin-top:10px;">
                 <div class="section-title" style="cursor:pointer;" onclick="toggleSection('suborbitConfigContent', this.querySelector('.collapse-btn'))">
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <span>Suborbit Configuration</span>
+                        <span>Suborbits</span>
                         <span style="font-size:8px; color:var(--text-muted);">EX | ORBIT | ELEC</span>
                     </div>
                     <button class="minimize-btn collapse-btn" type="button" onclick="event.stopPropagation(); toggleSection('suborbitConfigContent', this)">+</button>
@@ -195,7 +254,7 @@ body {
                                 <span class="action-link" onclick="autoCalculateSuborbitEnergiesUI()">[CALC EN]</span>
                             </div>
                             <input type="text" id="inputEn" value="" placeholder="Calculated per split suborbit">
-                            <button class="apply-btn" style="margin-top:4px;" onclick="rebuildQuantumModel()">SOLVE DIRAC MODEL</button>
+                            <button class="apply-btn" style="margin-top:4px;" onclick="rebuildQuantumModel()">BUILD</button>
                         </div>
                     </div>
                 </div>
@@ -204,7 +263,7 @@ body {
             <!-- 3. Collapsible: ORBITAL VISIBILITY FILTERS (SEPARATED) -->
             <div class="collapsible-section" style="margin-top:10px;">
                 <div class="section-title" style="cursor:pointer;" onclick="toggleSection('visibilityFiltersContent', this.querySelector('.collapse-btn'))">
-                    <span>Orbital Visibility Filters</span>
+                    <span>Orbital Visibility</span>
                     <button class="minimize-btn collapse-btn" type="button" onclick="event.stopPropagation(); toggleSection('visibilityFiltersContent', this)">+</button>
                 </div>
                 <div id="visibilityFiltersContent" class="collapsible-content collapsed">
@@ -222,11 +281,11 @@ body {
                 <div class="section-title">Manual Quantum Parameters</div>
                 <div class="input-card" style="margin-top:6px;">
                     <div class="input-field">
-                        <label>Atomic Number (Z)</label>
+                        <label>Z</label>
                         <input type="number" id="inputZManual" value="10">
                     </div>
                     <div class="input-field">
-                        <label>Elec Config (e.g., 1s2 2s2 2p6)</label>
+                        <label>e- Config</label>
                         <input type="text" id="inputConfig" value="1s2 2s2 2p6" oninput="if(typeof onConfigInputChanged === 'function') onConfigInputChanged();">
                     </div>
                     <div class="input-field">
@@ -234,23 +293,23 @@ body {
                         <input type="text" id="inputElec" value="2, 2, 6">
                     </div>
                     <div class="input-field">
-                        <label>Principal Quantum (n)</label>
+                        <label>n</label>
                         <input type="text" id="inputN" value="1, 2, 2">
                     </div>
                     <div class="input-field">
-                        <label>Azimuthal Quantum (l)</label>
+                        <label>l</label>
                         <input type="text" id="inputL" value="0, 0, 1">
                     </div>
                     <div class="input-field">
-                        <label>Nuclear g-Factor (gI)</label>
+                        <label>gI</label>
                         <input type="number" id="inputGI" value="5.585" step="0.001">
                     </div>
                     <div class="input-field">
-                        <label>Total Spin (S)</label>
+                        <label>S</label>
                         <input type="number" id="inputTotalSpinS" value="0.5" step="0.1">
                     </div>
                     <div class="input-field">
-                        <label>Electric Field (V/m)</label>
+                        <label>V/m</label>
                         <input type="number" id="inputElectricField" value="100000" step="1000">
                     </div>
                 </div>
@@ -258,7 +317,7 @@ body {
         </div>
 
         <div>
-            <div class="section-title">Global Mesh Opacity</div>
+            <div class="section-title">Opacity</div>
             <input type="range" id="opacityRange" min="0.05" max="1.0" step="0.05" value="0.35" oninput="updateOpacity(this.value)" style="margin-top:6px;">
         </div>
     </div>
@@ -268,7 +327,7 @@ body {
         <div class="pt-modal-window">
             <div class="pt-modal-header">
                 <div class="pt-modal-title">
-                    <span>PERIODIC TABLE SELECTOR</span>
+                    <span>ELEMENTS</span>
                     <span id="selectedElementTag" style="color:var(--text-accent); font-size:11px;"></span>
                 </div>
                 <button class="close-btn" onclick="closePeriodicTableModal()">✕</button>

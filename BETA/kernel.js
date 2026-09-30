@@ -159,6 +159,7 @@ function getElementData(Z) {
     const elem = ELEMENTS_DATA.find(e => e.Z === Z);
     return elem || { Z: Z, sym: "Unk", name: "Unknown", period: 0, group: 0, cat: "unknown", A: 0, gI: DEFAULT_GI };
 }
+// window.getElementData = getElementData;
 
 /**
  * Calculates total electron spin quantum number S based on ground-state subshell occupations (Hund's Rule).
@@ -494,8 +495,41 @@ function selectElementBySymbol(symbol) {
 
     const configData = getElectronConfigForZ(elem.Z);
 
+    // Auto Builder Inputs
     document.getElementById('inputZ').value = elem.Z;
     document.getElementById('inputMaxN').value = configData.maxN;
+
+    // Populate Manual Mode Inputs from ELEMENTS_DATA and active element calculations
+    const manualZ = document.getElementById('inputZManual');
+    const manualConfig = document.getElementById('inputConfig');
+    const manualElec = document.getElementById('inputElec');
+    const manualN = document.getElementById('inputN');
+    const manualL = document.getElementById('inputL');
+    const manualGI = document.getElementById('inputGI');
+    const manualS = document.getElementById('inputTotalSpinS');
+
+    const rawConfig = HARDCODED_ELECTRON_CONFIGS[elem.Z] || {};
+    const lMap = { s: 0, p: 1, d: 2, f: 3, g: 4 };
+
+    const configStrArr = [];
+    const elecArr = [];
+    const nArr = [];
+    const lArr = [];
+
+    for (const [subshell, count] of Object.entries(rawConfig)) {
+        configStrArr.push(`${subshell}${count}`);
+        elecArr.push(count);
+        nArr.push(parseInt(subshell[0]));
+        lArr.push(lMap[subshell[1]] ?? 0);
+    }
+
+    if (manualZ) manualZ.value = elem.Z;
+    if (manualConfig) manualConfig.value = configStrArr.join(' ');
+    if (manualElec) manualElec.value = elecArr.join(', ');
+    if (manualN) manualN.value = nArr.join(', ');
+    if (manualL) manualL.value = lArr.join(', ');
+    if (manualGI) manualGI.value = elem.gI;
+    if (manualS) manualS.value = calculateTotalSpinS(elem.Z);
 
     generateOrbitsBuilder(false);
 
@@ -518,6 +552,10 @@ function selectElementBySymbol(symbol) {
     visibilityState = {};
 
     rebuildQuantumModel();
+
+    if (currentControlMode === 'elementLook') {
+        renderCurrentElementSample();
+    }
 }
 
 function openPeriodicTableModal() {
@@ -1104,27 +1142,34 @@ function setupIndividualParticleFade() {
 /**
  * Stochastic Particle Fade System with Continuous Theme Interpolation.
  * Dynamically blends vertex colors between Neutral White and Deep Crimson
- * in sync with the real-time transition progress from effects.js.
+ * in sync with the real-time transition progress from effects.js, with
+ * dimFactor transitioning smoothly over 1.2 seconds.
  */
 function setupIndividualParticleFade() {
     if (!scene) return;
 
-    function getInterpolatedColors(baseCol, factor) {
+    const neutralDim = 0.365;
+    const redDim = 7.25;
+    const transitionDuration = 1.2; // Transition duration in seconds
+
+    // Tracks current animated dimFactor state
+    let activeDimFactor = neutralDim + (redDim - neutralDim) * getThemeFactor();
+
+    function getInterpolatedColors(baseCol, factor, currentDim) {
         const whiteBlendRatio = 0.8;
         const neutralR = baseCol.r * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
         const neutralG = baseCol.g * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
         const neutralB = baseCol.b * (1 - whiteBlendRatio) + 1.0 * whiteBlendRatio;
-        const neutralDim = 0.365;
 
         const redR = 0.0275;
         const redG = 0.0;
         const redB = 0.0085;
-        const redDim = 7.25;
 
         const targetR = neutralR + (redR - neutralR) * factor;
         const targetG = neutralG + (redG - neutralG) * factor;
         const targetB = neutralB + (redB - neutralB) * factor;
-        const dimFactor = neutralDim + (redDim - neutralDim) * factor;
+
+        const dimFactor = currentDim !== undefined ? currentDim : (neutralDim + (redDim - neutralDim) * factor);
 
         return {
             r: Math.min(1.0, targetR * dimFactor),
@@ -1133,21 +1178,7 @@ function setupIndividualParticleFade() {
         };
     }
 
-    // Helper to retrieve factor from window variable with fallback
-    /*
     function getThemeFactor() {
-        if (typeof window.globalThemeFactor !== 'undefined') {
-            return window.globalThemeFactor;
-        }
-        if (typeof currentProgress !== 'undefined') {
-            return currentProgress / 100;
-        }
-        return window.isRedFilterActive ? 1.0 : 0.0;
-    }
-    */
-
-    function getThemeFactor() {
-        // Check the fluid sliding progress indicator first
         if (typeof currentProgress !== 'undefined') {
             return currentProgress / 100;
         }
@@ -1175,7 +1206,7 @@ function setupIndividualParticleFade() {
             const baseCol = mesh.material.diffuseColor || new BABYLON.Color3(1, 1, 1);
 
             const factor = getThemeFactor();
-            const col = getInterpolatedColors(baseCol, factor);
+            const col = getInterpolatedColors(baseCol, factor, activeDimFactor);
 
             const colors = new Float32Array(vertexCount * 4);
             const fadeStates = new Uint8Array(vertexCount);
@@ -1196,7 +1227,8 @@ function setupIndividualParticleFade() {
                 fadeStates,
                 holdTimers,
                 baseCol,
-                lastFactor: factor
+                lastFactor: factor,
+                lastDimFactor: activeDimFactor
             };
         });
     }
@@ -1207,6 +1239,17 @@ function setupIndividualParticleFade() {
         initMeshAlphaColors();
 
         const factor = getThemeFactor();
+        const targetDimFactor = neutralDim + (redDim - neutralDim) * factor;
+
+        // Animate dimFactor over 1.2 seconds based on frame delta time
+        const deltaTime = scene.getEngine().getDeltaTime() / 1000;
+        const maxStep = Math.abs(redDim - neutralDim) * (deltaTime / transitionDuration);
+
+        if (activeDimFactor < targetDimFactor) {
+            activeDimFactor = Math.min(targetDimFactor, activeDimFactor + maxStep);
+        } else if (activeDimFactor > targetDimFactor) {
+            activeDimFactor = Math.max(targetDimFactor, activeDimFactor - maxStep);
+        }
 
         activeMeshes.forEach(item => {
             const mesh = item.mesh;
@@ -1215,15 +1258,16 @@ function setupIndividualParticleFade() {
 
             let bufferNeedsUpdate = false;
 
-            // Interpolate particle RGB channels as global theme factor changes
-            if (data.lastFactor !== factor) {
-                const col = getInterpolatedColors(data.baseCol, factor);
+            // Update particle RGB channels when factor or animated dimFactor changes
+            if (data.lastFactor !== factor || data.lastDimFactor !== activeDimFactor) {
+                const col = getInterpolatedColors(data.baseCol, factor, activeDimFactor);
                 for (let i = 0; i < data.vertexCount; i++) {
                     data.colors[i * 4]     = col.r;
                     data.colors[i * 4 + 1] = col.g;
                     data.colors[i * 4 + 2] = col.b;
                 }
                 data.lastFactor = factor;
+                data.lastDimFactor = activeDimFactor;
                 bufferNeedsUpdate = true;
             }
 
@@ -1273,3 +1317,649 @@ function setupIndividualParticleFade() {
         });
     });
 }
+
+/*
+// ==========================================
+// 1. WASM BUFFER PARSER (DiracModule - Zero-Allocation Cache)
+// ==========================================
+
+// Shared DataView cache & buffer reference
+let cachedDataView = null;
+let cachedBuffer = null;
+
+// Pre-allocated object container to eliminate GC allocation pressure
+const sharedPhysicalProps = {
+  r: 0,
+  g: 0,
+  b: 0,
+  crystalStructure: 0,
+  stateAt298K: 0,  // 0: Solid, 1: Liquid, 2: Gas
+  isMetal: 0,      // 0: Non-metal, 1: Metalloid, 2: Metal
+  density: 0,
+  electricalConductivity: 0,
+  thermalConductivity: 0,
+  meltingPoint: 0,
+  boilingPoint: 0
+};
+
+/
+  Reads WASM memory directly via cached DataView into a pre-allocated target object.
+ /
+function getElementPhysicalProps(Z, atomicMass, sCount, pCount, dCount, fCount, gCount = 0, tempK = 298.15, out = sharedPhysicalProps) {
+  if (!window.DiracModule || typeof window.DiracModule.generatePhysicalPropertiesBuffer !== 'function') {
+    console.error('DiracModule is not fully loaded or generatePhysicalPropertiesBuffer is missing.');
+    return null;
+  }
+
+  const memView = window.DiracModule.generatePhysicalPropertiesBuffer(
+    Z, atomicMass, sCount, pCount, dCount, fCount, gCount, tempK
+  );
+
+  if (!memView) return null;
+
+  const buffer = memView.buffer || memView;
+  const offset = memView.byteOffset || 0;
+
+  // Refresh DataView cache only if WASM ArrayBuffer detached or grew
+  if (!cachedDataView || cachedBuffer !== buffer) {
+    cachedBuffer = buffer;
+    cachedDataView = new DataView(buffer);
+  }
+
+  // Direct byte reading into pre-allocated struct (Zero JS Allocations)
+  out.r = cachedDataView.getUint8(offset);
+  out.g = cachedDataView.getUint8(offset + 1);
+  out.b = cachedDataView.getUint8(offset + 2);
+  out.crystalStructure = cachedDataView.getUint8(offset + 3);
+  out.stateAt298K = cachedDataView.getUint8(offset + 4);
+  out.isMetal = cachedDataView.getUint8(offset + 5);
+  out.density = cachedDataView.getFloat32(offset + 6, true);
+  out.electricalConductivity = cachedDataView.getFloat32(offset + 10, true);
+  out.thermalConductivity = cachedDataView.getFloat32(offset + 14, true);
+  out.meltingPoint = cachedDataView.getFloat32(offset + 18, true);
+  out.boilingPoint = cachedDataView.getFloat32(offset + 22, true);
+
+  return out;
+}
+
+
+// ==========================================
+// 2. THREE.JS ELEMENT LOOK RENDERER (Optimized)
+// ==========================================
+
+class ElementRealLookRenderer {
+  constructor(scene) {
+    this.scene = scene;
+    this.currentMesh = null;
+    this.particlePositions = null;
+    this.particleVelocities = null;
+    this.gasParticlesGeometry = null;
+    this.isGasMode = false;
+    this.reusableColor = new THREE.Color();
+  }
+
+  clear() {
+    if (this.currentMesh) {
+      this.scene.remove(this.currentMesh);
+      if (this.currentMesh.geometry) this.currentMesh.geometry.dispose();
+      if (this.currentMesh.material) this.currentMesh.material.dispose();
+      this.currentMesh = null;
+    }
+    this.isGasMode = false;
+    this.particlePositions = null;
+    this.particleVelocities = null;
+    this.gasParticlesGeometry = null;
+  }
+
+  renderElement(props) {
+    this.clear();
+
+    if (!props) return;
+
+    // Direct RGB float assignment (avoids expensive string parsing)
+    this.reusableColor.setRGB(props.r / 255, props.g / 255, props.b / 255);
+
+    // State at 298K (0: Solid, 1: Liquid, 2: Gas)
+    switch (props.stateAt298K) {
+      case 0:
+        this.renderSolidCube(this.reusableColor, props.isMetal);
+        break;
+
+      case 1:
+        this.renderLiquidBall(this.reusableColor);
+        break;
+
+      case 2:
+        this.renderGasCloud(this.reusableColor);
+        break;
+
+      default:
+        this.renderSolidCube(this.reusableColor, props.isMetal);
+        break;
+    }
+  }
+
+  renderSolidCube(color, isMetal) {
+    const geometry = new THREE.BoxGeometry(2.2, 2.2, 2.2);
+    const material = new THREE.MeshStandardMaterial({
+      color: color,
+      roughness: isMetal === 2 ? 0.25 : 0.65,
+      metalness: isMetal === 2 ? 0.85 : 0.1,
+      flatShading: true
+    });
+
+    this.currentMesh = new THREE.Mesh(geometry, material);
+    this.scene.add(this.currentMesh);
+  }
+
+  renderLiquidBall(color) {
+    const geometry = new THREE.SphereGeometry(1.5, 64, 64);
+    const material = new THREE.MeshPhysicalMaterial({
+      color: color,
+      roughness: 0.1,
+      transmission: 0.6,
+      thickness: 1.2,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.1,
+      ior: 1.33
+    });
+
+    this.currentMesh = new THREE.Mesh(geometry, material);
+    this.scene.add(this.currentMesh);
+  }
+
+  renderGasCloud(color) {
+    const particleCount = 600;
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    const velocities = new Float32Array(particleCount * 3);
+
+    for (let i = 0; i < particleCount; i++) {
+      const u = Math.random();
+      const v = Math.random();
+      const theta = u * 2.0 * Math.PI;
+      const phi = Math.acos(2.0 * v - 1.0);
+      const r = Math.cbrt(Math.random()) * 2.5;
+
+      positions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
+      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      positions[i * 3 + 2] = r * Math.cos(phi);
+
+      velocities[i * 3]     = (Math.random() - 0.5) * 0.015;
+      velocities[i * 3 + 1] = (Math.random() - 0.5) * 0.015;
+      velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.015;
+    }
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+    const material = new THREE.PointsMaterial({
+      color: color,
+      size: 0.08,
+      transparent: true,
+      opacity: 0.75,
+      blending: THREE.AdditiveBlending
+    });
+
+    this.particlePositions = positions;
+    this.particleVelocities = velocities;
+    this.gasParticlesGeometry = geometry;
+    this.currentMesh = new THREE.Points(geometry, material);
+    this.isGasMode = true;
+
+    this.scene.add(this.currentMesh);
+  }
+
+  update() {
+    if (!this.currentMesh) return;
+
+    if (this.isGasMode && this.particlePositions) {
+      const pos = this.particlePositions;
+      const vel = this.particleVelocities;
+      const count = pos.length / 3;
+
+      for (let i = 0; i < count; i++) {
+        const idx = i * 3;
+        pos[idx]     += vel[idx];
+        pos[idx + 1] += vel[idx + 1];
+        pos[idx + 2] += vel[idx + 2];
+
+        // Particle bounding sphere check (radius squared = 9.0)
+        const distSq = pos[idx] * pos[idx] + pos[idx + 1] * pos[idx + 1] + pos[idx + 2] * pos[idx + 2];
+        if (distSq > 9.0) {
+          vel[idx]     *= -1;
+          vel[idx + 1] *= -1;
+          vel[idx + 2] *= -1;
+        }
+      }
+      this.gasParticlesGeometry.attributes.position.needsUpdate = true;
+      this.currentMesh.rotation.y += 0.002;
+    } else {
+      this.currentMesh.rotation.y += 0.005;
+      this.currentMesh.rotation.x += 0.002;
+    }
+  }
+} */
+
+  /**
+ * Export current atom system state to a structured JSON file
+ */
+function exportAtomJson() {
+    // Read Auto Mode Parameters
+    const zAuto = document.getElementById('inputZ') ? document.getElementById('inputZ').value : 10;
+    const maxN = document.getElementById('inputMaxN') ? document.getElementById('inputMaxN').value : 2;
+    const bindingEn = document.getElementById('inputEn') ? document.getElementById('inputEn').value : "";
+
+    // Read Manual Mode Parameters
+    const zManual = document.getElementById('inputZManual') ? document.getElementById('inputZManual').value : 10;
+    const config = document.getElementById('inputConfig') ? document.getElementById('inputConfig').value : "";
+    const elec = document.getElementById('inputElec') ? document.getElementById('inputElec').value : "";
+    const n = document.getElementById('inputN') ? document.getElementById('inputN').value : "";
+    const l = document.getElementById('inputL') ? document.getElementById('inputL').value : "";
+    const gI = document.getElementById('inputGI') ? document.getElementById('inputGI').value : 5.585;
+    const spinS = document.getElementById('inputTotalSpinS') ? document.getElementById('inputTotalSpinS').value : 0.5;
+    const eField = document.getElementById('inputElectricField') ? document.getElementById('inputElectricField').value : 100000;
+
+    // Read Global Settings
+    const opacity = document.getElementById('opacityRange') ? document.getElementById('opacityRange').value : 0.35;
+
+    // Detect Active Mode
+    const isManualActive = document.getElementById('manualModeContainer') && 
+                           !document.getElementById('manualModeContainer').classList.contains('hidden');
+    const activeMode = isManualActive ? 'manual' : 'auto';
+
+    // Construct Atom Data Object
+    const atomData = {
+        format: "dirac-quantum-3d",
+        version: "1.0",
+        timestamp: new Date().toISOString(),
+        activeMode: activeMode,
+        autoParameters: {
+            Z: parseInt(zAuto, 10),
+            maxN: parseInt(maxN, 10),
+            bindingEn: bindingEn
+        },
+        manualParameters: {
+            Z: parseInt(zManual, 10),
+            config: config,
+            elec: elec,
+            n: n,
+            l: l,
+            gI: parseFloat(gI),
+            totalSpinS: parseFloat(spinS),
+            electricField: parseFloat(eField)
+        },
+        globalSettings: {
+            meshOpacity: parseFloat(opacity)
+        }
+    };
+
+    // Download JSON File
+    const fileName = `atom_Z${isManualActive ? zManual : zAuto}_${activeMode}.json`;
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(atomData, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", fileName);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+}
+
+/**
+ * Trigger file selector dialog for JSON loading
+ */
+function triggerLoadAtomJson() {
+    const fileInput = document.getElementById('atomJsonFileInput');
+    if (fileInput) {
+        fileInput.click();
+    }
+}
+
+/**
+ * Parse and apply uploaded JSON atom configuration
+ */
+function handleLoadAtomJson(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async function(e) { // Marked async
+        try {
+            const data = JSON.parse(e.target.result);
+
+            if (!data.autoParameters && !data.manualParameters) {
+                alert("Invalid Atom JSON format.");
+                return;
+            }
+
+            // Restore Auto Parameters
+            if (data.autoParameters) {
+                if (data.autoParameters.Z !== undefined && document.getElementById('inputZ')) {
+                    document.getElementById('inputZ').value = data.autoParameters.Z;
+                }
+                if (data.autoParameters.maxN !== undefined && document.getElementById('inputMaxN')) {
+                    document.getElementById('inputMaxN').value = data.autoParameters.maxN;
+                    if (typeof generateOrbitsBuilder === 'function') generateOrbitsBuilder();
+                }
+                if (data.autoParameters.bindingEn !== undefined && document.getElementById('inputEn')) {
+                    document.getElementById('inputEn').value = data.autoParameters.bindingEn;
+                }
+            }
+
+            // Restore Manual Parameters
+            if (data.manualParameters) {
+                if (data.manualParameters.Z !== undefined && document.getElementById('inputZManual')) {
+                    document.getElementById('inputZManual').value = data.manualParameters.Z;
+                }
+                if (data.manualParameters.config !== undefined && document.getElementById('inputConfig')) {
+                    document.getElementById('inputConfig').value = data.manualParameters.config;
+                }
+                if (data.manualParameters.elec !== undefined && document.getElementById('inputElec')) {
+                    document.getElementById('inputElec').value = data.manualParameters.elec;
+                }
+                if (data.manualParameters.n !== undefined && document.getElementById('inputN')) {
+                    document.getElementById('inputN').value = data.manualParameters.n;
+                }
+                if (data.manualParameters.l !== undefined && document.getElementById('inputL')) {
+                    document.getElementById('inputL').value = data.manualParameters.l;
+                }
+                if (data.manualParameters.gI !== undefined && document.getElementById('inputGI')) {
+                    document.getElementById('inputGI').value = data.manualParameters.gI;
+                }
+                if (data.manualParameters.totalSpinS !== undefined && document.getElementById('inputTotalSpinS')) {
+                    document.getElementById('inputTotalSpinS').value = data.manualParameters.totalSpinS;
+                }
+                if (data.manualParameters.electricField !== undefined && document.getElementById('inputElectricField')) {
+                    document.getElementById('inputElectricField').value = data.manualParameters.electricField;
+                }
+            }
+
+            // Restore Global Mesh Opacity
+            if (data.globalSettings && data.globalSettings.meshOpacity !== undefined && document.getElementById('opacityRange')) {
+                document.getElementById('opacityRange').value = data.globalSettings.meshOpacity;
+                if (typeof updateOpacity === 'function') {
+                    updateOpacity(data.globalSettings.meshOpacity);
+                }
+            }
+
+            // Await WASM / Dirac Solver Rebuild
+            if (typeof rebuildQuantumModel === 'function') {
+                await rebuildQuantumModel(); // Properly awaited
+            }
+
+            // Restore Active Control Mode
+            if (data.activeMode && typeof switchControlMode === 'function') {
+                switchControlMode(data.activeMode);
+            }
+
+            // Reset input value to allow re-uploading the same file if modified
+            event.target.value = '';
+
+        } catch (err) {
+            console.error("Failed to load atom JSON:", err);
+            alert("Error parsing JSON file. Ensure it uses valid atom configuration structure.");
+        }
+    };
+    reader.readAsText(file);
+}
+
+const STORAGE_KEY = 'quantum_atom_projects';
+const MAX_PROJECTS = 10;
+
+/**
+ * Helper to fetch stored projects from Local Storage
+ */
+function getStoredProjects() {
+    try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        return data ? JSON.parse(data) : [];
+    } catch (e) {
+        console.error("Failed to read from Local Storage:", e);
+        return [];
+    }
+}
+
+/**
+ * Helper to save projects list back to Local Storage
+ */
+function saveProjectsToStorage(projects) {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+    } catch (e) {
+        console.error("Failed to write to Local Storage:", e);
+        alert("Storage error! Local Storage might be full.");
+    }
+}
+
+/**
+ * Capture current UI state into an object
+ */
+function getCurrentAtomState() {
+    const isManualActive = document.getElementById('manualModeContainer') && 
+                           !document.getElementById('manualModeContainer').classList.contains('hidden');
+
+    return {
+        activeMode: isManualActive ? 'manual' : 'auto',
+        autoParameters: {
+            Z: parseInt(document.getElementById('inputZ')?.value || 10, 10),
+            maxN: parseInt(document.getElementById('inputMaxN')?.value || 2, 10),
+            bindingEn: document.getElementById('inputEn')?.value || ""
+        },
+        manualParameters: {
+            Z: parseInt(document.getElementById('inputZManual')?.value || 10, 10),
+            config: document.getElementById('inputConfig')?.value || "",
+            elec: document.getElementById('inputElec')?.value || "",
+            n: document.getElementById('inputN')?.value || "",
+            l: document.getElementById('inputL')?.value || "",
+            gI: parseFloat(document.getElementById('inputGI')?.value || 5.585),
+            totalSpinS: parseFloat(document.getElementById('inputTotalSpinS')?.value || 0.5),
+            electricField: parseFloat(document.getElementById('inputElectricField')?.value || 100000)
+        },
+        globalSettings: {
+            meshOpacity: parseFloat(document.getElementById('opacityRange')?.value || 0.35)
+        }
+    };
+}
+
+/*
+/
+ * Prompt user and save current configuration
+ /
+function handleSaveProjectPrompt() {
+    const projects = getStoredProjects();
+
+    const nameInput = prompt("Enter a name for this atom project:");
+    if (!nameInput || !nameInput.trim()) return;
+
+    const trimmedName = nameInput.trim();
+    const existingIndex = projects.findIndex(p => p.name.toLowerCase() === trimmedName.toLowerCase());
+
+    // Enforce 10 project maximum limit
+    if (existingIndex === -1 && projects.length >= MAX_PROJECTS) {
+        alert(`Storage limit reached (${MAX_PROJECTS}/${MAX_PROJECTS} projects).\nPlease delete or rename an existing project before saving a new one.`);
+        return;
+    }
+
+    const currentState = getCurrentAtomState();
+    const formattedDate = new Date().toLocaleDateString();
+
+    if (existingIndex !== -1) {
+        if (confirm(`A project named "${trimmedName}" already exists. Do you want to overwrite it?`)) {
+            projects[existingIndex].data = currentState;
+            projects[existingIndex].date = formattedDate;
+        } else {
+            return;
+        }
+    } else {
+        projects.push({
+            id: 'proj_' + Date.now(),
+            name: trimmedName,
+            date: formattedDate,
+            data: currentState
+        });
+    }
+
+    saveProjectsToStorage(projects);
+    alert(`Project "${trimmedName}" saved to Local Storage!`);
+}
+
+/
+ * Open Modal and display saved projects
+ /
+function openProjectManagerModal() {
+    const modal = document.getElementById('projectModal');
+    const projectList = document.getElementById('projectList');
+    const projectCount = document.getElementById('projectCount');
+    const projects = getStoredProjects();
+
+    projectCount.textContent = projects.length;
+    projectList.innerHTML = '';
+
+    if (projects.length === 0) {
+        projectList.innerHTML = '<li style="color:#aaa; text-align:center; padding: 12px;">No saved projects found.</li>';
+    } else {
+        projects.forEach(project => {
+            const li = document.createElement('li');
+            li.className = 'project-item';
+            li.innerHTML = `
+                <div class="project-info">
+                    <span class="project-name" title="${project.name}">${project.name}</span>
+                    <span class="project-date">Saved: ${project.date}</span>
+                </div>
+                <div class="project-actions">
+                    <button onclick="loadProjectState('${project.id}')">Load</button>
+                    <button onclick="renameProject('${project.id}')">Rename</button>
+                    <button class="delete-btn" onclick="deleteProject('${project.id}')">Delete</button>
+                </div>
+            `;
+            projectList.appendChild(li);
+        });
+    }
+
+    modal.style.display = 'flex';
+}
+
+/
+ * Close Project Modal
+ /
+function closeProjectManagerModal() {
+    document.getElementById('projectModal').style.display = 'none';
+}
+
+/
+ * Apply saved project configuration to UI and trigger rebuild
+ /
+function loadProjectState(id) {
+    const projects = getStoredProjects();
+    const project = projects.find(p => p.id === id);
+
+    if (!project) {
+        alert("Project not found.");
+        return;
+    }
+
+    const data = project.data;
+
+    // Restore Auto Parameters
+    if (data.autoParameters) {
+        if (data.autoParameters.Z !== undefined && document.getElementById('inputZ')) {
+            document.getElementById('inputZ').value = data.autoParameters.Z;
+        }
+        if (data.autoParameters.maxN !== undefined && document.getElementById('inputMaxN')) {
+            document.getElementById('inputMaxN').value = data.autoParameters.maxN;
+            if (typeof generateOrbitsBuilder === 'function') generateOrbitsBuilder();
+        }
+        if (data.autoParameters.bindingEn !== undefined && document.getElementById('inputEn')) {
+            document.getElementById('inputEn').value = data.autoParameters.bindingEn;
+        }
+    }
+
+    // Restore Manual Parameters
+    if (data.manualParameters) {
+        if (data.manualParameters.Z !== undefined && document.getElementById('inputZManual')) {
+            document.getElementById('inputZManual').value = data.manualParameters.Z;
+        }
+        if (data.manualParameters.config !== undefined && document.getElementById('inputConfig')) {
+            document.getElementById('inputConfig').value = data.manualParameters.config;
+        }
+        if (data.manualParameters.elec !== undefined && document.getElementById('inputElec')) {
+            document.getElementById('inputElec').value = data.manualParameters.elec;
+        }
+        if (data.manualParameters.n !== undefined && document.getElementById('inputN')) {
+            document.getElementById('inputN').value = data.manualParameters.n;
+        }
+        if (data.manualParameters.l !== undefined && document.getElementById('inputL')) {
+            document.getElementById('inputL').value = data.manualParameters.l;
+        }
+        if (data.manualParameters.gI !== undefined && document.getElementById('inputGI')) {
+            document.getElementById('inputGI').value = data.manualParameters.gI;
+        }
+        if (data.manualParameters.totalSpinS !== undefined && document.getElementById('inputTotalSpinS')) {
+            document.getElementById('inputTotalSpinS').value = data.manualParameters.totalSpinS;
+        }
+        if (data.manualParameters.electricField !== undefined && document.getElementById('inputElectricField')) {
+            document.getElementById('inputElectricField').value = data.manualParameters.electricField;
+        }
+    }
+
+    // Restore Global Settings
+    if (data.globalSettings && data.globalSettings.meshOpacity !== undefined && document.getElementById('opacityRange')) {
+        document.getElementById('opacityRange').value = data.globalSettings.meshOpacity;
+        if (typeof updateOpacity === 'function') {
+            updateOpacity(data.globalSettings.meshOpacity);
+        }
+    }
+
+    // Restore Mode
+    if (data.activeMode && typeof switchControlMode === 'function') {
+        switchControlMode(data.activeMode);
+    }
+
+    // Trigger Model Calculation
+    if (typeof rebuildQuantumModel === 'function') {
+        rebuildQuantumModel();
+    }
+
+    closeProjectManagerModal();
+}
+
+/
+ * Rename a project in Local Storage
+ /
+function renameProject(id) {
+    const projects = getStoredProjects();
+    const project = projects.find(p => p.id === id);
+
+    if (!project) return;
+
+    const newName = prompt("Enter new name for this project:", project.name);
+    if (!newName || !newName.trim() || newName.trim() === project.name) return;
+
+    const trimmed = newName.trim();
+    const exists = projects.some(p => p.id !== id && p.name.toLowerCase() === trimmed.toLowerCase());
+
+    if (exists) {
+        alert("A project with this name already exists.");
+        return;
+    }
+
+    project.name = trimmed;
+    saveProjectsToStorage(projects);
+    openProjectManagerModal(); // Refresh list UI
+}
+
+/
+ * Delete a project from Local Storage
+ /
+function deleteProject(id) {
+    let projects = getStoredProjects();
+    const project = projects.find(p => p.id === id);
+
+    if (!project) return;
+
+    if (confirm(`Are you sure you want to delete "${project.name}"?`)) {
+        projects = projects.filter(p => p.id !== id);
+        saveProjectsToStorage(projects);
+        openProjectManagerModal(); // Refresh list UI
+    }
+}
+*/

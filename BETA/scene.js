@@ -85,3 +85,104 @@ function createSoftGlowTexture(scene) {
 }
 
 document.addEventListener("DOMContentLoaded", initScene);
+
+let elementLookRenderer = null;
+let currentControlMode = 'auto';
+
+// 1. Initialize ElementLookRenderer once DOM & WebAssembly are ready
+window.addEventListener('DOMContentLoaded', async () => {
+    const sampleCanvas = document.getElementById('elementLookCanvas');
+    if (sampleCanvas) {
+        elementLookRenderer = new ElementLookRenderer(sampleCanvas);
+        try {
+            // Wait for Wasm module initialization
+            await elementLookRenderer.init();
+        } catch (e) {
+            console.warn("ElementLookRenderer waiting for Wasm core:", e);
+        }
+    }
+});
+
+// 2. Helper to resize the 2D canvas to viewport dimensions
+function resizeSampleCanvas() {
+    const canvas = document.getElementById('elementLookCanvas');
+    if (canvas) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+}
+
+// 3. Render function for the active element sample
+function renderCurrentElementSample() {
+    if (!elementLookRenderer) return;
+    resizeSampleCanvas();
+
+    // Get active Z atomic number (defaults to 10 if input is empty)
+    const currentZ = parseInt(document.getElementById('inputZ')?.value) || 10;
+    
+    // Render physical properties to 2D canvas
+    elementLookRenderer.renderElementSample(currentZ);
+}
+
+// Handle window resizing while in elementLook mode
+window.addEventListener('resize', () => {
+    if (currentControlMode === 'elementLook') {
+        renderCurrentElementSample();
+    }
+});
+
+// 4. Mode switcher handler
+function switchControlMode(mode) {
+    currentControlMode = mode;
+
+    // Update button active state highlights
+    document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+
+    const autoContainer = document.getElementById('autoModeContainer');
+    const manualContainer = document.getElementById('manualModeContainer');
+    const renderCanvas3D = document.getElementById('renderCanvas');
+    const lookCanvas2D = document.getElementById('elementLookCanvas');
+
+    if (mode === 'auto') {
+        document.getElementById('btnModeAuto')?.classList.add('active');
+        if (autoContainer) autoContainer.classList.remove('hidden');
+        if (manualContainer) manualContainer.classList.add('hidden');
+
+        if (lookCanvas2D) lookCanvas2D.style.display = 'none';
+        if (renderCanvas3D) renderCanvas3D.style.display = 'block';
+
+        // Resume Babylon 3D loop
+        if (typeof engine !== 'undefined' && engine && !engine.activeRenderLoop) {
+            engine.runRenderLoop(() => { if (typeof scene !== 'undefined' && scene) scene.render(); });
+        }
+
+    } else if (mode === 'manual') {
+        document.getElementById('btnModeManual')?.classList.add('active');
+        if (autoContainer) autoContainer.classList.add('hidden');
+        if (manualContainer) manualContainer.classList.remove('hidden');
+
+        if (lookCanvas2D) lookCanvas2D.style.display = 'none';
+        if (renderCanvas3D) renderCanvas3D.style.display = 'block';
+
+        // Resume Babylon 3D loop
+        if (typeof engine !== 'undefined' && engine && !engine.activeRenderLoop) {
+            engine.runRenderLoop(() => { if (typeof scene !== 'undefined' && scene) scene.render(); });
+        }
+
+    } else if (mode === 'elementLook') {
+        document.getElementById('btnElementLook')?.classList.add('active');
+        if (autoContainer) autoContainer.classList.add('hidden');
+        if (manualContainer) manualContainer.classList.add('hidden');
+
+        // Hide 3D Canvas, pause 3D loop, and display 2D Sample Canvas
+        if (renderCanvas3D) renderCanvas3D.style.display = 'none';
+        if (lookCanvas2D) lookCanvas2D.style.display = 'block';
+
+        if (typeof engine !== 'undefined' && engine) {
+            engine.stopRenderLoop();
+        }
+
+        // Draw element physical sample
+        renderCurrentElementSample();
+    }
+}
