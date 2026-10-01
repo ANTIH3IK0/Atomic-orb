@@ -121,8 +121,6 @@
     <!-- Floating Restore Trigger Buttons -->
     <button class="restore-btn" id="restoreBtn" style="display:none;" onclick="togglePanel(false)">☰</button>
     <button class="tp-restore-btn" id="tpRestoreBtn" style="display:none;" onclick="toggleTpPanel(false)">⧇</button>
-    <!-- Dedicated Idle Unlock Button (Positioned in lower-right corner) -->
-    <button class="restore-btn" id="idleUnlockBtn" style="display: none; bottom: 20px; right: 20px; z-index: 999999;" title="Hold 3s to unlock">⍝</button>
 
     <!-- Camera / Teleport Overlay -->
     <div class="tp-overlay" id="tpOverlay">
@@ -147,7 +145,7 @@
     <div class="pt-modal-window" style="max-width: 640px; width: 90%;">
         <div class="pt-modal-header">
             <div class="pt-modal-title">
-                <span>(beta) PROJECTS</span>
+                <span>PROJECTS</span>
                 <span id="projectCountTag" style="color:var(--text-accent); font-size:11px; margin-left:8px;">
                 (<span id="projectCount">0</span>/10)
                 </span>
@@ -165,15 +163,21 @@
     <!-- Main UI Panel -->
     <div class="ui-overlay" id="uiOverlay">
         <header style="display:flex; justify-content:space-between; align-items:center;">
-            <button class="minimize-btn" onclick="togglePanel(true)">✕</button>
+            <button class="minimize-btn" onclick="togglePanel(true)">✕</button><div class="section-title">
+            <button class="secondary-btn" style="margin-top:6px;" onclick="openPeriodicTableModal()">⊞</button>
+            <br>
+            
+            </div>
+            
         </header>
+        <button class="apply-btn" onclick="saveCurrentProject()">SAVE PROJECT</button>
+        <button class="secondary-btn" onclick="openProjectManagerModal()">
+            PROJECTS (<span id="projectCountButtonTag">0</span>/4)
+        </button>
 
         <!-- Element Selector via Periodic Table Modal -->
         <div>
-            <div class="section-title">Elements</div>
-            <br>
-            <br>
-            <button class="secondary-btn" style="margin-top:6px;" onclick="openPeriodicTableModal()">PERIODIC TABLE ⊞</button>
+            <div class="section-title"></div>
         </div>
 
         <!-- Load & Export System Buttons -->
@@ -193,16 +197,7 @@
 </div>
 -->
 
-<!-- Project Storage Controls -->
-<div>
-    <div class="section-title" style="margin-top: 10px;">Project Storage</div>
-    <div class="btn-group" style="margin-top:6px;">
-        <button class="apply-btn" onclick="saveCurrentProject()">SAVE PROJECT</button>
-        <button class="secondary-btn" onclick="openProjectManagerModal()">
-            PROJECTS (<span id="projectCountButtonTag">0</span>/10)
-        </button>
-    </div>
-</div>
+
 
         <!-- Mode Switcher -->
         <div class="mode-switch-bar">
