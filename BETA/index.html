@@ -63,7 +63,7 @@
 
     <!-- 3D Engine & Application Core -->
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
-    <script defer src="effects_test.js"></script>
+    <script defer src="effects.js"></script>
 
     <script src="compker.js"></script>
     <script defer>
@@ -125,7 +125,7 @@
     <!-- Camera / Teleport Overlay -->
     <div class="tp-overlay" id="tpOverlay">
         <div class="tp-title">
-            <span>POS & GOTO</span>
+            <span><br></span>
             <button class="minimize-btn" onclick="toggleTpPanel(true)">✕</button>
         </div>
         <div class="tp-grid">
@@ -133,10 +133,10 @@
             <div class="tp-field"><label>Y</label><input type="text" id="tpY" placeholder="~"></div>
             <div class="tp-field"><label>Z</label><input type="text" id="tpZ" placeholder="~"></div>
         </div>
-        <button class="apply-btn" onclick="teleportCamera()">GOTO POSITION</button>
+        <button class="apply-btn" onclick="teleportCamera()">-></button>
         <div class="btn-group">
-            <button class="secondary-btn" onclick="setInitialPosition()">SET INIT</button>
-            <button class="secondary-btn" onclick="reloadInitialPosition()">RESET</button>
+            <button class="secondary-btn" onclick="setInitialPosition()">:=</button>
+            <button class="secondary-btn" onclick="reloadInitialPosition()">⟳</button>
         </div>
     </div>
 
@@ -210,8 +210,12 @@
         <div id="autoModeContainer" class="mode-container">
             <!-- 1. Collapsible: QUANTUM SYSTEM SETUP -->
             <div class="collapsible-section">
+                <span style="font-weight: 200;">SETUP</span>
+                <br>
+                <br>
+
                 <div class="section-title" style="cursor:pointer;" onclick="toggleSection('quantumSetupContent', this.querySelector('.collapse-btn'))">
-                    <span>Quantum System Setup</span>
+                    <span>Quantum</span>
                     <button class="minimize-btn collapse-btn" type="button" onclick="event.stopPropagation(); toggleSection('quantumSetupContent', this)">+</button>
                 </div>
                 <div id="quantumSetupContent" class="collapsible-content collapsed">
@@ -233,7 +237,7 @@
             <div class="collapsible-section" style="margin-top:10px;">
                 <div class="section-title" style="cursor:pointer;" onclick="toggleSection('suborbitConfigContent', this.querySelector('.collapse-btn'))">
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <span>Suborbits</span>
+                        <span>e- Config.</span>
                         <span style="font-size:8px; color:var(--text-muted);">EX | ORBIT | ELEC</span>
                     </div>
                     <button class="minimize-btn collapse-btn" type="button" onclick="event.stopPropagation(); toggleSection('suborbitConfigContent', this)">+</button>
@@ -258,7 +262,7 @@
             <!-- 3. Collapsible: ORBITAL VISIBILITY FILTERS (SEPARATED) -->
             <div class="collapsible-section" style="margin-top:10px;">
                 <div class="section-title" style="cursor:pointer;" onclick="toggleSection('visibilityFiltersContent', this.querySelector('.collapse-btn'))">
-                    <span>Orbital Visibility</span>
+                    <span>Visibility</span>
                     <button class="minimize-btn collapse-btn" type="button" onclick="event.stopPropagation(); toggleSection('visibilityFiltersContent', this)">+</button>
                 </div>
                 <div id="visibilityFiltersContent" class="collapsible-content collapsed">
@@ -273,7 +277,7 @@
         <!-- MANUAL MODE SECTION -->
         <div id="manualModeContainer" class="mode-container hidden">
             <div>
-                <div class="section-title">Manual Quantum Parameters</div>
+                <div class="section-title">Manual</div>
                 <div class="input-card" style="margin-top:6px;">
                     <div class="input-field">
                         <label>Z</label>

@@ -1455,8 +1455,8 @@ function getRequiredMaxN(z) {
 // Save Current Quantum Parameters & Camera / Internal Data to LocalStorage
 function saveCurrentProject() {
     const savedProjects = JSON.parse(localStorage.getItem('atomic_orb_projects') || '[]');
-    if (savedProjects.length >= 10) {
-        alert("Project storage limit reached (10 max). Please delete an existing project before saving.");
+    if (savedProjects.length >= 4) {
+        alert("Project storage limit reached (4 max). Please delete an existing project before saving.");
         return;
     }
 
@@ -1537,82 +1537,102 @@ function saveCurrentProject() {
 }
 
 // Load Saved Project Parameters and Fully Sync with Internal Data, Camera, & Configurations
+// Load Saved Project Parameters and Fully Sync with Internal Data, Camera, & Configurations
 async function loadProject(index) {
     try {
         const savedProjects = JSON.parse(localStorage.getItem('atomic_orb_projects') || '[]');
-        const proj = savedProjects[index];
-        if (!proj) return;
+        let proj = savedProjects[index];
+        if (!proj) {
+            console.warn(`[loadProject]: No project found at index ${index}`);
+            return;
+        }
 
-        const zVal = parseInt(proj.Z, 10) || 1;
-        const requiredMaxN = Math.max(parseInt(proj.maxN, 10) || 1, getRequiredMaxN(zVal));
+        // Unwrap nested project structure if stored via saveProjectsToStorage ({ id, name, data: {...} })
+        const data = proj.data || proj;
 
-        // 1. Sync internal element data
+        // Extract auto & manual parameter sources
+        const autoParams = data.autoParameters || data;
+        const manualParams = data.manualParameters || data;
+
+        // 1. Resolve Target Atomic Number (Z) and Max N upfront
+        const targetInitZ = 172;
+        const zVal = parseInt(autoParams.Z || data.Z, 10) || targetInitZ;
+
+        let requiredMaxN = parseInt(autoParams.maxN || data.maxN, 10);
+        if (isNaN(requiredMaxN)) {
+            if (typeof getRequiredMaxN === 'function') {
+                requiredMaxN = getRequiredMaxN(zVal);
+            } else {
+                requiredMaxN = 9; // Fallback depth for superheavy baseline
+            }
+        }
+
+        // 2. Sync Element Metadata Context
         let elemData = null;
         if (typeof getElementData === 'function') {
             elemData = getElementData(zVal);
-        } else if (typeof ELEMENTS_DATA !== 'undefined') {
+        } else if (typeof ELEMENTS_DATA !== 'undefined' && Array.isArray(ELEMENTS_DATA)) {
             elemData = ELEMENTS_DATA.find(e => e.Z === zVal);
+        }
+
+        if (!elemData && zVal === targetInitZ) {
+            elemData = { Z: 172, sym: "Unk", name: "Superheavy 172", period: 8, group: 0, cat: "unknown", A: 420, gI: 0.0 };
         }
 
         if (elemData) {
             window.currentElement = elemData;
+            const selectedTag = document.getElementById('selectedElementTag');
+            if (selectedTag) {
+                selectedTag.textContent = `${elemData.name} (${elemData.sym}, Z=${elemData.Z})`;
+            }
         }
 
-        // 2. Update UI Element Header
-        const selectedTag = document.getElementById('selectedElementTag');
-        if (selectedTag && elemData) {
-            selectedTag.textContent = `${elemData.name} (${elemData.sym}, Z=${elemData.Z})`;
-        }
-
-        // 3. Restore Auto Builder fields with enforced maxN for high Z elements
+        // 3. Update Baseline Control Inputs
         if (document.getElementById('inputZ')) document.getElementById('inputZ').value = zVal;
         if (document.getElementById('inputMaxN')) document.getElementById('inputMaxN').value = requiredMaxN;
-        if (document.getElementById('inputEn')) document.getElementById('inputEn').value = proj.inputEn || '';
+        if (document.getElementById('inputEn')) document.getElementById('inputEn').value = autoParams.bindingEn || data.inputEn || '';
 
-        // 4. Restore Manual Mode fields
-        if (document.getElementById('inputZManual')) document.getElementById('inputZManual').value = proj.manualZ || zVal;
-        if (document.getElementById('inputConfig')) document.getElementById('inputConfig').value = proj.config || '';
-        if (document.getElementById('inputElec')) document.getElementById('inputElec').value = proj.elec || '';
-        if (document.getElementById('inputN')) document.getElementById('inputN').value = proj.n || '';
-        if (document.getElementById('inputL')) document.getElementById('inputL').value = proj.l || '';
+        // Restore Manual Mode fields
+        if (document.getElementById('inputZManual')) document.getElementById('inputZManual').value = manualParams.Z || zVal;
+        if (document.getElementById('inputConfig')) document.getElementById('inputConfig').value = manualParams.config || data.config || '';
+        if (document.getElementById('inputElec')) document.getElementById('inputElec').value = manualParams.elec || data.elec || '';
+        if (document.getElementById('inputN')) document.getElementById('inputN').value = manualParams.n || data.n || '';
+        if (document.getElementById('inputL')) document.getElementById('inputL').value = manualParams.l || data.l || '';
 
-        // 5. Physical quantum properties
+        // Physical Quantum Properties
         const inputGI = document.getElementById('inputGI');
         if (inputGI) {
-            const fallbackGI = elemData ? elemData.gI : 0.0;
-            inputGI.value = (proj.gI !== undefined && proj.gI !== '') ? proj.gI : fallbackGI;
+            const fallbackGI = elemData ? elemData.gI : 5.585;
+            const savedGI = manualParams.gI ?? data.gI;
+            inputGI.value = (savedGI !== undefined && savedGI !== '') ? savedGI : fallbackGI;
         }
 
         const inputSpinS = document.getElementById('inputTotalSpinS');
         if (inputSpinS) {
             const fallbackSpin = (typeof calculateTotalSpinS === 'function') ? calculateTotalSpinS(zVal) : 0.5;
-            inputSpinS.value = (proj.spinS !== undefined && proj.spinS !== '') ? proj.spinS : fallbackSpin;
+            const savedSpin = manualParams.totalSpinS ?? data.spinS;
+            inputSpinS.value = (savedSpin !== undefined && savedSpin !== '') ? savedSpin : fallbackSpin;
         }
 
-        if (document.getElementById('inputElectricField')) {
-            document.getElementById('inputElectricField').value = proj.electricField || '';
+        const inputEF = document.getElementById('inputElectricField');
+        if (inputEF) {
+            const savedEF = manualParams.electricField ?? data.electricField;
+            inputEF.value = (savedEF !== undefined && savedEF !== '') ? savedEF : '';
         }
 
-        // 6. Restore Opacity State
-        if (proj.opacity !== undefined) {
-            const opacitySlider = document.getElementById('opacityRange');
-            if (opacitySlider) {
-                opacitySlider.value = proj.opacity;
-                if (typeof updateOpacity === 'function') {
-                    updateOpacity(proj.opacity);
-                }
-            }
-        }
-
-        // 7. Rebuild Suborbit Controls with correct N depth
+        // 4. Build Orbit DOM Layout ONCE
         if (typeof generateOrbitsBuilder === 'function') {
-            generateOrbitsBuilder();
+            generateOrbitsBuilder(false);
         }
 
-        // Restore custom suborbit electron inputs if present
+        // 5. Restore Suborbit Electron Configurations & Excitations
         let restoredElectronsCount = 0;
-        if (Array.isArray(proj.suborbitInputs) && proj.suborbitInputs.length > 0) {
-            proj.suborbitInputs.forEach(item => {
+        const subMap = data.subConfig || data.orbitals || {};
+        const exMap = data.excitations || {};
+
+        // A. Restore from Array format (suborbitInputs)
+        if (Array.isArray(data.suborbitInputs) && data.suborbitInputs.length > 0) {
+            data.suborbitInputs.forEach(item => {
                 let el = null;
                 if (item.id) el = document.getElementById(item.id);
                 if (!el && item.key) el = document.querySelector(`[data-suborbit-key="${item.key}"], [name="${item.key}"]`);
@@ -1623,25 +1643,70 @@ async function loadProject(index) {
             });
         }
 
-        // Fallback: If suborbit inputs sum to 0, regenerate ground-state suborbit configuration
-        if (restoredElectronsCount === 0 && typeof populateDefaultSuborbitElectrons === 'function') {
-            populateDefaultSuborbitElectrons(zVal);
+        // B. Restore from Map / DOM Orbit Rows (subConfig & excitations)
+        document.querySelectorAll('.orbit-row').forEach(row => {
+            const label = row.querySelector('.orbit-label')?.innerText?.trim();
+            const eInput = row.querySelector('.e-input');
+            const exInput = row.querySelector('.ex-input');
+
+            if (label) {
+                if (eInput && subMap[label] !== undefined) {
+                    eInput.value = subMap[label];
+                    restoredElectronsCount += parseInt(subMap[label], 10) || 0;
+                }
+                if (exInput && exMap[label] !== undefined) {
+                    exInput.value = exMap[label];
+                }
+            }
+        });
+
+        // C. Fallback: Populate default baseline if no electron configurations were set
+        if (restoredElectronsCount === 0) {
+            if (typeof populateDefaultSuborbitElectrons === 'function') {
+                populateDefaultSuborbitElectrons(zVal);
+            } else if (typeof getElectronConfigForZ === 'function') {
+                const preloadConfig = getElectronConfigForZ(zVal);
+                if (preloadConfig && preloadConfig.subConfig) {
+                    document.querySelectorAll('.orbit-row').forEach(row => {
+                        const label = row.querySelector('.orbit-label')?.innerText?.trim();
+                        const eInput = row.querySelector('.e-input');
+                        if (eInput && preloadConfig.subConfig[label] !== undefined) {
+                            eInput.value = preloadConfig.subConfig[label];
+                        }
+                    });
+                }
+            }
         }
 
-        // Restore Orbital Visibility Filters
-        if (proj.filterStates) {
-            if (typeof visibilityState !== 'undefined') {
-                Object.assign(visibilityState, proj.filterStates);
+        // 6. Restore Opacity & Global Settings
+        const globalSettings = data.globalSettings || {};
+        const opacityVal = globalSettings.meshOpacity ?? data.opacity;
+        if (opacityVal !== undefined) {
+            const opacitySlider = document.getElementById('opacityRange');
+            if (opacitySlider) {
+                opacitySlider.value = opacityVal;
+                if (typeof updateOpacity === 'function') {
+                    updateOpacity(opacityVal);
+                }
             }
-            Object.entries(proj.filterStates).forEach(([key, val]) => {
+        }
+
+        // 7. Restore Orbital Visibility Filters
+        const filterStates = data.filterStates || data.visibilityState;
+        if (filterStates) {
+            if (typeof visibilityState !== 'undefined') {
+                Object.assign(visibilityState, filterStates);
+            }
+            Object.entries(filterStates).forEach(([key, val]) => {
                 const chk = document.querySelector(`input[data-filter="${key}"]`) || document.getElementById(`filter_${key}`);
                 if (chk) chk.checked = Boolean(val);
             });
         }
 
-        // 8. Switch Active Control Mode BEFORE rebuilding 3D model
-        if (proj.activeMode && typeof switchControlMode === 'function') {
-            switchControlMode(proj.activeMode);
+        // 8. Switch Active Control Mode BEFORE Rebuilding 3D Model
+        const mode = data.activeMode || data.mode;
+        if (mode && typeof switchControlMode === 'function') {
+            switchControlMode(mode);
         }
 
         // 9. Rebuild 3D Quantum Dirac Model
@@ -1649,8 +1714,8 @@ async function loadProject(index) {
             await rebuildQuantumModel();
         }
 
-        // 10. Restore Camera Position, Angles, and Target
-        if (proj.camera) {
+        // 10. Restore Camera State & Target
+        if (data.camera) {
             if (typeof userHasCustomInit !== 'undefined') {
                 userHasCustomInit = true;
             }
@@ -1659,20 +1724,20 @@ async function loadProject(index) {
             const tpY = document.getElementById('tpY');
             const tpZ = document.getElementById('tpZ');
 
-            if (tpX && proj.camera.x !== undefined) tpX.value = typeof proj.camera.x === 'number' ? proj.camera.x.toFixed(2) : proj.camera.x;
-            if (tpY && proj.camera.y !== undefined) tpY.value = typeof proj.camera.y === 'number' ? proj.camera.y.toFixed(2) : proj.camera.y;
-            if (tpZ && proj.camera.z !== undefined) tpZ.value = typeof proj.camera.z === 'number' ? proj.camera.z.toFixed(2) : proj.camera.z;
+            if (tpX && data.camera.x !== undefined) tpX.value = typeof data.camera.x === 'number' ? data.camera.x.toFixed(2) : data.camera.x;
+            if (tpY && data.camera.y !== undefined) tpY.value = typeof data.camera.y === 'number' ? data.camera.y.toFixed(2) : data.camera.y;
+            if (tpZ && data.camera.z !== undefined) tpZ.value = typeof data.camera.z === 'number' ? data.camera.z.toFixed(2) : data.camera.z;
 
             if (typeof camera !== 'undefined' && camera) {
-                if (proj.camera.target && camera.target) {
-                    camera.target.set(Number(proj.camera.target.x), Number(proj.camera.target.y), Number(proj.camera.target.z));
+                if (data.camera.target && camera.target) {
+                    camera.target.set(Number(data.camera.target.x), Number(data.camera.target.y), Number(data.camera.target.z));
                 }
-                if (proj.camera.alpha !== undefined) camera.alpha = Number(proj.camera.alpha);
-                if (proj.camera.beta !== undefined) camera.beta = Number(proj.camera.beta);
-                if (proj.camera.radius !== undefined) camera.radius = Number(proj.camera.radius);
+                if (data.camera.alpha !== undefined) camera.alpha = Number(data.camera.alpha);
+                if (data.camera.beta !== undefined) camera.beta = Number(data.camera.beta);
+                if (data.camera.radius !== undefined) camera.radius = Number(data.camera.radius);
 
-                if (proj.camera.x !== undefined && proj.camera.y !== undefined && proj.camera.z !== undefined) {
-                    camera.position.set(Number(proj.camera.x), Number(proj.camera.y), Number(proj.camera.z));
+                if (data.camera.x !== undefined && data.camera.y !== undefined && data.camera.z !== undefined) {
+                    camera.position.set(Number(data.camera.x), Number(data.camera.y), Number(data.camera.z));
                 }
             } else if (typeof teleportCamera === 'function') {
                 teleportCamera();
@@ -1683,6 +1748,8 @@ async function loadProject(index) {
         if (typeof closeProjectManagerModal === 'function') {
             closeProjectManagerModal();
         }
+
+        console.log(`[loadProject]: Successfully loaded project index ${index} (Z = ${zVal})`);
     } catch (err) {
         console.error("[loadProject Error] Exception while loading project index", index, err);
     }

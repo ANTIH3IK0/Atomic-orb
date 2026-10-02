@@ -159,7 +159,7 @@ function getElementData(Z) {
     const elem = ELEMENTS_DATA.find(e => e.Z === Z);
     return elem || { Z: Z, sym: "Unk", name: "Unknown", period: 0, group: 0, cat: "unknown", A: 0, gI: DEFAULT_GI };
 }
-// window.getElementData = getElementData;
+window.getElementData = getElementData;
 
 /**
  * Calculates total electron spin quantum number S based on ground-state subshell occupations (Hund's Rule).
@@ -331,7 +331,10 @@ const HARDCODED_ELECTRON_CONFIGS = {
     115:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "6s": 2, "6p": 6, "6d": 10, "7s": 2, "7p": 3 },
     116:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "6s": 2, "6p": 6, "6d": 10, "7s": 2, "7p": 4 },
     117:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "6s": 2, "6p": 6, "6d": 10, "7s": 2, "7p": 5 },
-    118:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "6s": 2, "6p": 6, "6d": 10, "7s": 2, "7p": 6 }
+    118:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "6s": 2, "6p": 6, "6d": 10, "7s": 2, "7p": 6 },
+
+    /* default when load project */
+    172:{ "1s": 2, "2s": 2, "2p": 6, "3s": 2, "3p": 6, "3d": 10, "4s": 2, "4p": 6, "4d": 10, "4f": 14, "5s": 2, "5p": 6, "5d": 10, "5f": 14, "5g": 18, "6s": 2, "6p": 6, "6d": 10, "6f": 14, "6g": 18, "7s": 2, "7p": 6, "7d": 10, "7f": 14, "7g": 18, "8s": 2, "8p": 6, "8d": 10, "8f": 14, "8g": 18, "9s": 2, "9p": 6, "9d": 10, "9f": 14, "9g": 18 }
 };
 
 let selectedElementSymbol = 'Ne';
@@ -372,6 +375,8 @@ function getElectronConfigForZ(Z) {
 
     return { subConfig, maxN };
 }
+
+window.jsonloaddef = getElectronConfigForZ(172);
 
 /**
  * Builds standard 18-column Periodic Table with Lanthanides & Actinides
