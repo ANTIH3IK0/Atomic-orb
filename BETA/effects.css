@@ -225,7 +225,7 @@ body {
 
     /* Base Shadow & Metallic Edge Rim */
     box-shadow: 
-        0 30px 60px 0px var(--bs-shad),
+        0 30px 60px 0.85px var(--bs-shad),
         inset 0 0 0 1px var(--met-edge);
 
     /* Clean tilt mapping without forced perspective overlap */
