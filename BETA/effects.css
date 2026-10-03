@@ -220,12 +220,12 @@ body {
     background: var(--ui-bg);
     backdrop-filter: var(--bg-fil) saturate(190%);
     -webkit-backdrop-filter: var(--bg-fil) saturate(190%);
-    border-radius: 0px;
+    border-radius: 0px !important;
     border: 1.25px solid transparent !important;
 
     /* Base Shadow & Metallic Edge Rim */
     box-shadow: 
-        0 30px 60px -12px var(--bs-shad),
+        0 30px 60px 0px var(--bs-shad),
         inset 0 0 0 1px var(--met-edge);
 
     /* Clean tilt mapping without forced perspective overlap */
