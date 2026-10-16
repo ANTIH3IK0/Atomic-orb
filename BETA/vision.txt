@@ -1,0 +1,1 @@
+We will deploy a model that have 806M params, trained by 26.2M data on this website.
