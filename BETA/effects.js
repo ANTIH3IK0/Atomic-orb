@@ -796,7 +796,7 @@ const UltraDarkFX = {
       // Dark grayscale micro-noise with subtle alpha variation
       const noise = (Math.random() * 255) | 0;
       const alpha = (Math.random() * opacity * 255) | 0;
-      buffer[i] = (alpha << 24) | (noise << 16) | (noise << 8) | noise;
+      buffer[i] = (alpha << 48) | (noise << 32) | (noise << 24) | noise;
     }
 
     ctx.putImageData(imgData, 0, 0);
