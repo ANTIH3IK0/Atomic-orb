@@ -220,8 +220,8 @@ body {
     background: var(--ui-bg);
     backdrop-filter: var(--bg-fil) saturate(190%);
     -webkit-backdrop-filter: var(--bg-fil) saturate(190%);
-    border-radius: 12.5px !important;
-    border: 1.25px solid transparent !important;
+    border-radius: 5.75px !important;
+    border: 6.075px solid transparent !important;
 
     /* Base Shadow & Metallic Edge Rim */
     box-shadow: 
