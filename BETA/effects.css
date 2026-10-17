@@ -34,7 +34,7 @@
     --chk-checked-bg: rgba(30, 30, 35, 0.95);
     --chk-tick-color: #78767a;
 
-    --panel-border: 1px solid rgba(255, 255, 255, 0.12);
+    --panel-border: 0.05px solid rgba(10, 10, 10, 0.12);
 }
 * {
     box-sizing: border-box;
