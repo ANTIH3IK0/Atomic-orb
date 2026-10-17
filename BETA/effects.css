@@ -34,7 +34,7 @@
     --chk-checked-bg: rgba(30, 30, 35, 0.95);
     --chk-tick-color: #78767a;
 
-    --panel-border: 0.05px solid rgba(10, 10, 10, 0.12);
+    --panel-border: 0.55px solid rgba(10, 10, 10, 0.12);
 }
 * {
     box-sizing: border-box;
@@ -221,7 +221,7 @@ body {
     backdrop-filter: var(--bg-fil) saturate(190%);
     -webkit-backdrop-filter: var(--bg-fil) saturate(190%);
     border-radius: 5.75px !important;
-    border: 1.25px solid transparent !important;
+    border: 0.005px solid transparent !important;
 
     /* Base Shadow & Metallic Edge Rim */
     box-shadow: 
