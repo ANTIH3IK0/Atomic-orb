@@ -341,7 +341,7 @@ function switchControlMode(mode) {
     }
 }
 
-/* Germanium Oxide Quicksilver Engine */
+/* Heavy Metal Quicksilver Engine */
 function initQuicksilverGlassEngine() {
     // Inject Germanium Oxide Palette & Idle Red CSS Styles
     if (!document.getElementById('quicksilverEngineStyles')) {
@@ -363,7 +363,7 @@ function initQuicksilverGlassEngine() {
                 will-change: transform, border-radius;
             }
 
-            /* Edge Rim: Germanium Oxide Rainbow (Active) -> Crimson Red (Idle) */
+            /* Edge Rim: Metallic Edge (Active) -> Crimson Red (Idle) */
             .ui-overlay::before, .tp-overlay::before, .pt-modal-window::before {
                 content: "";
                 position: absolute;
@@ -378,18 +378,18 @@ function initQuicksilverGlassEngine() {
                         transparent 70%),
                     /* Scatter 1: Germanium Oxide Copper-Red */
                     radial-gradient(ellipse 260px 160px at var(--scatter-x1, 30%) var(--scatter-y1, 30%), 
-                        rgba(180, 35, 20, var(--rainbow-op, 0.5)) 0%, 
-                        rgba(110, 20, 10, var(--rainbow-op, 0.25)) 45%, 
+                        rgba(41, 90, 92, var(--rainbow-op, 0.5)) 0%, 
+                        rgba(32, 48, 48, var(--rainbow-op, 0.25)) 45%, 
                         transparent 75%),
                     /* Scatter 2: Deep Amethyst / Violet Prism */
                     radial-gradient(ellipse 220px 240px at var(--scatter-x2, 70%) var(--scatter-y2, 70%), 
-                        rgba(75, 15, 95, var(--rainbow-op, 0.5)) 0%, 
-                        rgba(40, 10, 60, var(--rainbow-op, 0.25)) 50%, 
+                        rgba(89, 91, 99, var(--rainbow-op, 0.5)) 0%, 
+                        rgba(69, 66, 74, var(--rainbow-op, 0.25)) 50%, 
                         transparent 80%),
                     /* Scatter 3: Smoked Slate Cyan / Amber Oxide */
                     radial-gradient(circle 280px at var(--scatter-x3, 50%) var(--scatter-y3, 20%), 
                         rgba(20, 65, 85, var(--rainbow-op, 0.45)) 0%, 
-                        rgba(130, 80, 15, var(--rainbow-op, 0.25)) 50%, 
+                        rgba(40, 29, 43, var(--rainbow-op, 0.25)) 50%, 
                         transparent 85%),
                     /* IDLE MODE: Deep Germanium Crimson Red Glow */
                     radial-gradient(circle 350px at 50% 50%, 
